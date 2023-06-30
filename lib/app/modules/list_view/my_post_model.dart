@@ -21,4 +21,6 @@ class MyPost {
     data['body'] = body;
     return data;
   }
+
+  static List<MyPost> listFromJson(list) => List<MyPost>.from(list.map((x) => MyPost.fromJson(x)));
 }
