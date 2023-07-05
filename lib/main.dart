@@ -18,8 +18,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "Application",
        theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
+        useMaterial3: true
       ),
+      
       initialRoute: AppPages.homePage,
       getPages: AppPages.routes
     );

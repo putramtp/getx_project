@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 
 import '../controllers/login_controller.dart';
@@ -17,73 +16,89 @@ class LoginView extends GetView<LoginController> {
         child: Column(
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.only(top: 60.0),
+              padding: const EdgeInsets.only(top: 20.0),
               child: Center(
                 child: Container(
                     width: 200,
                     height: 150,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(50.0)),
+                    decoration: const BoxDecoration(color: Colors.white),
                     child: Image.asset('assets/images/logo.png')),
               ),
             ),
-            const Padding(
-              //padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0),
-              padding: EdgeInsets.symmetric(horizontal: 15),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: TextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Email',
-                    hintText: 'Enter valid email id as abc@gmail.com'),
+                    hintText: 'Enter valid email as example@gmail.com'),
+                onChanged: (value) {
+                  controller.emailValue.value = value;
+                  // controller.emailValue.value = "kminchelle";
+
+                },
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0),
-              //padding: EdgeInsets.symmetric(horizontal: 15),
+            Padding(
+              padding: const EdgeInsets.all(15),
               child: TextField(
                 obscureText: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Password',
                     hintText: 'Enter secure password'),
+                onChanged: (value) {
+                  // controller.passwordValue.value = value;
+                  controller.passwordValue.value = "0lelplR";
+                },
               ),
             ),
             ElevatedButton(
-              onPressed: (){
-                //FORGOT PASSWORD SCREEN GOES HERE
+              onPressed: () {
+                controller.authLogin();
               },
               child: const Text(
                 'Forgot Password',
                 style: TextStyle(color: Colors.blue, fontSize: 15),
               ),
             ),
-            Container(
-              height: 50,
-              width: 250,
-              decoration: BoxDecoration(
-                  color: Colors.blue, borderRadius: BorderRadius.circular(20)),
-              child: ElevatedButton(
-                onPressed: () {
-                  Get.toNamed("/list-view");
-                },
-                child: const Text(
-                  'Login',
-                  style: TextStyle(color: Colors.white, fontSize: 25),
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Container(
+                height: 50,
+                width: 250,
+                decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(20)),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.toNamed("/list-view");
+                  },
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(
+                        color: Color.fromARGB(255, 61, 27, 211), fontSize: 25),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(
-              height: 130,
-            ),
-            const Text('New User? Create Account')
+            const Padding(
+              padding: EdgeInsets.only(top: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('New User ? '),
+                  Text('Create Account',
+                      style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.blue)),
+                ],
+              ),
+            )
           ],
         ),
       ),
     );
   }
 }
-
-
-
-
