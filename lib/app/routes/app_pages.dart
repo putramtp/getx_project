@@ -6,6 +6,8 @@ import '../modules/home1/bindings/home1_binding.dart';
 import '../modules/home1/views/home1_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/receive/bindings/receive_binding.dart';
+import '../modules/receive/views/receive_view.dart';
 
 part 'app_routes.dart';
 
@@ -14,6 +16,7 @@ class AppPages {
 
   static const homePage = Routes.HOME;
   static const homePage1 = Routes.HOME1;
+  static const receivePage = Routes.RECEIVE;
 
   static final routes = [
     GetPage(
@@ -30,6 +33,11 @@ class AppPages {
       name: _Paths.HOME1,
       page: () => const Home1View(),
       binding: Home1Binding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE,
+      page: () => const ReceiveView(),
+      binding: ReceiveBinding(),
     ),
   ];
 }
