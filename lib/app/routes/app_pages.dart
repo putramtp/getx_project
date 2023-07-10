@@ -2,8 +2,8 @@ import 'package:get/get.dart';
 
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
-import '../modules/list_view/bindings/list_view_binding.dart';
-import '../modules/list_view/views/list_view_view.dart';
+import '../modules/home1/bindings/home1_binding.dart';
+import '../modules/home1/views/home1_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 
@@ -13,6 +13,7 @@ class AppPages {
   AppPages._();
 
   static const homePage = Routes.HOME;
+  static const homePage1 = Routes.HOME1;
 
   static final routes = [
     GetPage(
@@ -26,9 +27,9 @@ class AppPages {
       binding: LoginBinding(),
     ),
     GetPage(
-      name: _Paths.LIST_VIEW,
-      page: () => const ListViewView(),
-      binding: ListViewBinding(),
+      name: _Paths.HOME1,
+      page: () => const Home1View(),
+      binding: Home1Binding(),
     ),
   ];
 }

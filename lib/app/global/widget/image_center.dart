@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class NotFoundImage extends StatelessWidget {
+class ImageCenter extends GetView {
   final double height;
   final double width;
   final String path ;
-  const NotFoundImage({super.key, required this.height, required this.width,required this.path});
+  const ImageCenter({super.key, required this.height, required this.width,required this.path});
 
   @override
   Widget build(BuildContext context) {

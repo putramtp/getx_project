@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:get/get.dart';
 
-import '../../../../global/alert.dart';
+import '../../../global/alert.dart';
 import '../providers/login_provider.dart';
 
 class LoginController extends GetxController {
