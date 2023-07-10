@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../../global/functions.dart';
 import '../providers/receive_provider.dart';
 
-class ReceiveController extends GetxController {
+class CategoryController extends GetxController {
  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController barcodeController = TextEditingController();
   final TextEditingController searchController = TextEditingController();

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:getx_project/app/routes/app_pages.dart';
 
-import '../controllers/receive_controller.dart';
+import '../controllers/category_controller.dart';
 
-class ReceiveView extends GetView<ReceiveController> {
-  const ReceiveView({Key? key}) : super(key: key);
+class SearchCategory extends GetView<CategoryController> {
+  const SearchCategory({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,8 +40,9 @@ class ReceiveView extends GetView<ReceiveController> {
               child: Obx(() => controller.filteListCategories.isNotEmpty ? ListView.builder(
                   itemCount: controller.filteListCategories.length,
                   itemBuilder: (BuildContext context, int index) {
-                    var item = controller.filteListCategories[index];
+                    final String item = controller.filteListCategories[index];
                     return ListTile(
+                      onTap:()=>Get.toNamed(AppPages.itemPage,arguments:{"title":item}),
                       leading: const Icon(Icons.arrow_right),
                       trailing: const Text(
                         "Go",

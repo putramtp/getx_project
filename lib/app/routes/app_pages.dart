@@ -6,8 +6,10 @@ import '../modules/home1/bindings/home1_binding.dart';
 import '../modules/home1/views/home1_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
-import '../modules/receive/bindings/receive_binding.dart';
-import '../modules/receive/views/receive_view.dart';
+import '../modules/receive/bindings/category_binding.dart';
+import '../modules/receive/bindings/item_binding.dart';
+import '../modules/receive/views/category_view.dart';
+import '../modules/receive/views/item_view.dart';
 
 part 'app_routes.dart';
 
@@ -17,6 +19,7 @@ class AppPages {
   static const homePage = Routes.HOME;
   static const homePage1 = Routes.HOME1;
   static const receivePage = Routes.RECEIVE;
+  static const itemPage = Routes.ITEM;
 
   static final routes = [
     GetPage(
@@ -36,8 +39,13 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.RECEIVE,
-      page: () => const ReceiveView(),
+      page: () => const SearchCategory(),
       binding: ReceiveBinding(),
+    ),
+    GetPage(
+      name: _Paths.ITEM,
+      page: () => const ItemView(),
+      binding: ItemBinding(),
     ),
   ];
 }

@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 
-import '../controllers/receive_controller.dart';
+import '../controllers/category_controller.dart';
 
 class ReceiveBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ReceiveController>(
-      () => ReceiveController(),
+    Get.lazyPut<CategoryController>(
+      () => CategoryController(),
     );
   }
 }
