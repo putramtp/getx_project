@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:getx_project/app/global/size_config.dart';
 
 import '../../../global/variables.dart';
+import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/image_center.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/home1_controller.dart';
@@ -42,19 +43,18 @@ class Home1View extends GetView<Home1Controller> {
                   child: const Divider(),
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     IconButton(
                       icon: Column(
                         children: [
                           const Icon(CupertinoIcons.bag_badge_plus),
-                          Text('Receiving Item',
-                              style: TextStyle(fontSize: size * 1.2)),
+                          titleMenu("Receiving Item",size),
                         ],
                       ),
-                      iconSize: size * 4,
+                      iconSize: size * 2.8,
                       onPressed: () {
-                        Get.toNamed(AppPages.receivePage);
+                        Get.toNamed(AppPages.categoryPage);
                       },
                       tooltip: 'Receiving Item',
                     ),
@@ -62,11 +62,10 @@ class Home1View extends GetView<Home1Controller> {
                       icon: Column(
                         children: [
                           const Icon(CupertinoIcons.bag_badge_minus),
-                          Text('Output Item',
-                              style: TextStyle(fontSize: size * 1.2)),
+                          titleMenu("Output Item",size),
                         ],
                       ),
-                      iconSize: size * 4,
+                      iconSize: size * 2.8,
                       onPressed: () {},
                       tooltip: 'Output Item',
                     ),
@@ -74,11 +73,10 @@ class Home1View extends GetView<Home1Controller> {
                       icon: Column(
                         children: [
                           const Icon(CupertinoIcons.arrow_down_to_line),
-                          Text('Return Item',
-                              style: TextStyle(fontSize: size * 1.2)),
+                          titleMenu("Return Item",size),
                         ],
                       ),
-                      iconSize: size * 4,
+                      iconSize: size * 2.8,
                       onPressed: () {},
                       tooltip: 'Return Item',
                     ),

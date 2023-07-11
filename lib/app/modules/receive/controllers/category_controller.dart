@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 
 import '../../../global/functions.dart';
 import '../providers/receive_provider.dart';
 
 class CategoryController extends GetxController {
- final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController barcodeController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
   final ReceiveProvider _receivingOrderProvider = ReceiveProvider();
   RxList<String> listCategories = RxList<String>();
   RxList<String> filteListCategories = RxList<String>();
   RxBool isSearch = false.obs;
+  RxBool isLoading = true.obs;
+  
   final count = 0.obs;
   @override
   void onInit() {
@@ -20,23 +19,12 @@ class CategoryController extends GetxController {
     super.onInit();
   }
 
-  Future<void> scanBarcode() async {
-    try {
-      String barcodeScanResult = await FlutterBarcodeScanner.scanBarcode(
-          '#ff6666', 'Cancel', true, ScanMode.BARCODE);
-      barcodeController.text = barcodeScanResult;
-    } catch (e) {
-      barcodeController.text = '';
-    }
-  }
-
-  void resetBarcode() {
-    barcodeController.text = "";
-  }
+  
 
   void getCategories() async {
     listCategories.value = await _receivingOrderProvider.categories();
     filteListCategories.value = listCategories;
+    isLoading.value = false;
   }
 
   void onSearch(String query) {

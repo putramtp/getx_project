@@ -40,3 +40,11 @@ AppBar costumAppbar(String title) {
         return const Text("None"); // Or return a default content widget
     }
   }
+
+  Widget titleApp(String text,double size) {
+      return Text(text,style: TextStyle(fontSize:size * 1.3,letterSpacing:0.5,wordSpacing:2));
+  }
+
+    Widget titleMenu(String text,double size) {
+      return  Text(text,style: TextStyle(fontSize: size * 1.17));
+  }
