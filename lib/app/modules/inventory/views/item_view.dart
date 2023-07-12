@@ -16,7 +16,8 @@ class ItemView extends GetView<ItemController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       appBar: AppBar(
-        title: titleApp(controller.title,size),
+        // leading: BackButton(onPressed:()=> Get.toNamed(AppPages.inventoryPage)),
+        title: titleApp(controller.title.value,size),
       ),
       body: Obx(() {
         if (controller.isCellLoad.value) {
@@ -27,7 +28,6 @@ class ItemView extends GetView<ItemController> {
           return Padding(
             padding: const EdgeInsets.fromLTRB(20,10, 20,2),
             child: DataTable2(
-              scrollController: controller.scrollController,
               fixedTopRows: controller.fixedRows,
               border: TableBorder.all(width: 0.5, color: Colors.grey),
               headingRowColor: MaterialStateProperty.resolveWith(
@@ -44,9 +44,6 @@ class ItemView extends GetView<ItemController> {
                     size: ColumnSize.S),
                 DataColumn2(
                     label: Center(child: Text('Qty')),
-                    size: ColumnSize.S),
-                DataColumn2(
-                    label: Center(child: Text('Actions')),
                     size: ColumnSize.S),
               ],
               rows: controller.listDataRowProduct,

@@ -1,11 +1,11 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 
-import '../../../models/product_model.dart';
 
 class ReceiveController extends GetxController {
-  final ProductModel product = Get.arguments["product"];
+    // final ProductModel product = Get.arguments["product"];
+   final String  title = "receive";
   final TextEditingController barcodeController = TextEditingController();
    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 

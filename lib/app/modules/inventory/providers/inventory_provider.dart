@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../models/product_model.dart';
 
-class ReceiveProvider extends GetConnect {
+class InventoryProvider extends GetConnect {
   // @override
   // void onInit() {
   //   httpClient.baseUrl = 'https://dummyjson.com/products/categories';

@@ -1,16 +1,8 @@
-
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
-  RxInt currentIndex  = 0.obs;
-  cobaDialog() => Get.defaultDialog(
-      title: 'GetX Alert',
-      middleText: 'Simple GetX alert',
-      textConfirm: 'Okay',
-      confirmTextColor: Colors.white,
-      textCancel: 'Cancel');
 
+  final count = 0.obs;
   // @override
   // void onInit() {
   //   super.onInit();
@@ -25,9 +17,6 @@ class HomeController extends GetxController {
   // void onClose() {
   //   super.onClose();
   // }
-  void onItemTapped(int index) {
-    currentIndex.value = index;
-  }
-  
 
+  void increment() => count.value++;
 }

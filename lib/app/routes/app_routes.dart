@@ -7,18 +7,18 @@ abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
   static const LOGIN = _Paths.LOGIN;
-  static const HOME1 = _Paths.HOME1;
   static const CATEGORY = _Paths.CATEGORY;
   static const ITEM = _Paths.ITEM;
   static const RECEIVE = _Paths.RECEIVE;
+  static const INVENTORY = _Paths.INVENTORY;
 }
 
 abstract class _Paths {
   _Paths._();
   static const HOME = '/home';
   static const LOGIN = '/login';
-  static const HOME1 = '/home1';
   static const CATEGORY = '/category';
   static const ITEM = '/item';
   static const RECEIVE = '/receive';
+  static const INVENTORY = '/inventory';
 }
