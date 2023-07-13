@@ -5,8 +5,10 @@ import 'package:get/get.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/image_center.dart';
 import '../controllers/inventory_controller.dart';
-import 'category_view.dart';
+import 'content/all_item_content.dart';
+import 'content/category_content.dart';
 
 class InventoryView extends GetView<InventoryController> {
   const InventoryView({Key? key}) : super(key: key);
@@ -19,7 +21,7 @@ class InventoryView extends GetView<InventoryController> {
       appBar: AppBar(
         title: titleApp("INVENTORY", size),
       ),
-      body: Obx(() =>_buildContent(controller.selectedIndex.value)) ,
+      body: Obx(() =>_buildContent(controller.selectedIndex.value,size)) ,
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           items: const  <BottomNavigationBarItem>[
@@ -43,10 +45,11 @@ class InventoryView extends GetView<InventoryController> {
     );
   }
 
-  Widget _buildContent (int index){
+  Widget _buildContent (int index,double size){
     switch (index) {
-      case 0:return const SearchCategory();
-      default:   return const Text("none data");
+      case 0:return const CategoryContent();
+      case 1:return const AllItemContent();
+      default: return  ImageCenter(path: 'assets/images/404_Image.png',height:size *40,width:size *40);
     }
   }
 

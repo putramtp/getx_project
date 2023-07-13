@@ -19,7 +19,7 @@ class InventoryProvider extends GetConnect {
     }
   }
 
-  Future<List<ProductModel>> products(String category) async {
+  Future<List<ProductModel>> productCategory(String category) async {
     final response = await get('https://dummyjson.com/products/category/$category');
     if (response.status.hasError) {
       return Future.error(response.status);
@@ -29,4 +29,17 @@ class InventoryProvider extends GetConnect {
       return itemList;
     }
   }
+
+    Future<List<ProductModel>> allProduct() async {
+    final response = await get('https://dummyjson.com/products');
+    if (response.status.hasError) {
+      return Future.error(response.status);
+    } else {
+      final data = response.body["products"];
+      final List<ProductModel> itemList = List.from(data.map((item) => ProductModel.fromJson(item)));
+      return itemList;
+    }
+  }
+
+
 }

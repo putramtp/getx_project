@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
-class ImageCenter extends GetView {
+class ImageCenter extends StatelessWidget {
   final double height;
   final double width;
   final String path ;

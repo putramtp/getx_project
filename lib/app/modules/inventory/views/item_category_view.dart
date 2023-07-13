@@ -7,8 +7,8 @@ import '../../../global/widget/functions_widget.dart';
 import '../controllers/item_controller.dart';
 import 'package:data_table_2/data_table_2.dart';
 
-class ItemView extends GetView<ItemController> {
-  const ItemView({Key? key}) : super(key: key);
+class ItemCategoryView extends GetView<ItemController> {
+  const ItemCategoryView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +16,7 @@ class ItemView extends GetView<ItemController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       appBar: AppBar(
-        // leading: BackButton(onPressed:()=> Get.toNamed(AppPages.inventoryPage)),
-        title: titleApp(controller.title.value,size),
+        title: titleApp(controller.title,size),
       ),
       body: Obx(() {
         if (controller.isCellLoad.value) {

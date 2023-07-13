@@ -5,9 +5,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/inventory/bindings/inventory_binding.dart';
 
-import '../modules/inventory/views/category_view.dart';
-import '../modules/inventory/views/inventory_view1.dart';
-import '../modules/inventory/views/item_view.dart';
+import '../modules/inventory/views/inventory_view.dart';
+import '../modules/inventory/views/item_category_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/receive/bindings/receive_binding.dart';
@@ -19,7 +18,6 @@ class AppPages {
   AppPages._();
 
   static const homePage = Routes.HOME;
-  static const categoryPage = Routes.CATEGORY;
   static const itemPage = Routes.ITEM;
   static const receivePage = Routes.RECEIVE;
   static const inventoryPage = Routes.INVENTORY;
@@ -41,14 +39,10 @@ class AppPages {
       binding: InventoryBinding(),
     ),
     GetPage(
-      name: _Paths.CATEGORY,
-      page: () => const SearchCategory(),
-      binding: InventoryBinding(),
-    ),
-    GetPage(
       name: _Paths.ITEM,
-      page: () => const ItemView(),
+      page: () => const ItemCategoryView(),
       binding: InventoryBinding(),
+      transition: Transition.leftToRight
     ),
     GetPage(
       name: _Paths.RECEIVE,

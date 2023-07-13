@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-import '../../../global/size_config.dart';
-import '../controllers/category_controller.dart';
+import '../../../../global/size_config.dart';
+import '../../controllers/category_controller.dart';
 
-class SearchCategory extends GetView<CategoryController> {
-  const SearchCategory({Key? key}) : super(key: key);
+
+class CategoryContent extends GetView<CategoryController> {
+  const CategoryContent({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);

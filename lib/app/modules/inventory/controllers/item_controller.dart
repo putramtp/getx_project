@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,7 +6,7 @@ import '../../../models/product_model.dart';
 import '../providers/inventory_provider.dart';
 
 class ItemController extends GetxController {
-  RxString title = "".obs;
+  String title = Get.arguments["title"];
 
   final InventoryProvider _receiveProvider = InventoryProvider();
   RxList<ProductModel> listProduct = RxList<ProductModel>();
@@ -19,9 +18,7 @@ class ItemController extends GetxController {
 
   @override
   void onInit() {
-    title.value = Get.arguments["title"];
-    log("title : ${title.value}");
-    fetchDataRows(title.value);
+    fetchDataRows(title);
     super.onInit();
   }
 
@@ -36,7 +33,7 @@ class ItemController extends GetxController {
   // }
 
   void fetchDataRows(String categoryName ) async {
-    listProduct.value = await _receiveProvider.products(categoryName);
+    listProduct.value = await _receiveProvider.productCategory(categoryName);
     listDataRowProduct.value = listProduct.map((product) {
       return DataRow(cells: [
         DataCell(Text(product.title)),
