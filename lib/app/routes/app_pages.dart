@@ -10,6 +10,7 @@ import '../modules/inventory/views/item_category_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/receive/bindings/receive_binding.dart';
+import '../modules/receive/views/receive_detail_view.dart';
 import '../modules/receive/views/receive_view.dart';
 
 part 'app_routes.dart';
@@ -19,8 +20,9 @@ class AppPages {
 
   static const homePage = Routes.HOME;
   static const itemPage = Routes.ITEM;
-  static const receivePage = Routes.RECEIVE;
   static const inventoryPage = Routes.INVENTORY;
+  static const receivePage = Routes.RECEIVE;
+  static const receiveDetailPage = Routes.RECEIVE_DETAIL;
 
   static final routes = [
     GetPage(
@@ -48,6 +50,11 @@ class AppPages {
       name: _Paths.RECEIVE,
       page: () => const ReceiveView(),
       binding: ReceiveBinding(),
-    )
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_DETAIL,
+      page: () => const ReceiveDetailView(),
+      binding: ReceiveBinding(),
+    ),
   ];
 }

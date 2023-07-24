@@ -1,12 +1,21 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
-class HomeController extends GetxController {
+import '../../../routes/app_pages.dart';
 
-  final count = 0.obs;
-  // @override
-  // void onInit() {
-  //   super.onInit();
-  // }
+class HomeController extends GetxController {
+  final Rx<DateTime> currentTime = DateTime.now().obs;
+
+
+  // final count = 0.obs;
+  @override
+  void onInit() {
+    super.onInit();
+      Timer.periodic(const Duration(seconds: 1), (timer) {
+      currentTime.value = DateTime.now();
+    });
+  }
 
   // @override
   // void onReady() {
@@ -18,5 +27,12 @@ class HomeController extends GetxController {
   //   super.onClose();
   // }
 
-  void increment() => count.value++;
+  // void increment() => count.value++;
+
+  void goToInventoryPage(){
+     Get.toNamed(AppPages.inventoryPage);
+  }
+  void goToReceivePage(){
+     Get.toNamed(AppPages.receivePage);
+  }
 }

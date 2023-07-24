@@ -7,7 +7,7 @@ import '../providers/inventory_provider.dart';
 
 class AllItemController extends GetxController {
   final TextEditingController searchController = TextEditingController();
-  final InventoryProvider _receiveProvider = InventoryProvider();
+  final InventoryProvider _inventoryProvider = InventoryProvider();
   final int fixedRows = 1;
 
   List<ProductModel> listProduct = [];
@@ -20,29 +20,28 @@ class AllItemController extends GetxController {
   RxBool isSearch = false.obs;
   RxBool isCellLoad = true.obs;
 
-  @override
-  void onInit() {
-    fetchDataRowProduct () ;
-    super.onInit();
-  }
+  // @override
+  // void onInit() {
+  //   super.onInit();
+  // }
 
-  void fetchDataRowProduct () async {
+  void fetchDataRowProduct (double size) async { // calling in view
       isCellLoad.value = true;
       //Product
-      listProduct  = await _receiveProvider.allProduct();
+      listProduct  = await _inventoryProvider.allProduct();
       filterListProduct = listProduct;
       //Raw table product
-      listDataRow  = filterListProduct.map((product) {return rawDataRow(product);}).toList();
+      listDataRow  = filterListProduct.map((product) {return rawDataRow(product,size);}).toList();
       defaultListDataRow = listDataRow;
       filterListDataRow.value = defaultListDataRow;
       isCellLoad.value = false;
   } 
     
-  void onSearch(String query) {
+  void onSearch(String query,double size) {
     if (query.isNotEmpty) {
       isSearch.value = true;
       filterListProduct  = listProduct.where((item)=> searchString(query,item.title)).toList();
-      listDataRow  = filterListProduct.map((product) {return rawDataRow(product);}).toList();
+      listDataRow  = filterListProduct.map((product) {return rawDataRow(product,size);}).toList();
       filterListDataRow.value = listDataRow;
 
     } else {
@@ -53,29 +52,25 @@ class AllItemController extends GetxController {
 
   void onCloseSearch(){
      searchController.clear();
-     isSearch.value = false; 
+     isSearch.value = false;
+     filterListDataRow.value = defaultListDataRow; 
   }
 
-  void reload(){
-    isCellLoad.value = true;
-    filterListDataRow.value = [];
-    filterListDataRow.value = defaultListDataRow;
-    isCellLoad.value = false;
-  }
+  // void reload(){
+  //   isCellLoad.value = true;
+  //   filterListDataRow.value = [];
+  //   filterListDataRow.value = defaultListDataRow;
+  //   isCellLoad.value = false;
+  // }
 
-  DataRow rawDataRow(ProductModel product){
+  DataRow rawDataRow(ProductModel product,double size){
       return DataRow(cells: [
-        DataCell(Text(product.title)),
-        DataCell(Center(child: Text(product.price.toString()))),
-        DataCell(Center(child: Text("${product.discountPercentage} %"))),
-        DataCell(Center(child: Text(product.stock.toString()))),
+        DataCell(Text(product.title,style:TextStyle(fontSize: size * 1.2),)),
+        DataCell(Text(product.price.toString(),style:TextStyle(fontSize: size * 1.2))),
+        DataCell(Text("${product.discountPercentage} %",style:TextStyle(fontSize: size * 1.2))),
+        DataCell(Text(product.stock.toString(),style:TextStyle(fontSize: size * 1.2))),
       ]);
   }
-
-
-
-
-
 
   // @override
   // void onInit() {

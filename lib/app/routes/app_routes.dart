@@ -8,8 +8,11 @@ abstract class Routes {
   static const HOME = _Paths.HOME;
   static const LOGIN = _Paths.LOGIN;
   static const ITEM = _Paths.ITEM;
-  static const RECEIVE = _Paths.RECEIVE;
   static const INVENTORY = _Paths.INVENTORY;
+
+
+  static const RECEIVE = _Paths.RECEIVE;
+  static const RECEIVE_DETAIL = _Paths.RECEIVE_DETAIL;
 }
 
 abstract class _Paths {
@@ -17,6 +20,7 @@ abstract class _Paths {
   static const HOME = '/home';
   static const LOGIN = '/login';
   static const ITEM = '/item';
-  static const RECEIVE = '/receive';
   static const INVENTORY = '/inventory';
+  static const RECEIVE = '/receive';
+  static const RECEIVE_DETAIL = '/receive/detail';
 }

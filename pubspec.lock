@@ -53,10 +53,10 @@ packages:
     dependency: "direct main"
     description:
       name: data_table_2
-      sha256: d124747f10b12cdfe5c46f6ee5fd5da896be7245b4fd8a46015a6283e31176d9
+      sha256: c787ee3c104c34bacd5c006b256d401c540dc5f423fa802e663ebc7368f506d7
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.3"
+    version: "2.5.4"
   fake_async:
     dependency: transitive
     description:
@@ -78,14 +78,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  flutter_form_builder:
-    dependency: "direct main"
-    description:
-      name: flutter_form_builder
-      sha256: "9b098f6a5f8a6381016a5fe9cdccc900683917d1fb930e1c6c6c051ca0f01f08"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.0.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -94,11 +86,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
-  flutter_localizations:
-    dependency: transitive
-    description: flutter
-    source: sdk
-    version: "0.0.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -117,14 +104,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  form_builder_validators:
-    dependency: "direct main"
-    description:
-      name: form_builder_validators
-      sha256: e04998b1597d76a51da7f009ed3b2f12d4173f13e146e8744fd2453e8595a2c9
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.0.0"
   get:
     dependency: "direct main"
     description:
@@ -141,14 +120,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
-  intl:
-    dependency: transitive
-    description:
-      name: intl
-      sha256: a3715e3bc90294e971cb7dc063fbf3cd9ee0ebf8604ffeafabd9e6f16abbdbe6
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.18.0"
   js:
     dependency: transitive
     description:
@@ -234,6 +205,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  syncfusion_flutter_core:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_core
+      sha256: a38808b2636bafc6466079668232eb228b85aa7c3d83545a15cc3b593d40b315
+      url: "https://pub.dev"
+    source: hosted
+    version: "22.1.38"
+  syncfusion_flutter_datagrid:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_datagrid
+      sha256: "548ffe88308db980e8e63207b7ba9791b428dc921974089c83ab94d0fbd31e16"
+      url: "https://pub.dev"
+    source: hosted
+    version: "22.1.38"
   term_glyph:
     dependency: transitive
     description:

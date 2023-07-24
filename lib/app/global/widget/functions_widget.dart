@@ -12,10 +12,13 @@ AppBar costumAppbar(String title) {
 
 Widget titleApp(String text, double size) {
   return Text(text,
-      style:
-          TextStyle(fontSize: size * 1.3, letterSpacing: 0.5, wordSpacing: 2));
+      style:TextStyle(fontSize: size * 1.8, letterSpacing: 0.5, wordSpacing: 2),overflow: TextOverflow.ellipsis,);
 }
 
 Widget titleMenu(String text, double size) {
   return Text(text, style: TextStyle(fontSize: size * 1.17));
+}
+
+Widget testContainer(double size) {
+  return Container(height: size,width: size ,color: Colors.brown);
 }

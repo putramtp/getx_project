@@ -13,6 +13,7 @@ class AllItemContent extends GetView<AllItemController> {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
+    controller.fetchDataRowProduct(size);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: size * 2),
       child: Column(
@@ -20,9 +21,13 @@ class AllItemContent extends GetView<AllItemController> {
           Obx(
             () => TextField(
               controller: controller.searchController,
-              onChanged: controller.onSearch,
+              onChanged: (String query) {
+                controller.onSearch(query, size);
+              },
               decoration: InputDecoration(
                 border: const UnderlineInputBorder(),
+                labelStyle: TextStyle(fontSize: size * 1.4),
+                hintStyle: TextStyle(fontSize: size * 1.4),
                 labelText: 'Search',
                 hintText: 'Search item...',
                 suffixIcon: controller.isSearch.value
@@ -34,34 +39,51 @@ class AllItemContent extends GetView<AllItemController> {
             ),
           ),
           const SizedBox(height: 10),
-          const Divider(),
           Expanded(
             child: Obx(() {
               if (controller.isCellLoad.value) {
                 return const Center(child: CircularProgressIndicator());
-              } else if (controller.listDataRow.isEmpty) {
+              } else if (controller.filterListDataRow.isEmpty) {
                 return const Center(child: Text("Data is empty "));
               } else {
                 return DataTable2(
                   fixedTopRows: controller.fixedRows,
+                  columnSpacing: size *1,
+                  minWidth: 400,
                   border: TableBorder.all(width: 0.5, color: Colors.grey),
-                  headingRowColor: MaterialStateProperty.resolveWith(
-                      (states) => controller.fixedRows > 0
-                          ? hex3
-                          : Colors.transparent),
-                  columns: const [
+                  headingRowColor: MaterialStateProperty.resolveWith((states) =>
+                      controller.fixedRows > 0 ? hex3 : Colors.transparent),
+                  columns: [
                     DataColumn2(
-                        label: Center(child: Text('Title')),
-                        size: ColumnSize.L),
+                      label: Text('Title',
+                          style: TextStyle(fontSize: size * 1.2),
+                          overflow: TextOverflow.ellipsis),
+                      fixedWidth: size *10
+                    ),
                     DataColumn2(
-                        label: Center(child: Text('Price')),
-                        size: ColumnSize.S),
+                      label: Text(
+                        'Price',
+                        style: TextStyle(fontSize: size * 1.2),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      fixedWidth: size *6
+                    ),
                     DataColumn2(
-                        label: Center(child: Text('Discount')),
-                        size: ColumnSize.S),
+                      label: Text(
+                        'Discount',
+                        style: TextStyle(fontSize: size * 1.2),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      fixedWidth: size *7
+                    ),
                     DataColumn2(
-                        label: Center(child: Text('Qty')),
-                        size: ColumnSize.S),
+                      label: Text(
+                        'Qty',
+                        style: TextStyle(fontSize: size * 1.2),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      fixedWidth: size *7
+                    ),
                   ],
                   rows: controller.filterListDataRow,
                 );
