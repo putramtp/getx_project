@@ -22,8 +22,8 @@ class InventoryView extends GetView<InventoryController> {
         title: titleApp("Inventory", size),
       ),
       body: StackBodyGradient(
-        hex1: '#A8A196',
-        hex2: '#F4E0B9',
+        hex1: '#7D7463',
+        hex2: '#A8A196',
         size: size,
         child: Obx(
           () => _buildContent(controller.selectedIndex.value, size),
@@ -42,7 +42,7 @@ class InventoryView extends GetView<InventoryController> {
             ),
           ],
           currentIndex: controller.selectedIndex.value,
-          selectedItemColor: Colors.cyan[700],
+          selectedItemColor:const Color(0xff7D7463),
           selectedFontSize: size*1.4,
           iconSize :size*2,
           unselectedItemColor: Colors.black45,

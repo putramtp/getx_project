@@ -108,10 +108,10 @@ class HomeView extends GetView<HomeController> {
                       shrinkWrap: true, // Important to use with SingleChildScrollView
                       physics: const NeverScrollableScrollPhysics(), // Disable GridView's scrolling
                     children: [
-                      MenuGrid(size: size,hex1: '#A8A196',hex2: '#F4E0B9',iconData: CupertinoIcons.cube_box,status: '',title: 'Inventory',onTap:controller.goToInventoryPage),
-                      MenuGrid(size: size,hex1: '#4FC0D0',hex2: '#8eeb8a',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Receive Item',onTap:controller.goToReceivePage),
-                      MenuGrid(size: size,hex1: '#F97B22',hex2: '#FEE8B0',iconData: CupertinoIcons.bag_badge_minus,status: '0',title: 'Output Item',onTap: () {}),
-                      MenuGrid(size: size,hex1: '#FF6666',hex2: '#FCAEAE',iconData: CupertinoIcons.arrow_down_to_line_alt,status: '33',title: 'Output Item',onTap: () {}),
+                      MenuGrid(size: size,hex1: '#9A9483',hex2: '#C7BEA2',iconData: CupertinoIcons.cube_box,status: '',title: 'Inventory',onTap:controller.goToInventoryPage),
+                      MenuGrid(size: size,hex1: '#4FC0D0',hex2: '#8eeb8a',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Receive Items',onTap:controller.goToReceivePage),
+                      MenuGrid(size: size,hex1: '#FAC213',hex2: '#FEF9A7',iconData: CupertinoIcons.bag_badge_minus,status: '0',title: 'Dispatch Items',onTap:controller.goToDispatchPage),
+                      MenuGrid(size: size,hex1: '#FF6666',hex2: '#FCAEAE',iconData: CupertinoIcons.chevron_back,status: '33',title: 'Return Items',onTap: () {}),
                     ],)
                   ],
                 ),

@@ -7,7 +7,6 @@ import '../../../routes/app_pages.dart';
 class HomeController extends GetxController {
   final Rx<DateTime> currentTime = DateTime.now().obs;
 
-
   // final count = 0.obs;
   @override
   void onInit() {
@@ -34,5 +33,8 @@ class HomeController extends GetxController {
   }
   void goToReceivePage(){
      Get.toNamed(AppPages.receivePage);
+  }
+  void goToDispatchPage(){
+     Get.toNamed(AppPages.dispatchPage);
   }
 }

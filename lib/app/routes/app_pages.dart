@@ -1,6 +1,9 @@
 import 'package:get/get.dart';
 
 
+import '../modules/dispatch/bindings/dispatch_binding.dart';
+import '../modules/dispatch/views/dispatch_detail_view.dart';
+import '../modules/dispatch/views/dispatch_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/inventory/bindings/inventory_binding.dart';
@@ -19,10 +22,15 @@ class AppPages {
   AppPages._();
 
   static const homePage = Routes.HOME;
-  static const itemPage = Routes.ITEM;
+
   static const inventoryPage = Routes.INVENTORY;
+  static const itemPage = Routes.ITEM;
+
   static const receivePage = Routes.RECEIVE;
   static const receiveDetailPage = Routes.RECEIVE_DETAIL;
+
+  static const dispatchPage = Routes.DISPATCH;
+  static const dispatchDetailPage = Routes.DISPATCH_DETAIL;
 
   static final routes = [
     GetPage(
@@ -55,6 +63,16 @@ class AppPages {
       name: _Paths.RECEIVE_DETAIL,
       page: () => const ReceiveDetailView(),
       binding: ReceiveBinding(),
+    ),
+    GetPage(
+      name: _Paths.DISPATCH,
+      page: () => const DispatchView(),
+      binding: DispatchBinding(),
+    ),
+    GetPage(
+      name: _Paths.DISPATCH_DETAIL,
+      page: () => const DispatchDetailView(),
+      binding:DispatchBinding(),
     ),
   ];
 }

@@ -23,8 +23,8 @@ class CategoryContent extends GetView<CategoryController> {
               decoration: InputDecoration(
                 border: const UnderlineInputBorder(),
                 labelText: 'Search',
-                labelStyle: TextStyle(fontSize: size *1.4),
-                hintStyle: TextStyle(fontSize: size *1.3),
+                labelStyle: TextStyle(fontSize: size * 1.4),
+                hintStyle: TextStyle(fontSize: size * 1.3),
                 hintText: 'Search item categories...',
                 suffixIcon: controller.isSearch.value
                     ? IconButton(
@@ -45,18 +45,28 @@ class CategoryContent extends GetView<CategoryController> {
                           itemBuilder: (BuildContext context, int index) {
                             final String item =
                                 controller.filteListCategories[index];
-                            return ListTile(
-                              onTap: () => Get.toNamed(AppPages.itemPage,
-                                  arguments: {"title": item}),
-                              leading: const Icon(Icons.arrow_right),
-                              trailing: Text(
-                                "Go",
-                                style: TextStyle(
-                                    color: Colors.green, fontSize: size * 1.4),
+                            return Container(
+                              margin:
+                                  EdgeInsets.symmetric(vertical: size * 0.4),
+                              padding: EdgeInsets.all(size * 0.4),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.black,
+                                    width: size * 0.03,
+                                    style: BorderStyle.solid),
+                                borderRadius: BorderRadius.circular(size * 1),
                               ),
-                              title: Text(
-                                item,
-                                style: TextStyle(fontSize: size * 1.4),
+                              child: ListTile(
+                                onTap: () => Get.toNamed(AppPages.itemPage,arguments: {"title": item}),
+                                trailing: const Icon(Icons.keyboard_arrow_right_outlined,color: Colors.green,),
+                                title: Text(
+                                  item,
+                                  style: TextStyle(
+                                    fontSize: size * 1.4,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w400
+                                  ),
+                                ),
                               ),
                             );
                           })

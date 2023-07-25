@@ -6,22 +6,22 @@ import 'package:hexcolor/hexcolor.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/stack_body.dart';
-import '../controllers/receive_controller.dart';
+import '../controllers/dispatch_controller.dart';
 import 'widgets/table_view.dart';
 
-class ReceiveView extends GetView<ReceiveController> {
-  const ReceiveView({Key? key}) : super(key: key);
+class DispatchView extends GetView<DispatchController> {
+  const DispatchView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       appBar: AppBar(
-        title: titleApp("Receive Items", size),
+        title: titleApp("Dispatch items", size),
       ),
       body: StackBodyGradient(
-        hex1: "#7D7463",
-        hex2: "#90AEFF",
+        hex1: "#9FB4FF",
+        hex2: "#FFD36E",
         size: size,
         child: Column(
           children: [
@@ -32,7 +32,7 @@ class ReceiveView extends GetView<ReceiveController> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomLeft,
                   end: Alignment.topRight,
-                  colors: [HexColor("#4FC0D0"), HexColor("#8eeb8a")],
+                  colors: [HexColor("#4682A9"), HexColor("#4682A9")],
                 ),
               ),
               child: Center(
@@ -72,7 +72,7 @@ class ReceiveView extends GetView<ReceiveController> {
                 ),
               ],
               currentIndex: controller.selectedIndex.value,
-              selectedItemColor: HexColor("#4FC0D0"),
+              selectedItemColor: HexColor("#4682A9"),
               selectedFontSize: size*1.4,
               iconSize :size*2,
               elevation: 2,
@@ -95,11 +95,12 @@ class ReceiveView extends GetView<ReceiveController> {
       default:
         title = "none";
     }
-    return Text("Table Receive items $title",
+    return Text("Table Dispatch items $title",
         style: TextStyle(
-            fontSize: size * 1.35,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: size * 0.1));
+          fontSize: size * 1.35,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          letterSpacing: size * 0.1),
+    );
   }
 }

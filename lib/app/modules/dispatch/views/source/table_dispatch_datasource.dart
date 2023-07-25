@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
-import 'receive_model.dart';
+import 'dispatch_model.dart';
 
 
-class ReceiveDetailDataSource extends DataGridSource {
-  final List<Receive> receives;
+class DispatchDataSource extends DataGridSource {
+  final List<DispatchModel> receives;
   final ValueChanged<String>? onTap;
-  ReceiveDetailDataSource({required this.receives ,required this.onTap}) {
+  final double size;
+  DispatchDataSource({required this.receives ,required this.onTap,required this.size}) {
     dataGridRows = receives
         .map<DataGridRow>((dataGridRow) => DataGridRow(cells: [
               DataGridCell<int>(columnName: 'id', value: dataGridRow.id),
@@ -49,11 +50,13 @@ class ReceiveDetailDataSource extends DataGridSource {
                         dataGridCell.value.toString(),
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
+                        style:TextStyle(fontSize: size *1.2),
                       ))
                   : Text(
                       dataGridCell.value.toString(),
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
+                      style:TextStyle(fontSize: size *1.2),
 
                     ));
         }).toList());
