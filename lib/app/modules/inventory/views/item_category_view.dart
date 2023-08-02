@@ -4,7 +4,6 @@ import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/variables.dart';
 
 import '../../../global/widget/functions_widget.dart';
-import '../../../global/widget/stack_body.dart';
 import '../controllers/item_controller.dart';
 import 'package:data_table_2/data_table_2.dart';
 
@@ -19,18 +18,19 @@ class ItemCategoryView extends GetView<ItemController> {
       appBar: AppBar(
         title: titleApp(controller.title, size),
       ),
-      body: StackBodyGradient(
-        hex1: '#A8A196',
-        hex2: '#F4E0B9',
-        size: size,
-        child: Obx(() {
-          if (controller.isCellLoad.value) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (controller.listDataRowProduct.isEmpty) {
-            return const Center(child: Text("Data is empty "));
-          } else {
-            return DataTable2(
+      body: Obx(() {
+        if (controller.isCellLoad.value) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (controller.listDataRowProduct.isEmpty) {
+          return const Center(child: Text("Data is empty "));
+        } else {
+          return Container(
+            margin: EdgeInsets.all(size*1),
+            child: DataTable2(
               fixedTopRows: controller.fixedRows,
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: size*40,
               border: TableBorder.all(width: 0.5, color: Colors.grey),
               headingRowColor: MaterialStateProperty.resolveWith((states) =>
                   controller.fixedRows > 0 ? hex3 : Colors.transparent),
@@ -46,10 +46,10 @@ class ItemCategoryView extends GetView<ItemController> {
                     label: Center(child: Text('Qty')), size: ColumnSize.S),
               ],
               rows: controller.listDataRowProduct,
-            );
-          }
-        }),
-      ),
+            ),
+          );
+        }
+      }),
     );
   }
 }

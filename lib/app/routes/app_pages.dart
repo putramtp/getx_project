@@ -1,13 +1,11 @@
 import 'package:get/get.dart';
 
-
 import '../modules/dispatch/bindings/dispatch_binding.dart';
 import '../modules/dispatch/views/dispatch_detail_view.dart';
 import '../modules/dispatch/views/dispatch_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/inventory/bindings/inventory_binding.dart';
-
 import '../modules/inventory/views/inventory_view.dart';
 import '../modules/inventory/views/item_category_view.dart';
 import '../modules/login/bindings/login_binding.dart';
@@ -15,6 +13,8 @@ import '../modules/login/views/login_view.dart';
 import '../modules/receive/bindings/receive_binding.dart';
 import '../modules/receive/views/receive_detail_view.dart';
 import '../modules/receive/views/receive_view.dart';
+import '../modules/return/bindings/return_binding.dart';
+import '../modules/return/views/return_view.dart';
 
 part 'app_routes.dart';
 
@@ -31,6 +31,8 @@ class AppPages {
 
   static const dispatchPage = Routes.DISPATCH;
   static const dispatchDetailPage = Routes.DISPATCH_DETAIL;
+
+  static const returnPage = Routes.RETURN;
 
   static final routes = [
     GetPage(
@@ -49,11 +51,10 @@ class AppPages {
       binding: InventoryBinding(),
     ),
     GetPage(
-      name: _Paths.ITEM,
-      page: () => const ItemCategoryView(),
-      binding: InventoryBinding(),
-      transition: Transition.leftToRight
-    ),
+        name: _Paths.ITEM,
+        page: () => const ItemCategoryView(),
+        binding: InventoryBinding(),
+        transition: Transition.leftToRight),
     GetPage(
       name: _Paths.RECEIVE,
       page: () => const ReceiveView(),
@@ -72,7 +73,12 @@ class AppPages {
     GetPage(
       name: _Paths.DISPATCH_DETAIL,
       page: () => const DispatchDetailView(),
-      binding:DispatchBinding(),
+      binding: DispatchBinding(),
+    ),
+    GetPage(
+      name: _Paths.RETURN,
+      page: () => const ReturnView(),
+      binding: ReturnBinding(),
     ),
   ];
 }

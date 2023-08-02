@@ -20,8 +20,8 @@ class DispatchView extends GetView<DispatchController> {
         title: titleApp("Dispatch items", size),
       ),
       body: StackBodyGradient(
-        hex1: "#9FB4FF",
-        hex2: "#FFD36E",
+        hex1: "#61677A",
+        hex2: "#272829",
         size: size,
         child: Column(
           children: [
@@ -72,10 +72,6 @@ class DispatchView extends GetView<DispatchController> {
                 ),
               ],
               currentIndex: controller.selectedIndex.value,
-              selectedItemColor: HexColor("#4682A9"),
-              selectedFontSize: size*1.4,
-              iconSize :size*2,
-              elevation: 2,
               onTap: controller.onSelectedBNavigation)),
     );
   }

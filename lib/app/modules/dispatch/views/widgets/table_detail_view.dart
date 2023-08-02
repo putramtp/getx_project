@@ -63,7 +63,7 @@ class TableDetailView extends GetView<DispatchDetailController> {
               columns:  [
                 DataColumn2(
                   label: Text('Name',style: TextStyle(fontSize:size*1.2),),
-                  fixedWidth: size *10
+                  fixedWidth: size *16
                 ),
                 DataColumn2(
                   label: Text('Price',style: TextStyle(fontSize:size*1.2)),
@@ -71,11 +71,11 @@ class TableDetailView extends GetView<DispatchDetailController> {
                 ),
                 DataColumn2(
                   label: Text('Qty',style: TextStyle(fontSize:size*1.2)),
-                  fixedWidth: size *4
+                  fixedWidth: size *6
 
                 ),
                 DataColumn2(
-                  fixedWidth: size *11,
+                  fixedWidth: size *6,
                   label: Center(child: Text('Scan',style: TextStyle(fontSize:size*1.2))),
                 ),
               ],

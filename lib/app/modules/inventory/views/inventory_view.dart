@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/image_center.dart';
-import '../../../global/widget/stack_body.dart';
 import '../controllers/inventory_controller.dart';
 import 'content/all_item_content.dart';
 import 'content/category_content.dart';
@@ -21,13 +20,8 @@ class InventoryView extends GetView<InventoryController> {
       appBar: AppBar(
         title: titleApp("Inventory", size),
       ),
-      body: StackBodyGradient(
-        hex1: '#7D7463',
-        hex2: '#A8A196',
-        size: size,
-        child: Obx(
-          () => _buildContent(controller.selectedIndex.value, size),
-        ),
+      body: Obx(
+        () => _buildContent(controller.selectedIndex.value, size),
       ),
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
@@ -42,10 +36,6 @@ class InventoryView extends GetView<InventoryController> {
             ),
           ],
           currentIndex: controller.selectedIndex.value,
-          selectedItemColor:const Color(0xff7D7463),
-          selectedFontSize: size*1.4,
-          iconSize :size*2,
-          unselectedItemColor: Colors.black45,
           onTap: controller.onBottomNavigationTapped,
         ),
       ),
@@ -62,7 +52,7 @@ class InventoryView extends GetView<InventoryController> {
         return ImageCenter(
             path: 'assets/images/404_Image.png',
             height: size * 40,
-            width: size * 40);
+            width: size * 40, desc: Container());
     }
   }
 }

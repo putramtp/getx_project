@@ -19,8 +19,8 @@ class DispatchDetailView extends GetView<DispatchDetailController> {
           title: titleApp("Detail Dispatch #${controller.title}", size),
         ),
         body: StackBodyGradient(
-        hex1: "#9FB4FF",
-        hex2: "#FFD36E",
+        hex1: "#61677A",
+        hex2: "#272829",
         size: size, 
         child: const TableDetailView(),
 

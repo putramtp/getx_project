@@ -51,28 +51,21 @@ class DispatchDetailController extends GetxController {
       DataCell(Text(chart.title,style: TextStyle(fontSize:size*1.2))),
       DataCell(Text(chart.price.toString(),style: TextStyle(fontSize:size*1.2))),
       DataCell(Text(chart.quantity.toString(),style: TextStyle(fontSize:size*1.2))),
-      DataCell(!chart.isHaveScan
-          ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                  onPressed: () => scanBarcode(chart,size),
-                  icon: Icon(
-                    Icons.camera_alt_outlined,
-                    color: Colors.blue[400],
-                    size: size *2,
-                  )),
-              // IconButton(
-              //     onPressed: () => dialogSaveScanning(chart,"1210293838",size),
-              //     icon: Icon(
-              //       Icons.save_alt,
-              //       color: Colors.red[400],
-              //       size: size *2,
-              //     )),
-
-            ],
-          )
-          : const Center(child: Badge(label: Text("succes") ,largeSize:23,backgroundColor: Colors.green,offset: Offset(10,10),))),
+      DataCell(Center(
+            child: !chart.isHaveScan
+                ? IconButton(
+                    onPressed: () => scanBarcode(chart, size),
+                    icon: Icon(
+                      Icons.camera_alt_outlined,
+                      color: Colors.blue[400],
+                      size: size * 2,
+                    ))
+                : Icon(
+                      Icons.camera_alt_outlined,
+                      color: Colors.grey[400],
+                      size: size * 2,
+                    ))
+      )
     ]);
   }
 
@@ -106,9 +99,10 @@ class DispatchDetailController extends GetxController {
                 onPressed: () {
                   Get.back();
                   Get.snackbar("", "${chart.id} success",
-                    titleText: const Text(
+                    snackPosition: SnackPosition.BOTTOM,
+                    titleText:  Text(
                       "Status",
-                      style: TextStyle(color: Colors.green),
+                      style: TextStyle(color: Colors.green,fontSize: size * 1.6),
                     ),
                   );
                 },

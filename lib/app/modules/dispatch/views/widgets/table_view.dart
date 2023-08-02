@@ -21,7 +21,7 @@ class TableView extends GetView<DispatchController> {
         ? SfDataGridTheme(
             data: SfDataGridThemeData(
                 // headerColor: HexColor("#F2EE9D"),
-                gridLineColor: HexColor("#F9F54B"),
+                gridLineColor: HexColor("#FFE17B"),
                 gridLineStrokeWidth: 2),
             child: Obx(
               () => SfDataGrid(

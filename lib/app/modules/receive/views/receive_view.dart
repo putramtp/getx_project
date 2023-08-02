@@ -18,6 +18,8 @@ class ReceiveView extends GetView<ReceiveController> {
     return Scaffold(
       appBar: AppBar(
         title: titleApp("Receive Items", size),
+       backgroundColor: const Color(0xff90AEFF),
+        leading: BackButton(color: Colors.white,onPressed: (){Get.back();}),
       ),
       body: StackBodyGradient(
         hex1: "#7D7463",
@@ -72,10 +74,6 @@ class ReceiveView extends GetView<ReceiveController> {
                 ),
               ],
               currentIndex: controller.selectedIndex.value,
-              selectedItemColor: HexColor("#4FC0D0"),
-              selectedFontSize: size*1.4,
-              iconSize :size*2,
-              elevation: 2,
               onTap: controller.onSelectedBNavigation)),
     );
   }

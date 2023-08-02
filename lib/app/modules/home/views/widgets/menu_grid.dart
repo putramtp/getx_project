@@ -37,14 +37,14 @@ class MenuGrid extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.only(left: size * 2),
+          padding: EdgeInsets.only(left: size * 1),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                margin:EdgeInsets.symmetric(vertical: size * 2),
+                margin:EdgeInsets.symmetric(vertical: size *1),
                 width: size * 4,
-                height: size * 4,
+                height: size * 3,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
@@ -53,35 +53,32 @@ class MenuGrid extends StatelessWidget {
                     color: HexColor(hex1),
                     size: size * 1.9),
               ),
-              SizedBox(height:size*0.8),
-              Expanded(
-                  child: Column(
+              SizedBox(height: size*1),
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     status,
                     style: TextStyle(
-                        fontSize: size * 1.6,
+                        fontSize: size * 1,
                         fontWeight: FontWeight.bold,
                         color: Colors.white),
                   ),
                   Text(
                     title,
                     style: TextStyle(
-                        fontSize: size * 1.4,
+                        fontSize: size * 1,
                         fontWeight: FontWeight.bold,
                         color: Colors.white),
                   ),
-                ],
-              )),
-              Padding(
-                padding: EdgeInsets.only(bottom: size * 1),
-                child: Text("Tap to View",
-                    style: TextStyle(
-                        fontSize: size * 1,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70)),
-              ),
+                    ],
+                  ),
+                  Text("Tap to View",
+                      style: TextStyle(
+                          fontSize: size * 0.8,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white70)),
             ],
           ),
         ),

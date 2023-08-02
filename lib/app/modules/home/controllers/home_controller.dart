@@ -37,4 +37,7 @@ class HomeController extends GetxController {
   void goToDispatchPage(){
      Get.toNamed(AppPages.dispatchPage);
   }
+  void goToReturnPage(){
+     Get.toNamed(AppPages.returnPage);
+  }
 }
