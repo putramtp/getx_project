@@ -19,6 +19,8 @@ dependencies:
   syncfusion_flutter_datagrid: ^22.1.38
   syncfusion_flutter_core: ^22.1.38
   google_fonts: ^5.1.0
+  get_storage: ^2.1.1
+  shared_preferences: ^2.2.2
   
 
 dev_dependencies: 

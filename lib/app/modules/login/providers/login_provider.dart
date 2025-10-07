@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-
+import 'package:getx_project/app/global/variables.dart';
 
 class LoginProvider extends GetConnect {
   // @override
@@ -7,8 +7,9 @@ class LoginProvider extends GetConnect {
   //   httpClient.baseUrl = 'https://dummyjson.com/';
   // }
 
-   Future<Response> login(String username, String password) async {
-   final response = await post('https://dummyjson.com/auth/login',
+  Future<Response> login(String username, String password) async {
+    final response = await post(
+      '$baseUrlApi/login',
       {
         'username': username,
         'password': password,
@@ -16,4 +17,4 @@ class LoginProvider extends GetConnect {
     );
     return response;
   }
-  } 
+}

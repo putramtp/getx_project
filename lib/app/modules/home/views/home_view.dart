@@ -24,14 +24,54 @@ class HomeView extends GetView<HomeController> {
         // toolbarHeight: size *3.8,
         actions: [Padding(
           padding:  EdgeInsets.only(right: size *2),
-          child:  CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Center(
-              child: IconButton(onPressed:(){
-                Get.defaultDialog(title: "Account Detail",middleText: "This is user Informations");
-              }, icon: const Icon(Icons.account_circle_rounded,color: Color(0xff2D6187))),
+         child: CircleAvatar(
+  backgroundColor: Colors.white,
+  child: Center(
+    child: IconButton(
+      onPressed: () {
+        Get.bottomSheet(
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info, color: Color(0xff2D6187)),
+                  title: const Text("Account Info"),
+                  onTap: () {
+                    Get.back(); // close sheet
+                    final String userName =  controller.getName();
+                    Get.defaultDialog(
+                      title: "Account Detail",
+                      middleText: "Your logged in as:\n $userName",
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text("Logout"),
+                  onTap: () {
+                    Get.back(); // close sheet
+                    controller.logout();
+                    Get.snackbar("Logout", "You have been logged out");
+                  },
+                ),
+              ],
             ),
           ),
+        );
+      },
+      icon: const Icon(
+        Icons.account_circle_rounded,
+        color: Color(0xff2D6187),
+      ),
+    ),
+  ),
+),
+
         )],
         flexibleSpace: Container(decoration: BoxDecoration(gradient:LinearGradient(
           begin: Alignment.bottomLeft,

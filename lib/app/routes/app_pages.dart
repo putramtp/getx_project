@@ -15,6 +15,7 @@ import '../modules/receive/views/receive_detail_view.dart';
 import '../modules/receive/views/receive_view.dart';
 import '../modules/return/bindings/return_binding.dart';
 import '../modules/return/views/return_view.dart';
+import '../middleware/auth_middleware.dart';
 
 part 'app_routes.dart';
 
@@ -22,6 +23,7 @@ class AppPages {
   AppPages._();
 
   static const homePage = Routes.HOME;
+  static const loginPage = Routes.LOGIN;
 
   static const inventoryPage = Routes.INVENTORY;
   static const itemPage = Routes.ITEM;
@@ -44,6 +46,7 @@ class AppPages {
       name: _Paths.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: _Paths.INVENTORY,

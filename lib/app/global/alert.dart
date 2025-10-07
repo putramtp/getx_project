@@ -16,7 +16,7 @@ successAlert(String message) {
     '',
     message,
     titleText: const Text("Success! ",style: TextStyle(fontSize:14,fontWeight: FontWeight.bold,letterSpacing: 2),),
-    colorText: Colors.green,
+    colorText: Colors.white,
     icon: const Icon(Icons.check_circle_rounded,color: Colors.green,),
   );
 }

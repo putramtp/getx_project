@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:getx_project/app/modules/services/auth_service.dart';
 
 import 'app/global/size_config.dart';
 import 'app/routes/app_pages.dart';
 
 void main() {
+  Get.put(AuthService()); 
   runApp(const MyApp());
 }
 
