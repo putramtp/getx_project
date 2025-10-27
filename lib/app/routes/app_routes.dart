@@ -14,6 +14,12 @@ abstract class Routes {
   static const RECEIVE = _Paths.RECEIVE;
   static const RECEIVE_DETAIL = _Paths.RECEIVE_DETAIL;
 
+  static const RECEIVE_ORDER = _Paths.RECEIVE_ORDER;
+  static const RECEIVE_ORDER_DETAIL = _Paths.RECEIVE_ORDER_DETAIL;
+
+  static const OUTFLOW_ORDER = _Paths.OUTFLOW_ORDER;
+  static const OUTFLOW_ORDER_DETAIL = _Paths.OUTFLOW_ORDER_DETAIL;
+
   static const DISPATCH = _Paths.DISPATCH;
   static const DISPATCH_DETAIL = _Paths.DISPATCH_DETAIL;
   static const RETURN = _Paths.RETURN;
@@ -29,6 +35,12 @@ abstract class _Paths {
 
   static const RECEIVE = '/receive';
   static const RECEIVE_DETAIL = '/receive/detail';
+
+  static const RECEIVE_ORDER = '/receive-order';
+  static const RECEIVE_ORDER_DETAIL = '/receive-order/detail';
+
+  static const OUTFLOW_ORDER = '/outflow-order';
+  static const OUTFLOW_ORDER_DETAIL = '/outflow-order/detail';
 
   static const DISPATCH = '/dispatch';
   static const DISPATCH_DETAIL = '/dispatch/detail';

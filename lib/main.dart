@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:getx_project/app/api_providers.dart';
 import 'package:getx_project/app/modules/services/auth_service.dart';
 
 import 'app/global/size_config.dart';
 import 'app/routes/app_pages.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   Get.put(AuthService()); 
+  Get.put<ApiProvider>(ApiProvider()); 
   runApp(const MyApp());
 }
 
@@ -21,7 +24,7 @@ class MyApp extends StatelessWidget {
     final double size = SizeConfig.defaultSize;
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "Application",
+      title: "Warehouse App",
        theme: ThemeData(
         useMaterial3: true,
         primaryColor: const Color(0xff90AEFF),

@@ -1,4 +1,12 @@
 import 'package:get/get.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_view.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_view.dart';
 
 import '../modules/dispatch/bindings/dispatch_binding.dart';
 import '../modules/dispatch/views/dispatch_detail_view.dart';
@@ -30,6 +38,12 @@ class AppPages {
 
   static const receivePage = Routes.RECEIVE;
   static const receiveDetailPage = Routes.RECEIVE_DETAIL;
+
+  static const receiveOrderPage = Routes.RECEIVE_ORDER;
+  static const receiveOrderDetailPage = Routes.RECEIVE_ORDER_DETAIL;
+
+  static const outflowOrderPage = Routes.OUTFLOW_ORDER;
+  static const outflowOrderDetailPage = Routes.OUTFLOW_ORDER_DETAIL;
 
   static const dispatchPage = Routes.DISPATCH;
   static const dispatchDetailPage = Routes.DISPATCH_DETAIL;
@@ -67,6 +81,26 @@ class AppPages {
       name: _Paths.RECEIVE_DETAIL,
       page: () => const ReceiveDetailView(),
       binding: ReceiveBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER,
+      page: () => const ReceiveOrderView(),
+      binding: ReceiveOrderBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER_DETAIL,
+      page: () => const ReceiveOrderDetailView(),
+      binding: ReceiveOrderDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.OUTFLOW_ORDER,
+      page: () => const OutflowOrderView(),
+      binding: OutflowOrderBinding(),
+    ),
+    GetPage(
+      name: _Paths.OUTFLOW_ORDER_DETAIL,
+      page: () => const OutflowOrderDetailView(),
+      binding: OutflowOrderDetailBinding(),
     ),
     GetPage(
       name: _Paths.DISPATCH,

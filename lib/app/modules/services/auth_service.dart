@@ -4,57 +4,74 @@ import 'package:get_storage/get_storage.dart';
 
 /// A GetxService responsible for managing the user's authentication token and state.
 class AuthService extends GetxService {
-  // Use GetStorage for persistent storage
+  // Persistent local storage
   final GetStorage _storage = GetStorage();
+
+  // Storage keys
   final String _tokenKey = 'auth_token';
   final String _usernameKey = 'username_key';
-  
-  // FIXED: Use reactive variables (RxnString) for observable state.
-  // This replaces the plain String? variables and enables reactivity.
+  final String _rolesKey = 'roles_key'; // ✅ FIXED: was mistakenly the same as username_key
+
+  // Reactive variables for reactivity
   final RxnString token = RxnString(null); 
   final RxnString username = RxnString(null); 
+  final RxnString roles = RxnString(null); 
 
   @override
   void onInit() {
     super.onInit();
-    
-    // 1. Load token and username from storage into the reactive variables on service startup.
-    // This happens only on Hot Restart (full app start), maintaining state otherwise.
+
+    // Load saved credentials on startup
     token.value = _storage.read<String>(_tokenKey); 
     username.value = _storage.read<String>(_usernameKey);
+    roles.value = _storage.read<String>(_rolesKey);
 
     if (token.value != null) {
-      log('AuthService initialized. Token loaded from storage: ${token.value}'); 
+      log('✅ AuthService initialized. Token loaded: ${token.value}');
+    } else {
+      log('ℹ️ AuthService initialized with no stored token.');
     }
   }
 
-  /// Sets the received token, saves it to storage, and updates the reactive state.
-  void setToken(String newToken) {
-    token.value = newToken; // Update reactive state
-    _storage.write(_tokenKey, newToken); // Save token to persistent storage
-    // log('Auth token set and persisted successfully: ${token.value}'); 
+  /// ✅ Public getter to retrieve current token directly
+  String? getToken() {
+    return token.value ?? _storage.read<String>(_tokenKey);
   }
 
-  /// Sets the username, saves it to storage, and updates the reactive state.
+  /// Save token to memory and storage
+  void setToken(String newToken) {
+    token.value = newToken;
+    _storage.write(_tokenKey, newToken);
+    log('🔐 Token saved: $newToken');
+  }
+
+  /// Save username to memory and storage
   void setUsername(String? newUsername) {
-    username.value = newUsername; // Update reactive state
-    _storage.write(_usernameKey, newUsername); // Save username to persistent storage
-    // log('Auth username set and persisted successfully: ${username.value}');
+    username.value = newUsername;
+    _storage.write(_usernameKey, newUsername);
+  }
+
+  /// Save roles to memory and storage
+  void setRoles(String? newRoles) {
+    roles.value = newRoles;
+    _storage.write(_rolesKey, newRoles);
   }
   
-  /// Clears the token (used during logout) from memory and storage.
+  /// Clear all credentials (used on logout)
   void clearToken() {
-    token.value = null; // Clear reactive state
-    username.value = null; // Clear reactive state
-    
-    _storage.remove(_tokenKey); // Remove token from persistent storage
-    _storage.remove(_usernameKey); // Remove username from persistent storage
-    
-    log('Auth credentials cleared from memory and storage.'); 
+    token.value = null;
+    username.value = null;
+    roles.value = null;
+
+    _storage.remove(_tokenKey);
+    _storage.remove(_usernameKey);
+    _storage.remove(_rolesKey);
+
+    log('🚪 Auth credentials cleared.');
   }
 
-  // Helper getters for convenience (reading the reactive value)
-  // Use these in your UI like: Get.find<AuthService>().currentToken
+  /// Convenience getters
   String? get currentToken => token.value;
   String? get currentUsername => username.value;
+  String? get currentUserRoles => roles.value;
 }

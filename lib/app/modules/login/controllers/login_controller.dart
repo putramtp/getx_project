@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
 class LoginController extends GetxController {
-  final LoginProvider _apiLogin = LoginProvider();
+  final LoginProvider _apiLogin = Get.find<LoginProvider>();
   final AuthService _authService = Get.find<AuthService>();
 
   // Reactive states
@@ -25,7 +25,7 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadSavedLogin();
+    loadSavedLogin().then((_) => checkAlreadyLoggedIn());
   }
 
   /// ✅ Load saved login if "remember me" was checked
@@ -64,6 +64,17 @@ class LoginController extends GetxController {
     }
   }
 
+  /// ✅ Check if already logged in
+    Future<void> checkAlreadyLoggedIn() async {
+      final token = _authService.getToken(); // or read from storage if you use GetStorage
+      if (token != null && token.isNotEmpty) {
+        log("🔑 User already logged in with token: $token");
+        Get.offAllNamed(Routes.HOME);
+      } else {
+        log("ℹ️ No active session found, stay on login page.");
+      }
+    }
+
   /// ✅ Login API call
   Future<void> authLogin() async {
     if (isLoading.value) return;
@@ -74,24 +85,28 @@ class LoginController extends GetxController {
         emailValue.value,
         passwordValue.value,
       );
-
+      // log("Login API Response: ${response.body}", name: "LoginController");
+      // log("Status Code: ${response.statusCode}", name: "LoginController");
+      // log("Status Text: ${response.statusText}", name: "LoginController");
       if (response.statusCode == 200 && response.body != null) {
         final data = response.body['data'];
         final token = data?['token'];
         final username = data?['name'];
+        final roles = data?['roles'];
 
         if (token != null && token.isNotEmpty) {
           await saveLogin(); // <- ✅ Save email/password if rememberMe is checked
           _authService.setToken(token);
           _authService.setUsername(username);
+          var rawRoles = (roles.isNotEmpty) ? roles.join(', ') : '-';
+          _authService.setRoles(rawRoles);
           successAlert("Success Login as ${username ?? 'User'}");
           Get.offAllNamed(Routes.HOME);
         } else {
           errorAlert("Login successful, but token missing.");
         }
       } else {
-        final msg = response.body?['message'] ??
-            "Login failed. Please check your credentials.";
+        final msg = response.body?['message'] ?? "Login failed. Please check your credentials.";
         errorAlert(msg);
       }
     } catch (e) {

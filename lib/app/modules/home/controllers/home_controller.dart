@@ -37,6 +37,12 @@ class HomeController extends GetxController {
   void goToReceivePage(){
      Get.toNamed(AppPages.receivePage);
   }
+  void goToReceiveOrderPage(){
+     Get.toNamed(AppPages.receiveOrderPage);
+  }
+  void goToOutflowOderPage(){
+     Get.toNamed(AppPages.outflowOrderPage);
+  }
   void goToDispatchPage(){
      Get.toNamed(AppPages.dispatchPage);
   }
@@ -46,6 +52,11 @@ class HomeController extends GetxController {
 
   String getName(){
     String? name = _authService.currentUsername;
+    return name ?? "";
+  }
+
+  String getRoles(){
+    String? name = _authService.currentUserRoles;
     return name ?? "";
   }
 

@@ -17,6 +17,8 @@ class HomeView extends GetView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final String userName =  controller.getName();
+    final String userRoles =  controller.getRoles();
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
@@ -43,7 +45,6 @@ class HomeView extends GetView<HomeController> {
                   title: const Text("Account Info"),
                   onTap: () {
                     Get.back(); // close sheet
-                    final String userName =  controller.getName();
                     Get.defaultDialog(
                       title: "Account Detail",
                       middleText: "Your logged in as:\n $userName",
@@ -151,8 +152,8 @@ class HomeView extends GetView<HomeController> {
                                   width: size *5,
                                 ),
                                 SizedBox(height: size * 1),
-                                Text("God Morning Putra Pardede",style:TextStyle(color:Colors.white,fontWeight: FontWeight.bold,fontSize: size *2.2)),
-                                Text("Your Role : Admin",style:TextStyle(color:Colors.white60,fontWeight: FontWeight.w700,fontSize: size *1.3,letterSpacing:1)),
+                                Text("God Morning $userName",style:TextStyle(color:Colors.white,fontWeight: FontWeight.bold,fontSize: size *2.2)),
+                                Text("Your Role : $userRoles",style:TextStyle(color:Colors.white60,fontWeight: FontWeight.w700,fontSize: size *1.3,letterSpacing:1)),
                               
                               ]
                             ),
@@ -165,9 +166,11 @@ class HomeView extends GetView<HomeController> {
                             shrinkWrap: true, // Important to use with SingleChildScrollView
                             physics: const NeverScrollableScrollPhysics(), // Disable GridView's scrolling
                           children: [
-                            MenuGrid(size: size,hex1: '#4FC0D0',hex2: '#8eeb8a',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Receive Items',onTap:controller.goToReceivePage),
-                            MenuGrid(size: size,hex1: '#FAC213',hex2: '#FEF9A7',iconData: CupertinoIcons.bag_badge_minus,status: '0',title: 'Dispatch Items',onTap:controller.goToDispatchPage),
-                            MenuGrid(size: size,hex1: '#F67280',hex2: '#355C7D',iconData: CupertinoIcons.chevron_back,status: '33',title: 'Return Items',onTap: controller.goToReturnPage),
+                            MenuGrid(size: size,hex1: '#8060be',hex2: '#71718c',iconData: CupertinoIcons.bag_badge_plus,status: '0',title: 'Penerimaan Barang',onTap:controller.goToReceiveOrderPage),
+                            MenuGrid(size: size,hex1: '#FF9B00',hex2: '#FFC900',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Outflow Order New',onTap:controller.goToOutflowOderPage),
+                            MenuGrid(size: size,hex1: '#4FC0D0',hex2: '#8eeb8a',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Receive Order',onTap:controller.goToReceivePage),
+                            MenuGrid(size: size,hex1: '#FAC213',hex2: '#FEF9A7',iconData: CupertinoIcons.bag_badge_minus,status: '0',title: 'Outflow Order',onTap:controller.goToDispatchPage),
+                            MenuGrid(size: size,hex1: '#F67280',hex2: '#355C7D',iconData: CupertinoIcons.chevron_back,status: '33',title: 'Return Order',onTap: controller.goToReturnPage),
                           ],),
                           SizedBox(height: size *2),
                           Row(

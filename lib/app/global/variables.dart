@@ -8,8 +8,6 @@ Color hex5 = const Color(0xFF94ADD7);
 Color hex6 = const Color(0xFF7C73C0);
 
 // const  String baseUrl = "http://mc.mastersystembackend.test";
-const  String baseUrl = "https://allowing-toucan-ghastly.ngrok-free.app";
-const  String baseUrlApi = "$baseUrl/api";
 
 
 
