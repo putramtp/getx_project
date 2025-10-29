@@ -166,7 +166,7 @@ class HomeView extends GetView<HomeController> {
                             shrinkWrap: true, // Important to use with SingleChildScrollView
                             physics: const NeverScrollableScrollPhysics(), // Disable GridView's scrolling
                           children: [
-                            MenuGrid(size: size,hex1: '#8060be',hex2: '#71718c',iconData: CupertinoIcons.bag_badge_plus,status: '0',title: 'Penerimaan Barang',onTap:controller.goToReceiveOrderPage),
+                            MenuGrid(size: size,hex1: '#8060be',hex2: '#71718c',iconData: CupertinoIcons.bag_badge_plus,status: '0',title: 'Penerimaan Barang',onTap:controller.goToReceiveOrderHomePage),
                             MenuGrid(size: size,hex1: '#FF9B00',hex2: '#FFC900',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Outflow Order New',onTap:controller.goToOutflowOderPage),
                             MenuGrid(size: size,hex1: '#4FC0D0',hex2: '#8eeb8a',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Receive Order',onTap:controller.goToReceivePage),
                             MenuGrid(size: size,hex1: '#FAC213',hex2: '#FEF9A7',iconData: CupertinoIcons.bag_badge_minus,status: '0',title: 'Outflow Order',onTap:controller.goToDispatchPage),

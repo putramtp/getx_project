@@ -32,7 +32,7 @@ Widget testContainer(double size) {
   return Container(height: size, width: size, color: Colors.brown);
 }
 
-PreferredSizeWidget appBarPO(String title,
+PreferredSizeWidget appBarReceive(String title,
     {IconData icon = Icons.inventory_2_rounded, String? routeBackName}) {
   return AppBar(
     automaticallyImplyLeading: false,

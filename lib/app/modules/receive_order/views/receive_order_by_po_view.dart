@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/models/purchase_order_model.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
-import '../controllers/receive_order_controller.dart';
+import '../controllers/receive_order_by_po_controller.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class ReceiveOrderView extends GetView<ReceiveOrderController> {
-  const ReceiveOrderView({Key? key}) : super(key: key);
+class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
+  const ReceiveOrderByPoView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class ReceiveOrderView extends GetView<ReceiveOrderController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarPO("Purchase Order List", icon: Icons.list_alt_sharp,routeBackName:AppPages.homePage),
+        child: appBarReceive("Purchase Order List", icon: Icons.list_alt_sharp,routeBackName:AppPages.receiveHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -131,7 +131,7 @@ class ReceiveOrderView extends GetView<ReceiveOrderController> {
 
                   final orders = controller.filteredOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('Tidak ada data PO.'));
+                    return const Center(child: Text('No purhcase order data.'));
                   }
 
                   return ListView.builder(
@@ -161,7 +161,7 @@ class ReceiveOrderView extends GetView<ReceiveOrderController> {
                           color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: const Color(0xFF3B82F6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

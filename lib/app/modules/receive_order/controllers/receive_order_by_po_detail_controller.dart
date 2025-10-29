@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/models/purchase_order_line_item_model.dart';
 import 'package:getx_project/app/models/purchase_order_model.dart';
+import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_controller.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-class ReceiveOrderDetailController extends GetxController {
+class ReceiveOrderByPoDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
 
   var items = <Map<String, dynamic>>[].obs;
@@ -28,20 +29,20 @@ class ReceiveOrderDetailController extends GetxController {
 
     if (args != null && args is PurchaseOrder) {
       currentOrder = args;
-      loadReceiveOrderItems();
+      loadPurchaseOrderItems();
     } else {
-      log("⚠️ Invalid or missing arguments in ReceiveOrderDetailController: $args");
+      log("⚠️ Invalid or missing arguments in currentOrder: $args");
     }
   }
 
   /// 🔹 Fetch items for this order
-  Future<void> loadReceiveOrderItems() async {
+  Future<void> loadPurchaseOrderItems() async {
     try {
       isLoading.value = true;
       final orderId = currentOrder.id;
 
       final List<PurchaseOrderLineItem> data =
-          await provider.getReceiveOrderItems(orderId);
+          await provider.getPurchaseOrderLineItem(orderId);
       log("loadReceiveOrderItems success : ${jsonEncode(data.map((e) => e.toJson()).toList())}");
       // Normalize each item: ensure filled list & received count are consistent
       final normalizedData = data.map((item) {
@@ -238,12 +239,12 @@ class ReceiveOrderDetailController extends GetxController {
 
       final Map<String, dynamic> payload = {
         "receive_number": receiveNumber.value,
-        "id": po.id,
+        "po_id": po.id,
         "items": items.map((e) => e).toList(), // ensure list of maps
       };
 
       // log("📦 Payload:\n${jsonEncode(payload)}", name: 'startReceivingItem');
-      final response = await provider.postReceivedData(payload);
+      final response = await provider.postPoLineToReceivedData(payload);
 
       if (response.isOk && (response.body?['success'] == true)) {
         // log("Receiving process for $poNumber completed successfully.", name: 'startReceivingItem');
@@ -260,10 +261,17 @@ class ReceiveOrderDetailController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
           icon: const Icon(Icons.check_circle, color: Colors.green),
         );
+
         // ✅ Navigate to the target page after a short delay
-        Future.delayed(const Duration(milliseconds: 500), () {
-          Get.toNamed(AppPages.receiveOrderPage);
+        Future.delayed(const Duration(milliseconds: 500), () async {
+          // Ensure this controller is deleted before navigating
+          if (Get.isRegistered<ReceiveOrderByPoController>()) {
+            Get.delete<ReceiveOrderByPoController>(force: true);
+          }
+          // Navigate and recreate a fresh controller on that page
+          await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
         });
+
       } else {
         Get.snackbar(
           "Failed",

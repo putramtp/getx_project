@@ -2,12 +2,13 @@ import 'dart:developer';
 
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/models/purchase_order_model.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:intl/intl.dart';
 
-class ReceiveOrderController extends GetxController {
+class ReceiveOrderByPoController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -136,23 +137,12 @@ class ReceiveOrderController extends GetxController {
 
   // 📅 Pick start date
   Future<void> pickStartDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: startDate.value ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
+    final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
   }
 
-  // 📅 Pick end date
   Future<void> pickEndDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: endDate.value ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
+    final picked = await pickDate(context, initialDate: endDate.value);
     if (picked != null) endDate.value = picked;
   }
 
@@ -185,7 +175,7 @@ class ReceiveOrderController extends GetxController {
 
   void openDetail(PurchaseOrder order) {
     // Get.snackbar('Detail', 'Open ${order['po_number']}');
-    Get.toNamed(AppPages.receiveOrderDetailPage, arguments: order);
+    Get.toNamed(AppPages.receiveOrderByPoDetailPage, arguments: order);
   }
 
   /// 🔄 Manual Sync

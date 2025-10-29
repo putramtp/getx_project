@@ -38,7 +38,10 @@ class HomeController extends GetxController {
      Get.toNamed(AppPages.receivePage);
   }
   void goToReceiveOrderPage(){
-     Get.toNamed(AppPages.receiveOrderPage);
+     Get.toNamed(AppPages.receiveOrderByPoPage);
+  }
+  void goToReceiveOrderHomePage(){
+     Get.toNamed(AppPages.receiveHomePage);
   }
   void goToOutflowOderPage(){
      Get.toNamed(AppPages.outflowOrderPage);

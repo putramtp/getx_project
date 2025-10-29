@@ -1,14 +1,11 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_detail_controller.dart';
+import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
 
-class ScanPage extends GetView<OutflowOrderDetailController> {
-  const ScanPage({super.key});
+class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController> {
+  const ReceiveOrderFillByPoView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +14,7 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarReceive("Scan Item", icon: Icons.qr_code_scanner_rounded),
+      appBar: appBarReceive("Fill Item", icon: Icons.edit_rounded),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -29,11 +26,11 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
 
             final item = controller.items[index];
             final int expected = (item["expected"] ?? 0) as int;
-            final int outflowd = (item["outflowd"] ?? 0) as int;
-            final List<Map<String, dynamic>> scanned =
-                List<Map<String, dynamic>>.from(item["scanned"] ?? []);
+            final int received = (item["received"] ?? 0) as int;
+            final List<Map<String, dynamic>> filled =
+                List<Map<String, dynamic>>.from(item["filled"] ?? []);
 
-            final int scannedQty = scanned.fold<int>(
+            final int filledQty = filled.fold<int>(
               0,
               (sum, e) {
                 final qtyValue = e['qty'];
@@ -43,7 +40,7 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
               },
             );
 
-            final int remaining = expected - (outflowd + scannedQty);
+            final int remaining = expected - (received + filledQty);
 
             // AnimatedSwitcher keyed by item id -> animates when selectedIndex changes
             return AnimatedSwitcher(
@@ -67,13 +64,14 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
                 children: [
                   _buildHeaderCard(theme, item),
                   const SizedBox(height: 12),
-                  _buildQtyCard(theme, expected, outflowd, scannedQty, remaining),
+                  _buildQtyCard(
+                      theme, expected, received, filledQty, remaining),
                   const SizedBox(height: 20),
-                  Text("Scanned Results",
+                  Text("Filled Results",
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Expanded(child: _buildScannedList(theme, scanned, context)),
+                  Expanded(child: _buildFilledList(theme, filled, context)),
                 ],
               ),
             );
@@ -89,36 +87,20 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
           foregroundColor: Colors.white,
           elevation: 5,
           shape: const CircleBorder(),
-          child: Icon(Icons.qr_code_scanner, size: size * 4),
+          child: Icon(Icons.edit_note_rounded, size: size * 4),
           onPressed: () async {
-            final barcode = await FlutterBarcodeScanner.scanBarcode(
-              "#ff6666",
-              "Cancel",
-              true,
-              ScanMode.BARCODE,
-            );
-            if (barcode == "-1") return;
-
             final index = controller.selectedIndex.value;
             final item = controller.items[index];
             final serialType = item['serialNumberType'];
+            final manageExpired = item['manageExpired'];
 
-            if (serialType == 'BATCH') {
-              final qty = await _showBatchQtyDialog();
-              if (qty != null && qty > 0) {
-                controller.addScannedCode(barcode, batchQty: qty);
-              }
-            } else if (serialType == 'OTHER') {
-              final result = await _showOtherItemDialog();
-              if (result != null) {
-                controller.addScannedCode(
-                  barcode,
-                  batchQty: result['qty'],
-                );
-                log('🔹 Added OTHER item: $barcode | ${result['qty']} ');
-              }
-            } else {
-              controller.addScannedCode(barcode);
+            final result = await _showItemQtyDialog(
+                type: serialType, manageExpired: manageExpired);
+            if (result != null && result['qty'] != null && result['qty'] > 0) {
+              controller.addFilledQty(
+                batchQty: result['qty'],
+                expiredDate: result['expired_date'],
+              );
             }
           },
         ),
@@ -127,67 +109,124 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
     );
   }
 
-  /// 🧮 Batch item qty input
-  Future<int?> _showBatchQtyDialog() async {
+  Future<Map<String, dynamic>?> _showItemQtyDialog({
+    String? type,
+    bool? manageExpired,
+  }) async {
     final TextEditingController qtyController = TextEditingController();
-
-    return Get.dialog<int>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Batch Quantity'),
-        content: TextField(
-          controller: qtyController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Enter quantity for this batch',
-            prefixIcon: Icon(Icons.numbers),
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              final val = int.tryParse(qtyController.text);
-              Get.back(result: val);
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 🧩 Dialog for OTHER type item
-  Future<Map<String, dynamic>?> _showOtherItemDialog() async {
-    final TextEditingController qtyController = TextEditingController();
+    final TextEditingController expController = TextEditingController();
 
     return Get.dialog<Map<String, dynamic>>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Enter item quantity'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: qtyController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                prefixIcon: Icon(Icons.numbers),
-                border: OutlineInputBorder(),
+        title: Text(
+          type == 'BATCH' ? 'Batch Quantity' : 'Enter item quantity',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🔹 Quantity input
+              TextField(
+                controller: qtyController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  prefixIcon: Icon(Icons.numbers),
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              // 🔹 Only show expiration section if manageExpired == true
+              if (manageExpired == true) 
+              ...[
+                GestureDetector(
+                  onTap: () async {
+                    FocusScope.of(Get.context!)
+                        .unfocus(); // close keyboard if open
+                    final DateTime? pickedDate = await showDatePicker(
+                      context: Get.context!,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2100),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: Colors.teal,
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+
+                    if (pickedDate != null) {
+                      expController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                    }
+                  },
+                  child: AbsorbPointer(
+                    child: TextField(
+                      controller: expController,
+                      decoration: const InputDecoration(
+                        labelText: 'Expiration Date',
+                        prefixIcon: Icon(Icons.date_range),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             onPressed: () {
-              final qty = int.tryParse(qtyController.text) ?? 1;
-              Get.back(result: {'qty': qty});
+              final qty = int.tryParse(qtyController.text);
+              if (qty == null || qty <= 0) {
+                Get.snackbar(
+                  "Invalid Input",
+                  "Please enter a valid quantity greater than 0.",
+                  backgroundColor: Colors.orange.shade50,
+                  colorText: Colors.orange.shade800,
+                  snackPosition: SnackPosition.BOTTOM,
+                  icon: const Icon(Icons.warning_amber_rounded,
+                      color: Colors.orange),
+                );
+                return;
+              }
+
+              if (manageExpired == true && expController.text.isEmpty) {
+                Get.snackbar(
+                  "Missing Expiration Date",
+                  "Please select an expiration date.",
+                  backgroundColor: Colors.red.shade50,
+                  colorText: Colors.red.shade800,
+                  snackPosition: SnackPosition.BOTTOM,
+                  icon:
+                      const Icon(Icons.error_outline, color: Colors.redAccent),
+                );
+                return;
+              }
+
+              Get.back(
+                result: {
+                  'qty': qty,
+                  'expired_date': expController.text,
+                },
+              );
             },
-            child: const Text('Save'),
+            child: const Text('Save',style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -197,7 +236,7 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
   // ===== UI helpers =====
 
   Widget _buildBottomBar(ThemeData theme) {
-    final controller = Get.find<OutflowOrderDetailController>();
+    final controller = Get.find<ReceiveOrderByPoDetailController>();
 
     return Obx(() {
       final items = controller.items;
@@ -208,29 +247,16 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
           ? items[selectedIndex]
           : null;
 
-      // ✅ unified scanned format
-      final List<Map<String, dynamic>> scanned = currentItem != null
-          ? List<Map<String, dynamic>>.from(currentItem["scanned"] ?? [])
+      // ✅ unified filled format
+      final List<Map<String, dynamic>> filled = currentItem != null
+          ? List<Map<String, dynamic>>.from(currentItem["filled"] ?? [])
           : [];
 
-      final bool hasScannedCurrent = scanned.isNotEmpty;
+      final bool hasFilledCurrent = filled.isNotEmpty;
 
-      // ✅ count all scanned qty from unified data
-      final allScanned = controller.getAllScannedUnified();
-      final totalScanned = allScanned.values.fold<int>(
-        0,
-        (sum, list) =>
-            sum +
-            list.fold<int>(
-              0,
-              (innerSum, e) =>
-                  innerSum +
-                  (e['qty'] is int
-                      ? e['qty'] as int
-                      : int.tryParse('${e['qty']}') ?? 0),
-            ),
-      );
-      final bool hasAnyScanned = totalScanned > 0;
+      // ✅ count all filled qty from unified data
+      final totalFilled = controller.totalFilled;
+      final bool hasAnyFilled = totalFilled > 0;
 
       return Container(
         height: 60,
@@ -249,20 +275,20 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            /// 🗑 Clear scanned codes for current item
+            /// 🗑 Clear filled codes for current item
             TextButton.icon(
-              onPressed: hasItems && hasScannedCurrent
-                  ? controller.clearScannedCodes
+              onPressed: hasItems && hasFilledCurrent
+                  ? controller.clearFilledCodes
                   : null,
               icon: Icon(
                 Icons.delete_forever,
-                color: hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
+                color: hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
               ),
               label: Text(
                 "Clear",
                 style: TextStyle(
                   color:
-                      hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
+                      hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -271,15 +297,15 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
             const SizedBox(width: 56),
 
             TextButton.icon(
-              onPressed: hasAnyScanned ? controller.goToNextItem : null,
+              onPressed: hasAnyFilled ? controller.goToNextItem : null,
               icon: Icon(
                 Icons.save_rounded,
-                color: hasAnyScanned ? Colors.blue : Colors.grey,
+                color: hasAnyFilled ? Colors.blue : Colors.grey,
               ),
               label: Text(
                 "Continue",
                 style: TextStyle(
-                  color: hasAnyScanned ? Colors.blueAccent : Colors.grey,
+                  color: hasAnyFilled ? Colors.blueAccent : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -299,8 +325,8 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.inventory_2_rounded,
-                color: theme.colorScheme.primary, size: 32),
+            const Icon(Icons.inventory_2_rounded,
+                color: Colors.blueGrey, size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -320,8 +346,8 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
   Widget _buildQtyCard(
     ThemeData theme,
     int expected,
-    int outflowd,
-    int scannedQty,
+    int received,
+    int filledQty,
     int remaining,
   ) {
     return Card(
@@ -334,8 +360,8 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
           children: [
             _buildQtyInfo(
                 "Expected", expected.toString(), Colors.grey.shade700),
-            _buildQtyInfo("Outflowd", outflowd.toString(), Colors.blue),
-            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green),
+            _buildQtyInfo("Received", received.toString(), Colors.blue),
+            _buildQtyInfo("Filled", filledQty.toString(), Colors.green),
             _buildQtyInfo(
               "Remaining",
               remaining.toString(),
@@ -360,21 +386,20 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
     );
   }
 
-  /// ✅ Modern scanned list
-  Widget _buildScannedList(
+  /// ✅ Modern filled list
+  Widget _buildFilledList(
     ThemeData theme,
-    List<Map<String, dynamic>> scanned,
+    List<Map<String, dynamic>> filled,
     BuildContext context,
   ) {
-    if (scanned.isEmpty) {
+    if (filled.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.qr_code_2_rounded,
-                size: 64, color: Colors.grey.shade400),
+            Icon(Icons.cancel_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 12),
-            Text("No codes scanned yet",
+            Text("No items have been filled yet",
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: Colors.grey.shade600)),
           ],
@@ -390,26 +415,36 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(12),
-              itemCount: scanned.length,
+              itemCount: filled.length,
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (_, i) {
-                final code = scanned[i]['code'] ?? 'N/A';
-                final qty = scanned[i]['qty'] ?? 1;
-                final serialType =
-                    controller.items[controller.selectedIndex.value]
-                            ['serialNumberType'] ??
-                        'OTHER';
+                final qty = filled[i]['qty'] ?? 1;
+                final expiredDate = filled[i]['expired_date'] ?? '';
 
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    child:
-                        Icon(Icons.qr_code, color: theme.colorScheme.primary),
+                    child: Icon(Icons.assignment_turned_in_outlined,
+                        color: theme.colorScheme.primary),
                   ),
                   // show qty only for batch items
-                  title: Text(
-                    serialType == 'UNIQUE' ? code : "$code (qty: $qty)",
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "$qty",
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      expiredDate.isNotEmpty
+                          ? Text(
+                              "Exp : $expiredDate",
+                              style: TextStyle(
+                                color: Colors.red.shade400,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ],
                   ),
                   onTap: () async {
                     await Get.bottomSheet(
@@ -422,16 +457,7 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
                               title: const Text("Edit Code"),
                               onTap: () {
                                 Get.back();
-                                showEditCodeDialog(
-                                  context,
-                                  code,
-                                  onSave: (newCode) {
-                                    controller.editScannedCode(
-                                      oldCode: code,
-                                      newCode: newCode,
-                                    );
-                                  },
-                                );
+                                Get.snackbar("test", "you click edit code.");
                               },
                             ),
                             ListTile(
@@ -440,11 +466,7 @@ class ScanPage extends GetView<OutflowOrderDetailController> {
                               title: const Text("Remove Code"),
                               onTap: () {
                                 Get.back();
-                                showRemoveDialog(
-                                  context,
-                                  code,
-                                  () => controller.removeScannedCode(code),
-                                );
+                                Get.snackbar("test", "you click remove code.");
                               },
                             ),
                           ],

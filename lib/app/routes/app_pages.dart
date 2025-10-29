@@ -3,10 +3,15 @@ import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_bi
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_detail_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/views/outflow_order_detail_view.dart';
 import 'package:getx_project/app/modules/outflow_order/views/outflow_order_view.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_detail_binding.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_detail_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_view.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_home_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
 
 import '../modules/dispatch/bindings/dispatch_binding.dart';
 import '../modules/dispatch/views/dispatch_detail_view.dart';
@@ -37,10 +42,14 @@ class AppPages {
   static const itemPage = Routes.ITEM;
 
   static const receivePage = Routes.RECEIVE;
+  static const receiveHomePage = Routes.RECEIVE_ORDER_HOME;
   static const receiveDetailPage = Routes.RECEIVE_DETAIL;
 
-  static const receiveOrderPage = Routes.RECEIVE_ORDER;
-  static const receiveOrderDetailPage = Routes.RECEIVE_ORDER_DETAIL;
+  static const receiveOrderByPoPage = Routes.RECEIVE_ORDER_BY_PO;
+  static const receiveOrderByPoDetailPage = Routes.RECEIVE_ORDER_BY_PO_DETAIL;
+
+  static const receiveOrderBySupplierPage = Routes.RECEIVE_ORDER_BY_SUPPLIER;
+  static const receiveOrderBySupplierDetailPage = Routes.RECEIVE_ORDER_BY_SUPPLIER_DETAIL;
 
   static const outflowOrderPage = Routes.OUTFLOW_ORDER;
   static const outflowOrderDetailPage = Routes.OUTFLOW_ORDER_DETAIL;
@@ -83,14 +92,29 @@ class AppPages {
       binding: ReceiveBinding(),
     ),
     GetPage(
-      name: _Paths.RECEIVE_ORDER,
-      page: () => const ReceiveOrderView(),
-      binding: ReceiveOrderBinding(),
+      name: _Paths.RECEIVE_ORDER_HOME,
+      page: () => const ReceiveOrderHomeView(),
+      binding: ReceiveBinding(),
     ),
     GetPage(
-      name: _Paths.RECEIVE_ORDER_DETAIL,
-      page: () => const ReceiveOrderDetailView(),
-      binding: ReceiveOrderDetailBinding(),
+      name: _Paths.RECEIVE_ORDER_BY_PO,
+      page: () => const ReceiveOrderByPoView(),
+      binding: ReceiveOrderByPoBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER_BY_PO_DETAIL,
+      page: () => const ReceiveOrderByPoDetailView(),
+      binding: ReceiveOrderByPoDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER_BY_SUPPLIER,
+      page: () => const ReceiveOrderBySupplierView(),
+      binding: ReceiveOrderSupplierBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL,
+      page: () => const ReceiveOrderBySupplierDetailView(),
+      binding: ReceiveOrderSupplierDetailBinding(),
     ),
     GetPage(
       name: _Paths.OUTFLOW_ORDER,

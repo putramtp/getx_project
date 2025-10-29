@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 String capitalizeFirstofEach(String text) {
@@ -71,36 +72,17 @@ String formatTime(DateTime dateTime) {
   return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
 }
 
-
-// class Person {
-//   final String name;
-//   final int age;
-
-//   Person({required this.name, required this.age});
-// }
-
-// class Animal {
-//   final String name;
-//   final String species;
-
-//   Animal({required this.name, required this.species});
-// }
-
-// List<T> getModels<T>() {
-//   if (T == Person) {
-//     return [
-//       Person(name: "John", age: 30),
-//       Person(name: "Alice", age: 25),
-//       Person(name: "Bob", age: 35),
-//     ] as List<T>;
-//   } else if (T == Animal) {
-//     return [
-//       Animal(name: "Fluffy", species: "Dog"),
-//       Animal(name: "Whiskers", species: "Cat"),
-//     ] as List<T>;
-//   } else {
-//     throw ArgumentError("Invalid model type");
-//   }
-// }
-
+Future<DateTime?> pickDate(
+  BuildContext context, {
+  DateTime? initialDate,
+  DateTime? firstDate,
+  DateTime? lastDate,
+}) async {
+  return await showDatePicker(
+    context: context,
+    initialDate: initialDate ?? DateTime.now(),
+    firstDate: firstDate ?? DateTime(2020),
+    lastDate: lastDate ?? DateTime.now(),
+  );
+}
 

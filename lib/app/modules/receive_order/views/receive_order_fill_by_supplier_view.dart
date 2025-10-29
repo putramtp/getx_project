@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_detail_controller.dart';
+import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
 
-class FillPage extends GetView<ReceiveOrderDetailController> {
-  const FillPage({super.key});
+class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetailController> {
+  const ReceiveOrderFillBySupplierView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class FillPage extends GetView<ReceiveOrderDetailController> {
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarPO("Fill Item", icon: Icons.edit_rounded),
+      appBar: appBarReceive("Fill Item", icon: Icons.edit_rounded),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -120,7 +120,7 @@ class FillPage extends GetView<ReceiveOrderDetailController> {
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          type == 'BATCH' ? 'Batch Quantity' : 'Enter Item Details',
+          type == 'BATCH' ? 'Batch Quantity' : 'Enter item quantity',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
@@ -226,7 +226,7 @@ class FillPage extends GetView<ReceiveOrderDetailController> {
                 },
               );
             },
-            child: const Text('Save'),
+            child: const Text('Save',style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -236,8 +236,7 @@ class FillPage extends GetView<ReceiveOrderDetailController> {
   // ===== UI helpers =====
 
   Widget _buildBottomBar(ThemeData theme) {
-    final controller = Get.find<ReceiveOrderDetailController>();
-
+    final controller = Get.find<ReceiveOrderBySupplierDetailController>();
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;

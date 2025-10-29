@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_detail_controller.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_fill_page.dart';
+import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_fill_by_supplier_view.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-class ReceiveOrderDetailView extends GetView<ReceiveOrderDetailController> {
-  const ReceiveOrderDetailView({super.key});
+class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDetailController> {
+  const ReceiveOrderBySupplierDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class ReceiveOrderDetailView extends GetView<ReceiveOrderDetailController> {
       backgroundColor: theme.colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarPO("Item Summary",routeBackName:AppPages.receiveOrderPage ),
+        child: appBarReceive("Item Summary",routeBackName:AppPages.receiveOrderBySupplierPage ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -107,7 +107,7 @@ class ReceiveOrderDetailView extends GetView<ReceiveOrderDetailController> {
                               onPressed: () {
                                 controller.selectedIndex.value = index;
                                 controller.selectedItem.value = item;
-                                Get.to(() => const FillPage());
+                                Get.to(() => const ReceiveOrderFillBySupplierView());
                               },
                               icon: const Icon(Icons.edit_rounded),
                               label: const Text("fill"),
@@ -432,8 +432,8 @@ class ReceiveOrderDetailView extends GetView<ReceiveOrderDetailController> {
   }
 
   Widget _buildHeader() {
-    final po = controller.currentOrder;
-    final poNumber = po.poNumber;
+    final supplier = controller.currentSupplier;
+    final supplierName = supplier.name ;
 
     return Container(
       width: double.infinity,
@@ -448,14 +448,14 @@ class ReceiveOrderDetailView extends GetView<ReceiveOrderDetailController> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.qr_code_rounded, color: Colors.white, size: 32),
+          const Icon(Icons.store_rounded, color: Colors.white, size: 34),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Purchase Order",
+              const Text("Supplier / Vendor",
                   style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("#$poNumber",
+              Text("#$supplierName",
                   style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

@@ -13,7 +13,7 @@ class OutflowOrderView extends GetView<OutflowOrderController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarPO("Purchase Order List", icon: Icons.list_alt_sharp),
+        child: appBarReceive("Purchase Order List", icon: Icons.list_alt_sharp),
       ),
       body: SafeArea(
         child: Padding(
