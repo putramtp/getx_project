@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/models/purchase_order_model.dart';
+import 'package:getx_project/app/models/receive_order_model.dart';
+import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
-import '../controllers/receive_order_by_po_controller.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
-  const ReceiveOrderByPoView({Key? key}) : super(key: key);
+class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
+  const ReceiveOrderListView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,9 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarReceive("Purchase Order List", icon: Icons.list_alt_sharp,routeBackName:AppPages.receiveHomePage),
+        child: appBarReceive("Receive Order List",
+            icon: Icons.list_alt_sharp,
+            routeBackName: AppPages.receiveHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -42,7 +44,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                             controller: searchController,
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.search),
-                              hintText: 'Search PO...',
+                              hintText: 'Search Receive order...',
                               filled: true,
                               fillColor: Colors.white,
                               contentPadding: const EdgeInsets.symmetric(
@@ -51,16 +53,15 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
                               ),
-                              suffixIcon:
-                                  isFocused 
-                                      ? IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            searchController.clear();
-                                            FocusScope.of(context).unfocus();
-                                          },
-                                        )
-                                      : null,
+                              suffixIcon: isFocused
+                                  ? IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () {
+                                        searchController.clear();
+                                        FocusScope.of(context).unfocus();
+                                      },
+                                    )
+                                  : null,
                             ),
                             onChanged: controller.onSearchChanged,
                           ),
@@ -104,7 +105,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                                 const SizedBox(width: 6),
                                 // Filter button
                                 IconButton.filledTonal(
-                                  icon: const Icon(Icons.filter_alt_rounded ),
+                                  icon: const Icon(Icons.filter_alt_rounded),
                                   tooltip: 'Filter',
                                   onPressed: () => _openTopFilterSheet(context),
                                   style: IconButton.styleFrom(
@@ -122,7 +123,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
 
               const SizedBox(height: 12),
 
-              /// 📋 List of Purchase Orders
+              /// 📋 List of Receive Orders
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
@@ -131,7 +132,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
 
                   final orders = controller.filteredOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('No purhcase order data.'));
+                    return const Center(child: Text('No receive order data.'));
                   }
 
                   return ListView.builder(
@@ -151,10 +152,10 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: controller.syncPO,
+                    onPressed: controller.syncReceiveOrder,
                     icon: const Icon(Icons.sync, color: Colors.white),
                     label: const Text(
-                      'PO Synchronization',
+                      'Receive Order Synchronization',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -280,8 +281,11 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                                 controller.applyDateFilter();
                                 Navigator.pop(context);
                               },
-                              icon: const Icon(Icons.check),
-                              label: const Text("Apply"),
+                              icon: const Icon(Icons.check,color:Colors.white),
+                              label: const Text(
+                                "Apply",
+                                style: TextStyle(color: Colors.white),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 padding:
@@ -342,40 +346,36 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
     );
   }
 
-  Widget _buildOrderCard(PurchaseOrder order) {
-    final status = order.status;
-    final statusColor = status.toLowerCase().contains('processing')
-        ? Colors.cyan
-        : status.toLowerCase().contains('waiting')
-            ? Colors.orange
-            : Colors.green;
-
+  Widget _buildOrderCard(ReceiveOrder order) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.15),
-          child: Icon(Icons.check_circle, color: statusColor),
+          backgroundColor: Colors.cyan.withOpacity(0.15),
+          child: const Icon(Icons.file_present_rounded, color: Colors.cyan),
         ),
-        title: Text(order.poNumber,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          order.supplier,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
+        title: Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Icon(Icons.star_border, size: 14, color: Colors.black54),
+            const SizedBox(width:2),
+            Text(
+              order.supplier,
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(order.items, style: const TextStyle(fontSize: 10)),
-            Text(
-              status.toString().isNotEmpty
-                  ? '${status[0].toUpperCase()}${status.substring(1)}'
-                  : '-',
+            Text(order.type, style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600)),
+            Text( controller.formatYmd(order.date),
               style: TextStyle(
-                  fontSize: 14,
-                  color: statusColor,
+                  fontSize: 10,
+                  color: Colors.grey[600],
                   fontWeight: FontWeight.w800),
             ),
           ],

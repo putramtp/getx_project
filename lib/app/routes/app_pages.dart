@@ -7,11 +7,15 @@ import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_binding.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_home_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
 
 import '../modules/dispatch/bindings/dispatch_binding.dart';
 import '../modules/dispatch/views/dispatch_detail_view.dart';
@@ -45,9 +49,10 @@ class AppPages {
   static const receiveHomePage = Routes.RECEIVE_ORDER_HOME;
   static const receiveDetailPage = Routes.RECEIVE_DETAIL;
 
+  static const receiveOrderListPage = Routes.RECEIVE_ORDER_LIST;
+  static const receiveOrderDetailPage = Routes.RECEIVE_ORDER_DETAIL;
   static const receiveOrderByPoPage = Routes.RECEIVE_ORDER_BY_PO;
   static const receiveOrderByPoDetailPage = Routes.RECEIVE_ORDER_BY_PO_DETAIL;
-
   static const receiveOrderBySupplierPage = Routes.RECEIVE_ORDER_BY_SUPPLIER;
   static const receiveOrderBySupplierDetailPage = Routes.RECEIVE_ORDER_BY_SUPPLIER_DETAIL;
 
@@ -92,6 +97,16 @@ class AppPages {
       binding: ReceiveBinding(),
     ),
     GetPage(
+      name: _Paths.RECEIVE_ORDER_LIST,
+      page: () => const ReceiveOrderListView(),
+      binding: ReceiveOrderListBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER_DETAIL,
+      page: () => const ReceiveOrderDetailView(),
+      binding: ReceiveOrderDetailBinding(),
+    ),
+    GetPage(
       name: _Paths.RECEIVE_ORDER_HOME,
       page: () => const ReceiveOrderHomeView(),
       binding: ReceiveBinding(),
@@ -109,7 +124,7 @@ class AppPages {
     GetPage(
       name: _Paths.RECEIVE_ORDER_BY_SUPPLIER,
       page: () => const ReceiveOrderBySupplierView(),
-      binding: ReceiveOrderSupplierBinding(),
+      binding: ReceiveOrderBySupplierBinding(),
     ),
     GetPage(
       name: _Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL,

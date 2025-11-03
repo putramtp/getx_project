@@ -14,6 +14,9 @@ abstract class Routes {
   static const RECEIVE = _Paths.RECEIVE;
   static const RECEIVE_DETAIL = _Paths.RECEIVE_DETAIL;
 
+  static const RECEIVE_ORDER_LIST = _Paths.RECEIVE_ORDER_LIST;
+  static const RECEIVE_ORDER_DETAIL = _Paths.RECEIVE_ORDER_DETAIL;
+  
   static const RECEIVE_ORDER_HOME = _Paths.RECEIVE_ORDER_HOME;
   static const RECEIVE_ORDER_BY_PO = _Paths.RECEIVE_ORDER_BY_PO;
   static const RECEIVE_ORDER_BY_PO_DETAIL = _Paths.RECEIVE_ORDER_BY_PO_DETAIL;
@@ -40,6 +43,8 @@ abstract class _Paths {
   static const RECEIVE = '/receive';
   static const RECEIVE_DETAIL = '/receive/detail';
 
+  static const RECEIVE_ORDER_LIST = '/receive-order/list';
+  static const RECEIVE_ORDER_DETAIL = '/receive-order/detail';
   static const RECEIVE_ORDER_HOME = '/receive-order/home';
   static const RECEIVE_ORDER_BY_PO = '/receive-order/po';
   static const RECEIVE_ORDER_BY_PO_DETAIL = '/receive-order/po/detail';

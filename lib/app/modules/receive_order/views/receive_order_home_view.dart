@@ -13,7 +13,7 @@ class ReceiveOrderHomeView extends GetView {
     final List<Map<String, dynamic>> menuItems = [
       {'title': 'By Purchase-order', 'icon': Icons.receipt_long_rounded,'color': Colors.indigoAccent,'routes':AppPages.receiveOrderByPoPage},
       {'title': 'By Supplier', 'icon': Icons.group_rounded,'color': Colors.blue,'routes':AppPages.receiveOrderBySupplierPage},
-      {'title': 'Receive Order', 'icon': Icons.category_rounded,'color': Colors.green},
+      {'title': 'Receive-order List', 'icon': Icons.category_rounded,'color': Colors.green,'routes':AppPages.receiveOrderListPage},
       {'title': 'Adjustments', 'icon': Icons.tune_rounded,'color': Colors.orange},
       {'title': 'Reports', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
       {'title': 'Settings', 'icon': Icons.settings_rounded,'color': Colors.teal},
