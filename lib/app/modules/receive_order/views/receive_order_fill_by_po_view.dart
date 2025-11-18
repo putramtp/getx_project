@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
@@ -14,7 +15,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarReceive("Fill Item", icon: Icons.edit_rounded),
+      appBar: appBarOrder("Fill Item", icon: Icons.edit_rounded),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -194,28 +195,12 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
             onPressed: () {
               final qty = int.tryParse(qtyController.text);
               if (qty == null || qty <= 0) {
-                Get.snackbar(
-                  "Invalid Input",
-                  "Please enter a valid quantity greater than 0.",
-                  backgroundColor: Colors.orange.shade50,
-                  colorText: Colors.orange.shade800,
-                  snackPosition: SnackPosition.BOTTOM,
-                  icon: const Icon(Icons.warning_amber_rounded,
-                      color: Colors.orange),
-                );
+                errorAlertBottom(title:"Invalid Input","Please enter a valid quantity greater than 0.");
                 return;
               }
 
               if (manageExpired == true && expController.text.isEmpty) {
-                Get.snackbar(
-                  "Missing Expiration Date",
-                  "Please select an expiration date.",
-                  backgroundColor: Colors.red.shade50,
-                  colorText: Colors.red.shade800,
-                  snackPosition: SnackPosition.BOTTOM,
-                  icon:
-                      const Icon(Icons.error_outline, color: Colors.redAccent),
-                );
+                errorAlertBottom(title:"Missing Expiration Date", "Please select an expiration date.");
                 return;
               }
 
@@ -457,7 +442,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                               title: const Text("Edit Code"),
                               onTap: () {
                                 Get.back();
-                                Get.snackbar("test", "you click edit code.");
+                               infoAlertBottom("you click edit code.");
                               },
                             ),
                             ListTile(
@@ -466,7 +451,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                               title: const Text("Remove Code"),
                               onTap: () {
                                 Get.back();
-                                Get.snackbar("test", "you click remove code.");
+                               infoAlertBottom("you click remove code.");
                               },
                             ),
                           ],

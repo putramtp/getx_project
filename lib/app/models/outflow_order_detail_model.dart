@@ -1,51 +1,49 @@
 import 'serial_number_model.dart';
 
-class ReceiveOrderDetail {
+class OutflowOrderDetail {
   final int id;
   final String code;
   final String type;
-  final int? supplierId;
-  final String? supplierName;
+  final int? customerId;
+  final String? customerName;
   final int? updatedBy;
   final String? editorName;
   final int? createdBy;
   final String? creatorName;
   final DateTime? date;
-  final String? receiveNumber;
-  final List<ReceiveOrderLine> receiveOrderLines;
+  final String? billNumber;
+  final List<OutflowOrderLine> outflowOrderLines;
 
-  ReceiveOrderDetail({
+  OutflowOrderDetail({
     required this.id,
     required this.code,
     required this.type,
-    this.supplierId,
-    this.supplierName,
+    this.customerId,
+    this.customerName,
     this.updatedBy,
     this.editorName,
     this.createdBy,
     this.creatorName,
     this.date,
-    this.receiveNumber,
-    required this.receiveOrderLines,
+    this.billNumber,
+    required this.outflowOrderLines,
   });
 
-  factory ReceiveOrderDetail.fromJson(Map<String, dynamic> json) {
-    return ReceiveOrderDetail(
+  factory OutflowOrderDetail.fromJson(Map<String, dynamic> json) {
+    return OutflowOrderDetail(
       id: json['id'],
       code: json['code'] ?? '-',
       type: json['type'] ?? '-',
-      supplierId: json['supplier_id'],
-      supplierName: json['supplier_name'],
+      customerId: json['customer_id'],
+      customerName: json['customer_name'],
       updatedBy: json['updated_by'],
       editorName: json['editor_name'],
       createdBy: json['created_by'],
       creatorName: json['creator_name'],
-      date: json['date'] != null && json['date'].toString().isNotEmpty
-          ? DateTime.tryParse(json['date'])
-          : null,
-      receiveNumber: json['receive_number'],
-      receiveOrderLines: (json['receive_order_lines'] as List<dynamic>? ?? [])
-          .map((e) => ReceiveOrderLine.fromJson(e))
+      date: DateTime.tryParse(json['date']),
+      billNumber: json['bill_number'],
+      outflowOrderLines: (json['outflow_order_lines'] as List<dynamic>? ?? [])
+          .map((e) => OutflowOrderLine.fromJson(e))
           .toList(),
     );
   }
@@ -55,50 +53,50 @@ class ReceiveOrderDetail {
       'id': id,
       'code': code,
       'type': type,
-      'supplier_id': supplierId,
-      'supplier_name': supplierName,
+      'customer_id': customerId,
+      'customer_name': customerName,
       'updated_by': updatedBy,
       'editor_name': editorName,
       'created_by': createdBy,
       'creator_name': creatorName,
       'date': date?.toIso8601String(),
-      'receive_number': receiveNumber,
-      'receive_order_lines':
-          receiveOrderLines.map((line) => line.toJson()).toList(),
+      'bill_number': billNumber,
+      'outflow_order_lines':
+          outflowOrderLines.map((line) => line.toJson()).toList(),
     };
   }
 }
 
-class ReceiveOrderLine {
+class OutflowOrderLine {
   final int id;
   final String type;
   final int itemId;
   final String itemName;
-  final String poLineId;
+  final String orLineId;
   final int qty;
   final double pricePerUnit;
   final double priceTotal;
   final List<SerialNumber> serialNumbers;
 
-  ReceiveOrderLine({
+  OutflowOrderLine({
     required this.id,
     required this.type,
     required this.itemId,
     required this.itemName,
-    required this.poLineId,
+    required this.orLineId,
     required this.qty,
     required this.pricePerUnit,
     required this.priceTotal,
     required this.serialNumbers,
   });
 
-  factory ReceiveOrderLine.fromJson(Map<String, dynamic> json) {
-    return ReceiveOrderLine(
+  factory OutflowOrderLine.fromJson(Map<String, dynamic> json) {
+    return OutflowOrderLine(
       id: json['id'],
       type: json['type'] ?? '-',
       itemId: json['item_id'],
       itemName: json['item_name'] ?? '-',
-      poLineId: json['po_line_id']?.toString() ?? '',
+      orLineId: json['or_line_id']?.toString() ?? '',
       qty: json['qty'] ?? 0,
       pricePerUnit: (json['price_per_unit'] ?? 0).toDouble(),
       priceTotal: (json['price_total'] ?? 0).toDouble(),
@@ -114,7 +112,7 @@ class ReceiveOrderLine {
       'type': type,
       'item_id': itemId,
       'item_name': itemName,
-      'po_line_id': poLineId,
+      'or_line_id': orLineId,
       'qty': qty,
       'price_per_unit': pricePerUnit,
       'price_total': priceTotal,

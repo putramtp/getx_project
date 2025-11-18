@@ -1,12 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
+import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 
-class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetailController> {
-  const ReceiveOrderFillBySupplierView({super.key});
+class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController> {
+  const ScanPageByCustomer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +17,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarOrder("Fill Item", icon: Icons.edit_rounded),
+      appBar: appBarOrder("Scan Item",showIcon: false),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -28,10 +30,9 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
             final item = controller.items[index];
             final int expected = (item["expected"] ?? 0) as int;
             final int received = (item["received"] ?? 0) as int;
-            final List<Map<String, dynamic>> filled =
-                List<Map<String, dynamic>>.from(item["filled"] ?? []);
+            final List<Map<String, dynamic>> scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
 
-            final int filledQty = filled.fold<int>(
+            final int scannedQty = scanned.fold<int>(
               0,
               (sum, e) {
                 final qtyValue = e['qty'];
@@ -41,7 +42,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
               },
             );
 
-            final int remaining = expected - (received + filledQty);
+            final int remaining = expected - (received + scannedQty);
 
             // AnimatedSwitcher keyed by item id -> animates when selectedIndex changes
             return AnimatedSwitcher(
@@ -65,14 +66,13 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
                 children: [
                   _buildHeaderCard(theme, item),
                   const SizedBox(height: 12),
-                  _buildQtyCard(
-                      theme, expected, received, filledQty, remaining),
+                  _buildQtyCard(theme, expected, received, scannedQty, remaining),
                   const SizedBox(height: 20),
-                  Text("Filled Results",
+                  Text("Scanned Results",
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Expanded(child: _buildFilledList(theme, filled, context)),
+                  Expanded(child: _buildScannedList(theme, scanned, context)),
                 ],
               ),
             );
@@ -88,130 +88,106 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
           foregroundColor: Colors.white,
           elevation: 5,
           shape: const CircleBorder(),
-          child: Icon(Icons.edit_note_rounded, size: size * 4),
+          child: Icon(Icons.qr_code_scanner, size: size * 4),
           onPressed: () async {
+            final barcode = await FlutterBarcodeScanner.scanBarcode(
+              "#ff6666",
+              "Cancel",
+              true,
+              ScanMode.BARCODE,
+            );
+            if (barcode == "-1") return;
+
             final index = controller.selectedIndex.value;
             final item = controller.items[index];
             final serialType = item['serialNumberType'];
-            final manageExpired = item['manageExpired'];
+            log('serialType : $serialType');
 
-            final result = await _showItemQtyDialog(
-                type: serialType, manageExpired: manageExpired);
-            if (result != null && result['qty'] != null && result['qty'] > 0) {
-              controller.addFilledQty(
-                batchQty: result['qty'],
-                expiredDate: result['expired_date'],
-              );
+            if (serialType == 'BATCH') {
+              final qty = await _showBatchQtyDialog();
+              if (qty != null && qty > 0) {
+                controller.addScannedCode(barcode, batchQty: qty);
+              }
+            } else if (serialType == 'OTHER') {
+              final result = await _showOtherItemDialog();
+              if (result != null) {
+                controller.addScannedCode(
+                  barcode,
+                  batchQty: result['qty'],
+                );
+                log('🔹 Added OTHER item: $barcode | ${result['qty']} ');
+              }
+            } else {
+              controller.addScannedCode(barcode);
             }
           },
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(theme),
+      bottomNavigationBar: _buildBottomBar(theme,controller),
     );
   }
 
-  Future<Map<String, dynamic>?> _showItemQtyDialog({
-    String? type,
-    bool? manageExpired,
-  }) async {
+  /// 🧮 Batch item qty input
+  Future<int?> _showBatchQtyDialog() async {
     final TextEditingController qtyController = TextEditingController();
-    final TextEditingController expController = TextEditingController();
+
+    return Get.dialog<int>(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Batch Quantity'),
+        content: TextField(
+          controller: qtyController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Enter quantity for this batch',
+            prefixIcon: Icon(Icons.numbers),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(qtyController.text);
+              Get.back(result: val);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 🧩 Dialog for OTHER type item
+  Future<Map<String, dynamic>?> _showOtherItemDialog() async {
+    final TextEditingController qtyController = TextEditingController();
 
     return Get.dialog<Map<String, dynamic>>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          type == 'BATCH' ? 'Batch Quantity' : 'Enter item quantity',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 🔹 Quantity input
-              TextField(
-                controller: qtyController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity',
-                  prefixIcon: Icon(Icons.numbers),
-                  border: OutlineInputBorder(),
-                ),
+        title: const Text('Enter item quantity'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: qtyController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Quantity',
+                prefixIcon: Icon(Icons.numbers),
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 16),
-              // 🔹 Only show expiration section if manageExpired == true
-              if (manageExpired == true) 
-              ...[
-                GestureDetector(
-                  onTap: () async {
-                    FocusScope.of(Get.context!)
-                        .unfocus(); // close keyboard if open
-                    final DateTime? pickedDate = await showDatePicker(
-                      context: Get.context!,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2100),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: const ColorScheme.light(
-                              primary: Colors.teal,
-                              onPrimary: Colors.white,
-                              onSurface: Colors.black,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-
-                    if (pickedDate != null) {
-                      expController.text =
-                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
-                    }
-                  },
-                  child: AbsorbPointer(
-                    child: TextField(
-                      controller: expController,
-                      decoration: const InputDecoration(
-                        labelText: 'Expiration Date',
-                        prefixIcon: Icon(Icons.date_range),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             onPressed: () {
-              final qty = int.tryParse(qtyController.text);
-              if (qty == null || qty <= 0) {
-                warningAlertBottom(title: "Invalid Input","Please enter a valid quantity greater than 0.");
-                return;
-              }
-
-              if (manageExpired == true && expController.text.isEmpty) {
-                errorAlertBottom(title:"Missing Expiration Date","Please select an expiration date.");
-                return;
-              }
-
-              Get.back(
-                result: {
-                  'qty': qty,
-                  'expired_date': expController.text,
-                },
-              );
+              final qty = int.tryParse(qtyController.text) ?? 1;
+              Get.back(result: {'qty': qty});
             },
-            child: const Text('Save',style: TextStyle(color: Colors.white)),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -220,8 +196,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
 
   // ===== UI helpers =====
 
-  Widget _buildBottomBar(ThemeData theme) {
-    final controller = Get.find<ReceiveOrderBySupplierDetailController>();
+  Widget _buildBottomBar(ThemeData theme,controller) {
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;
@@ -231,16 +206,16 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
           ? items[selectedIndex]
           : null;
 
-      // ✅ unified filled format
-      final List<Map<String, dynamic>> filled = currentItem != null
-          ? List<Map<String, dynamic>>.from(currentItem["filled"] ?? [])
+      // ✅ unified scanned format
+      final List<Map<String, dynamic>> scanned = currentItem != null
+          ? List<Map<String, dynamic>>.from(currentItem["scanned"] ?? [])
           : [];
 
-      final bool hasFilledCurrent = filled.isNotEmpty;
+      final bool hasScannedCurrent = scanned.isNotEmpty;
 
-      // ✅ count all filled qty from unified data
-      final totalFilled = controller.totalFilled;
-      final bool hasAnyFilled = totalFilled > 0;
+      // ✅ count all scanned qty from unified data
+      final totalScanned = controller.totalScanned;
+      final bool hasAnyScanned = totalScanned > 0;
 
       return Container(
         height: 60,
@@ -259,20 +234,20 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            /// 🗑 Clear filled codes for current item
+            /// 🗑 Clear scanned codes for current item
             TextButton.icon(
-              onPressed: hasItems && hasFilledCurrent
-                  ? controller.clearFilledCodes
+              onPressed: hasItems && hasScannedCurrent
+                  ? controller.clearScannedCodes
                   : null,
               icon: Icon(
                 Icons.delete_forever,
-                color: hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
+                color: hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
               ),
               label: Text(
                 "Clear",
                 style: TextStyle(
                   color:
-                      hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
+                      hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -281,15 +256,15 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
             const SizedBox(width: 56),
 
             TextButton.icon(
-              onPressed: hasAnyFilled ? controller.goToNextItem : null,
+              onPressed: hasAnyScanned ? controller.goToNextItem : null,
               icon: Icon(
                 Icons.save_rounded,
-                color: hasAnyFilled ? Colors.blue : Colors.grey,
+                color: hasAnyScanned ? Colors.blue : Colors.grey,
               ),
               label: Text(
                 "Continue",
                 style: TextStyle(
-                  color: hasAnyFilled ? Colors.blueAccent : Colors.grey,
+                  color: hasAnyScanned ? Colors.blueAccent : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -309,8 +284,8 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(Icons.inventory_2_rounded,
-                color: Colors.blueGrey, size: 32),
+            Icon(Icons.inventory_2_rounded,
+                color: theme.colorScheme.primary, size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -331,7 +306,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
     ThemeData theme,
     int expected,
     int received,
-    int filledQty,
+    int scannedQty,
     int remaining,
   ) {
     return Card(
@@ -345,7 +320,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
             _buildQtyInfo(
                 "Expected", expected.toString(), Colors.grey.shade700),
             _buildQtyInfo("Received", received.toString(), Colors.blue),
-            _buildQtyInfo("Filled", filledQty.toString(), Colors.green),
+            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green),
             _buildQtyInfo(
               "Remaining",
               remaining.toString(),
@@ -370,20 +345,21 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
     );
   }
 
-  /// ✅ Modern filled list
-  Widget _buildFilledList(
+  /// ✅ Modern scanned list
+  Widget _buildScannedList(
     ThemeData theme,
-    List<Map<String, dynamic>> filled,
+    List<Map<String, dynamic>> scanned,
     BuildContext context,
   ) {
-    if (filled.isEmpty) {
+    if (scanned.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cancel_outlined, size: 64, color: Colors.grey.shade400),
+            Icon(Icons.qr_code_2_rounded,
+                size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 12),
-            Text("No items have been filled yet",
+            Text("No codes scanned yet",
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: Colors.grey.shade600)),
           ],
@@ -399,36 +375,26 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(12),
-              itemCount: filled.length,
+              itemCount: scanned.length,
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (_, i) {
-                final qty = filled[i]['qty'] ?? 1;
-                final expiredDate = filled[i]['expired_date'] ?? '';
+                final code = scanned[i]['code'] ?? 'N/A';
+                final qty = scanned[i]['qty'] ?? 1;
+                final serialType =
+                    controller.items[controller.selectedIndex.value]
+                            ['serialNumberType'] ??
+                        'OTHER';
 
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Icon(Icons.assignment_turned_in_outlined,
-                        color: theme.colorScheme.primary),
+                    child:
+                        Icon(Icons.qr_code, color: theme.colorScheme.primary),
                   ),
                   // show qty only for batch items
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "$qty",
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      expiredDate.isNotEmpty
-                          ? Text(
-                              "Exp : $expiredDate",
-                              style: TextStyle(
-                                color: Colors.red.shade400,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ],
+                  title: Text(
+                    serialType == 'UNIQUE' ? code : "$code (qty: $qty)",
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   onTap: () async {
                     await Get.bottomSheet(
@@ -441,7 +407,16 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
                               title: const Text("Edit Code"),
                               onTap: () {
                                 Get.back();
-                                infoAlertBottom("you click edit code.");
+                                showEditCodeDialog(
+                                  context,
+                                  code,
+                                  onSave: (newCode) {
+                                    controller.editScannedCode(
+                                      oldCode: code,
+                                      newCode: newCode,
+                                    );
+                                  },
+                                );
                               },
                             ),
                             ListTile(
@@ -450,7 +425,11 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
                               title: const Text("Remove Code"),
                               onTap: () {
                                 Get.back();
-                                infoAlertBottom("you click remove code.");
+                                showRemoveDialog(
+                                  context,
+                                  code,
+                                  () => controller.removeScannedCode(code),
+                                );
                               },
                             ),
                           ],

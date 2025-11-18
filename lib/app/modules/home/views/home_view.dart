@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 import '../../../global/functions.dart';
@@ -57,7 +58,7 @@ class HomeView extends GetView<HomeController> {
                   onTap: () {
                     Get.back(); // close sheet
                     controller.logout();
-                    Get.snackbar("Logout", "You have been logged out");
+                    infoAlertBottom(title:"Logout", "You have been logged out");
                   },
                 ),
               ],
@@ -92,7 +93,7 @@ class HomeView extends GetView<HomeController> {
                           SizedBox(height: size * 10),  
                           Container(
                               decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 134, 157, 207), // Set a default color if you want
+                                color: const Color.fromARGB(255, 125, 154, 216), // Set a default color if you want
                                 borderRadius: BorderRadius.circular(10), // Optional: Add border radius
                               ),
                               child: ListTile(
@@ -166,11 +167,9 @@ class HomeView extends GetView<HomeController> {
                             shrinkWrap: true, // Important to use with SingleChildScrollView
                             physics: const NeverScrollableScrollPhysics(), // Disable GridView's scrolling
                           children: [
-                            MenuGrid(size: size,hex1: '#8060be',hex2: '#71718c',iconData: CupertinoIcons.bag_badge_plus,status: '0',title: 'Penerimaan Barang',onTap:controller.goToReceiveOrderHomePage),
-                            MenuGrid(size: size,hex1: '#FF9B00',hex2: '#FFC900',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Outflow Order New',onTap:controller.goToOutflowOderPage),
-                            MenuGrid(size: size,hex1: '#4FC0D0',hex2: '#8eeb8a',iconData: CupertinoIcons.bag_badge_plus,status: '33',title: 'Receive Order',onTap:controller.goToReceivePage),
-                            MenuGrid(size: size,hex1: '#FAC213',hex2: '#FEF9A7',iconData: CupertinoIcons.bag_badge_minus,status: '0',title: 'Outflow Order',onTap:controller.goToDispatchPage),
-                            MenuGrid(size: size,hex1: '#F67280',hex2: '#355C7D',iconData: CupertinoIcons.chevron_back,status: '33',title: 'Return Order',onTap: controller.goToReturnPage),
+                            MenuGrid(size: size,hex1: '#124076',hex2: '#7F9F80',iconData: CupertinoIcons.bag_badge_plus,status: '0',title: 'Receive Order',onTap:controller.goToReceiveOrderHomePage),
+                            MenuGrid(size: size,hex1: '#85193C',hex2: '#D76C82',iconData: CupertinoIcons.bag_badge_minus,status: '33',title: 'Outflow Order',onTap:controller.goToOutflowOrderHomePage),
+                            MenuGrid(size: size,hex1: '#4A70A9',hex2: '#8FABD4',iconData: CupertinoIcons.chevron_back,status: '33',title: 'Return Order',onTap: controller.goToReturnPage),
                           ],),
                           SizedBox(height: size *2),
                           Row(

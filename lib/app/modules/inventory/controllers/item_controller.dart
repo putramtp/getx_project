@@ -44,23 +44,4 @@ class ItemController extends GetxController {
     }).toList();
     isCellLoad.value = false;
   }
-
-  // void costumAddDialogAction(ProductModel product) {
-  //   Get.defaultDialog(
-  //     title: "Add Product",
-  //     titleStyle: const TextStyle(fontSize: 20),
-  //     textConfirm: "Oke",
-  //     textCancel: "Cancel",
-  //     middleText: product.title,
-  //     contentPadding: const EdgeInsets.all(20),
-  //     onConfirm: () {
-  //       Get.back();
-  //       Get.snackbar("", "${product.id} success",
-  //           titleText: const Text(
-  //             "Status",
-  //             style: TextStyle(color: Colors.green),
-  //           ));
-  //     },
-  //   );
-  // }
 }

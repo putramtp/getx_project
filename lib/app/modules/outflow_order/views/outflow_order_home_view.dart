@@ -4,17 +4,17 @@ import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-class ReceiveOrderHomeView extends GetView {
-  const ReceiveOrderHomeView({Key? key}) : super(key: key);
+class OutflowOrderHomeView extends GetView {
+  const OutflowOrderHomeView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     final List<Map<String, dynamic>> menuItems = [
-      {'title': 'By Purchase-order', 'icon': Icons.receipt_long_rounded,'color': Colors.indigoAccent,'routes':AppPages.receiveOrderByPoPage},
-      {'title': 'By Supplier', 'icon': Icons.group_rounded,'color': Colors.blue,'routes':AppPages.receiveOrderBySupplierPage},
-      {'title': 'List', 'icon': Icons.category_rounded,'color': Colors.green,'routes':AppPages.receiveOrderListPage},
+      {'title': 'By Request', 'icon': Icons.receipt_long_rounded,'color': Colors.indigoAccent,'routes':AppPages.outflowOrderByRequestPage},
+      {'title': 'By Customer', 'icon': Icons.group_rounded,'color': Colors.blue,'routes':AppPages.outflowOrderByCustomerPage},
+      {'title': 'List', 'icon': Icons.category_rounded,'color': Colors.green,'routes':AppPages.outflowOrderListPage},
       {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
       {'title': 'Report', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
       {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
@@ -23,7 +23,7 @@ class ReceiveOrderHomeView extends GetView {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Receive Order Menu", icon: Icons.grid_view_outlined, routeBackName: AppPages.homePage),
+      appBar: appBarOrder("Outflow Order Menu", icon: Icons.grid_view_outlined,routeBackName: AppPages.homePage),
       body: Padding(
         padding: const EdgeInsets.all(15),
         child: GridView.builder(

@@ -32,8 +32,7 @@ Widget testContainer(double size) {
   return Container(height: size, width: size, color: Colors.brown);
 }
 
-PreferredSizeWidget appBarReceive(String title,
-    {IconData icon = Icons.inventory_2_rounded, String? routeBackName}) {
+PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2, String? routeBackName,bool showIcon = true }) {
   return AppBar(
     automaticallyImplyLeading: false,
     flexibleSpace: Container(
@@ -53,8 +52,14 @@ PreferredSizeWidget appBarReceive(String title,
           onPressed: () =>
               (routeBackName != null) ? Get.toNamed(routeBackName) : Get.back(),
         ),
-        const SizedBox(width: 8),
-        Icon(icon, color: Colors.white, size: 26), // 👈 dynamic icon
+        showIcon 
+            ? Row(
+              children: [
+                const SizedBox(width: 8),
+                Icon(icon, color: Colors.white, size: 26),
+              ],
+            )
+            : const SizedBox.shrink(),
         const SizedBox(width: 12),
         Text(
           title,

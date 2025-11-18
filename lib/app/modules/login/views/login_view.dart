@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
@@ -121,8 +122,8 @@ class LoginView extends GetView<LoginController> {
 
               TextButton(
                 onPressed: () {
-                  Get.snackbar(
-                      "Forgot Password", "You clicked forgot password");
+                  infoAlertBottom(
+                      title:"Forgot Password", "You clicked forgot password");
                 },
                 child: const Text(
                   'Forgot Password',

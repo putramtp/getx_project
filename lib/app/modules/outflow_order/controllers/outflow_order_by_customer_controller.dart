@@ -2,20 +2,20 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
-import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
+import 'package:getx_project/app/models/outflow_request_customer_model.dart';
+import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
+import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:intl/intl.dart';
 
-class ReceiveOrderBySupplierController extends GetxController {
-  final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
+class OutflowOrderByCustomerController extends GetxController {
+  final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
 
   var isLoading = false.obs;
-  var orders = <PoSupplier>[].obs;
-  var filteredSuppliers = <PoSupplier>[].obs;
+  var orders = <OrCustomer>[].obs;
+  var filteredCustomers = <OrCustomer>[].obs;
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
 
@@ -29,15 +29,15 @@ class ReceiveOrderBySupplierController extends GetxController {
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    loadSuppliers();
+    loadCustomers();
   }
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredSuppliers.sort((a, b) => isAscending.value
+    filteredCustomers.sort((a, b) => isAscending.value
         ? a.name.compareTo(b.name)
         : b.name.compareTo(a.name));
-    filteredSuppliers.refresh();
+    filteredCustomers.refresh();
   }
 
   void clearSearch() {
@@ -49,30 +49,33 @@ class ReceiveOrderBySupplierController extends GetxController {
     filterList(value);
   }
 
-  Future<void> loadSuppliers() async {
+  Future<void> loadCustomers() async {
     try {
       isLoading.value = true;
-      final data = await provider.getSuppliers();
+      final data = await provider.getCustomers();
       orders.assignAll(data);
-      filteredSuppliers.assignAll(data);
-      successAlertBottom('Suppliers loaded successfully (${data.length} records)');
+      filteredCustomers.assignAll(data);
+      successAlertBottom(
+        title:'Success',
+        'Customers loaded successfully (${data.length} records)',
+      );
     } catch (e) {
-      errorAlertBottom('Unable to load Suppliers.\nError: $e');
+      errorAlertBottom('Unable to load Customers.\nError: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// 🔍 Filter list by supplier name
+  /// 🔍 Filter list by customer name
   void filterList(String query) {
     if (query.isEmpty) {
-      filteredSuppliers.assignAll(orders);
+      filteredCustomers.assignAll(orders);
     } else {
-      filteredSuppliers.assignAll(
+      filteredCustomers.assignAll(
         orders.where((order) {
           final lowerQuery = query.toLowerCase();
           final nameMatch = order.name.toLowerCase().contains(lowerQuery);
-          final codeMatch = order.code.toLowerCase().contains(lowerQuery);
+          final codeMatch = order.customerCode.toLowerCase().contains(lowerQuery);
           return nameMatch || codeMatch;
         }),
       );
@@ -93,11 +96,11 @@ class ReceiveOrderBySupplierController extends GetxController {
   // 📆 Apply date range filter
   void applyDateFilter() {
     if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom( title:'Filter Tanggal', 'Silakan pilih kedua tanggal terlebih dahulu');
+      infoAlertBottom(title: 'Filter Tanggal','Silakan pilih kedua tanggal terlebih dahulu');
       return;
     }
 
-    // filteredSuppliers.assignAll(orders.where((order) {
+    // filteredCustomers.assignAll(orders.where((order) {
     //   final date = order.date;
     //   return date.isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
     //       date.isBefore(endDate.value!.add(const Duration(days: 1)));
@@ -108,22 +111,22 @@ class ReceiveOrderBySupplierController extends GetxController {
   void clearDateFilter() {
     startDate.value = null;
     endDate.value = null;
-    filteredSuppliers.assignAll(orders);
-    infoAlertBottom( title:'Filter Dihapus', 'Filter tanggal telah direset');
+    filteredCustomers.assignAll(orders);
+    infoAlertBottom(title:'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(PoSupplier supplier) {
-    if (Get.isRegistered<ReceiveOrderBySupplierDetailController>()) {
-      Get.delete<ReceiveOrderBySupplierDetailController>(force: true);
+  void openDetail(OrCustomer customer) {
+    if (Get.isRegistered<OutflowOrderByCustomerDetailController>()) {
+      Get.delete<OutflowOrderByCustomerDetailController>(force: true);
     }
-    Get.toNamed(AppPages.receiveOrderBySupplierDetailPage, arguments: supplier);
+    Get.toNamed(AppPages.outflowOrderByCustomerDetailPage, arguments: customer);
   }
 
   void syncPO() async {
-    await loadSuppliers();
+    await loadCustomers();
   }
 }

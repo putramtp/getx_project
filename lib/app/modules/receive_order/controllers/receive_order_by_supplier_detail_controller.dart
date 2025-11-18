@@ -1,8 +1,8 @@
 import 'dart:developer';
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/models/purchase_order_line_item_by_supplier_model.dart';
 import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_controller.dart';
@@ -62,14 +62,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       items.assignAll(normalizedData);
     } catch (e) {
       log("loadReceiveOrderItems error: $e");
-      Get.snackbar(
-        'Failed',
-        'Unable to load receive order items.\nError: $e',
-        backgroundColor: const Color(0xFFF44336),
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
-      );
+      errorAlertBottom(title:"failed",'Unable to load receive order items.\nError: $e');
     } finally {
       isLoading.value = false;
     }
@@ -102,27 +95,13 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     final qtyToAdd = batchQty ?? 1;
 
     if (serialType != 'BATCH' && filled.isNotEmpty) {
-      Get.snackbar(
-        "Not Allowed",
-        "Only one fill is allowed for $itemName.",
-        backgroundColor: Colors.orange.shade50,
-        colorText: Colors.orange.shade800,
-        snackPosition: SnackPosition.BOTTOM,
-        icon: const Icon(Icons.block_rounded, color: Colors.orange),
-      );
+      warningAlertBottom(title:"Not Allowed","Only one fill is allowed for $itemName.");
       return;
     }
 
     // 🔹 Over-fill protection
     if ((totalFilledQty + qtyToAdd + receivedQty) > expectedQty) {
-      Get.snackbar(
-        "Exceeded Quantity",
-        "Filling this item would exceed the expected qty ($expectedQty) for $itemName.",
-        backgroundColor: Colors.red.shade50,
-        colorText: Colors.red.shade800,
-        snackPosition: SnackPosition.BOTTOM,
-        icon: const Icon(Icons.warning_amber_rounded, color: Colors.red),
-      );
+      errorAlertBottom(title: "Exceeded Quantity","Filling this item would exceed the expected qty ($expectedQty) for $itemName.");
       return;
     }
 
@@ -179,14 +158,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       item["filled"] = [];
       items[index] = Map<String, dynamic>.from(item); // trigger update
       items.refresh();
-
-      Get.snackbar(
-        "Cleared",
-        "Removed $clearedCount filled qty from $name",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFFFFE5E5),
-        colorText: const Color(0xFFB71C1C),
-      );
+      errorAlertBottom(title:"Cleared","Removed $clearedCount filled qty from $name");
     }
   }
 
@@ -251,15 +223,8 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
         if (Get.isDialogOpen == true) {
           Get.back(); // closes confirmation dialog
         }
-
-        Get.snackbar(
-          "Success",
-          "Receiving process for $supplierName started successfully.",
-          backgroundColor: Colors.green.shade50,
-          colorText: Colors.green.shade800,
-          snackPosition: SnackPosition.BOTTOM,
-          icon: const Icon(Icons.check_circle, color: Colors.green),
-        );
+        successAlertBottom("Receiving process for $supplierName started successfully.");
+       
         // ✅ Navigate to the target page after a short delay
         Future.delayed(const Duration(milliseconds: 500), () async {
           // Ensure this controller is deleted before navigating
@@ -270,26 +235,10 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
           await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
         });
       } else {
-        Get.snackbar(
-          "Failed",
-          "Unable to start receiving for $supplierName. Please try again.",
-          backgroundColor: Colors.red.shade50,
-          colorText: Colors.red.shade800,
-          snackPosition: SnackPosition.BOTTOM,
-          icon: const Icon(Icons.error_outline, color: Colors.red),
-        );
+        errorAlertBottom("Unable to start receiving for $supplierName. Please try again.");
       }
-    } catch (e, st) {
-      log('❌ Exception in startReceivingItem: $e\n$st',
-          name: 'startReceivingItem');
-      Get.snackbar(
-        "Error",
-        "An unexpected error occurred while starting the receiving process.",
-        backgroundColor: Colors.red.shade50,
-        colorText: Colors.red.shade800,
-        snackPosition: SnackPosition.BOTTOM,
-        icon: const Icon(Icons.error, color: Colors.red),
-      );
+    } catch (e) {
+      errorAlertBottom("An unexpected error occurred while starting the receiving process.");
     } finally {
       isLoadingReceiving.value = false;
     }

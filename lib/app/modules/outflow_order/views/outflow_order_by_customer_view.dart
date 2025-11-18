@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_controller.dart';
+import 'package:getx_project/app/models/outflow_request_customer_model.dart';
+import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class ReceiveOrderBySupplierView
-    extends GetView<ReceiveOrderBySupplierController> {
-  const ReceiveOrderBySupplierView({Key? key}) : super(key: key);
+class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerController> {
+  const OutflowOrderByCustomerView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +14,8 @@ class ReceiveOrderBySupplierView
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Supplier List",
-            icon: Icons.group_rounded, routeBackName: AppPages.receiveHomePage),
+        child: appBarOrder("Customer List",
+            icon: Icons.group_rounded, routeBackName: AppPages.outflowOrderByCustomerPage),
       ),
       body: SafeArea(
         child: Padding(
@@ -44,7 +43,7 @@ class ReceiveOrderBySupplierView
                             controller: searchController,
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.search),
-                              hintText: 'Search supplier...',
+                              hintText: 'Search customer...',
                               filled: true,
                               fillColor: Colors.white,
                               contentPadding: const EdgeInsets.symmetric(
@@ -120,19 +119,16 @@ class ReceiveOrderBySupplierView
                   ],
                 );
               }),
-
               const SizedBox(height: 12),
-
-              /// 📋 List of Purchase Orders
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final orders = controller.filteredSuppliers;
+                  final orders = controller.filteredCustomers;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('No supplier data.'));
+                    return const Center(child: Text('No customer data.'));
                   }
 
                   return ListView.builder(
@@ -155,7 +151,7 @@ class ReceiveOrderBySupplierView
                     onPressed: controller.syncPO,
                     icon: const Icon(Icons.sync, color: Colors.white),
                     label: const Text(
-                      'Supplier Synchronization',
+                      'Customer Synchronization',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -343,8 +339,8 @@ class ReceiveOrderBySupplierView
   //   );
   // }
 
-  Widget _buildOrderCard(PoSupplier supplier) {
-    final status = supplier.status;
+  Widget _buildOrderCard(OrCustomer customer) {
+    final status = customer.status;
     final statusColor = status.toLowerCase().contains('processing')
         ? Colors.cyan
         : status.toLowerCase().contains('waiting')
@@ -360,16 +356,16 @@ class ReceiveOrderBySupplierView
           backgroundColor: statusColor.withOpacity(0.15),
           child: Icon(Icons.store_rounded, color: statusColor),
         ),
-        title: Text(supplier.name,
+        title: Text(customer.name,
             style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(
-          supplier.code,
+          customer.customerCode,
           style: const TextStyle(fontSize: 12, color: Colors.black54),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(supplier.items, style: const TextStyle(fontSize: 10)),
+            Text(customer.items, style: const TextStyle(fontSize: 10)),
             Text(
               status.toString().isNotEmpty
                   ? '${status[0].toUpperCase()}${status.substring(1)}'
@@ -381,7 +377,7 @@ class ReceiveOrderBySupplierView
             ),
           ],
         ),
-        onTap: () => controller.openDetail(supplier),
+        onTap: () => controller.openDetail(customer),
       ),
     );
   }

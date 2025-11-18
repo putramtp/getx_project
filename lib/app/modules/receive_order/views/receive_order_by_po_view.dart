@@ -14,7 +14,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarReceive("Purchase Order List", icon: Icons.list_alt_sharp,routeBackName:AppPages.receiveHomePage),
+        child: appBarOrder("Purchase Order List", icon: Icons.list_alt_sharp,routeBackName:AppPages.receiveHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -131,7 +131,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
 
                   final orders = controller.filteredOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('No purhcase order data.'));
+                    return const Center(child: Text('No purchase order data.'));
                   }
 
                   return ListView.builder(

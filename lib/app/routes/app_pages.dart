@@ -1,25 +1,30 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_detail_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_detail_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_view.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_request_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_request_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_list_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_home_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_list_view.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_detail_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_binding.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_list_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_home_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
-
-import '../modules/dispatch/bindings/dispatch_binding.dart';
-import '../modules/dispatch/views/dispatch_detail_view.dart';
-import '../modules/dispatch/views/dispatch_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/inventory/bindings/inventory_binding.dart';
@@ -27,9 +32,6 @@ import '../modules/inventory/views/inventory_view.dart';
 import '../modules/inventory/views/item_category_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
-import '../modules/receive/bindings/receive_binding.dart';
-import '../modules/receive/views/receive_detail_view.dart';
-import '../modules/receive/views/receive_view.dart';
 import '../modules/return/bindings/return_binding.dart';
 import '../modules/return/views/return_view.dart';
 import '../middleware/auth_middleware.dart';
@@ -44,23 +46,22 @@ class AppPages {
 
   static const inventoryPage = Routes.INVENTORY;
   static const itemPage = Routes.ITEM;
-
-  static const receivePage = Routes.RECEIVE;
+  //RECEIVE ORDER
   static const receiveHomePage = Routes.RECEIVE_ORDER_HOME;
-  static const receiveDetailPage = Routes.RECEIVE_DETAIL;
-
   static const receiveOrderListPage = Routes.RECEIVE_ORDER_LIST;
-  static const receiveOrderDetailPage = Routes.RECEIVE_ORDER_DETAIL;
+  static const receiveOrderListDetailPage = Routes.RECEIVE_ORDER_LIST_DETAIL;
   static const receiveOrderByPoPage = Routes.RECEIVE_ORDER_BY_PO;
   static const receiveOrderByPoDetailPage = Routes.RECEIVE_ORDER_BY_PO_DETAIL;
   static const receiveOrderBySupplierPage = Routes.RECEIVE_ORDER_BY_SUPPLIER;
   static const receiveOrderBySupplierDetailPage = Routes.RECEIVE_ORDER_BY_SUPPLIER_DETAIL;
-
-  static const outflowOrderPage = Routes.OUTFLOW_ORDER;
-  static const outflowOrderDetailPage = Routes.OUTFLOW_ORDER_DETAIL;
-
-  static const dispatchPage = Routes.DISPATCH;
-  static const dispatchDetailPage = Routes.DISPATCH_DETAIL;
+  //OUTFLOW  ORDER
+  static const outflowHomePage = Routes.OUTFLOW_ORDER_HOME;
+  static const outflowOrderListPage = Routes.OUTFLOW_ORDER_LIST;
+  static const outflowOrderListDetailPage = Routes.OUTFLOW_ORDER_LIST_DETAIL;
+  static const outflowOrderByRequestPage = Routes.OUTFLOW_ORDER_BY_REQUEST;
+  static const outflowOrderByRequestDetailPage = Routes.OUTFLOW_ORDER_BY_REQUEST_DETAIL;
+  static const outflowOrderByCustomerPage = Routes.OUTFLOW_ORDER_BY_CUSTOMER;
+  static const outflowOrderByCustomerDetailPage = Routes.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL;
 
   static const returnPage = Routes.RETURN;
 
@@ -86,15 +87,10 @@ class AppPages {
         page: () => const ItemCategoryView(),
         binding: InventoryBinding(),
         transition: Transition.leftToRight),
+    //RECEIVE ORDER
     GetPage(
-      name: _Paths.RECEIVE,
-      page: () => const ReceiveView(),
-      binding: ReceiveBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_DETAIL,
-      page: () => const ReceiveDetailView(),
-      binding: ReceiveBinding(),
+      name: _Paths.RECEIVE_ORDER_HOME,
+      page: () => const ReceiveOrderHomeView(),
     ),
     GetPage(
       name: _Paths.RECEIVE_ORDER_LIST,
@@ -102,14 +98,9 @@ class AppPages {
       binding: ReceiveOrderListBinding(),
     ),
     GetPage(
-      name: _Paths.RECEIVE_ORDER_DETAIL,
-      page: () => const ReceiveOrderDetailView(),
-      binding: ReceiveOrderDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_HOME,
-      page: () => const ReceiveOrderHomeView(),
-      binding: ReceiveBinding(),
+      name: _Paths.RECEIVE_ORDER_LIST_DETAIL,
+      page: () => const ReceiveOrderListDetailView(),
+      binding: ReceiveOrderListDetailBinding(),
     ),
     GetPage(
       name: _Paths.RECEIVE_ORDER_BY_PO,
@@ -129,28 +120,45 @@ class AppPages {
     GetPage(
       name: _Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL,
       page: () => const ReceiveOrderBySupplierDetailView(),
-      binding: ReceiveOrderSupplierDetailBinding(),
+      binding: ReceiveOrderBySupplierDetailBinding(),
+    ),
+
+    // OUTFLOW ORDER
+    GetPage(
+      name: _Paths.OUTFLOW_ORDER_HOME,
+      page: () => const OutflowOrderHomeView(),
     ),
     GetPage(
-      name: _Paths.OUTFLOW_ORDER,
-      page: () => const OutflowOrderView(),
-      binding: OutflowOrderBinding(),
+      name: _Paths.OUTFLOW_ORDER_LIST,
+      page: () => const OutflowOrderListView(),
+      binding: OutflowOrderListBinding(),
     ),
     GetPage(
-      name: _Paths.OUTFLOW_ORDER_DETAIL,
+      name: _Paths.OUTFLOW_ORDER_LIST_DETAIL,
       page: () => const OutflowOrderDetailView(),
-      binding: OutflowOrderDetailBinding(),
+      binding: OutflowOrderListDetailBinding(),
     ),
     GetPage(
-      name: _Paths.DISPATCH,
-      page: () => const DispatchView(),
-      binding: DispatchBinding(),
+      name: _Paths.OUTFLOW_ORDER_BY_REQUEST,
+      page: () => const OutflowOrderByRequestView(),
+      binding: OutflowOrderByRequestBinding(),
     ),
     GetPage(
-      name: _Paths.DISPATCH_DETAIL,
-      page: () => const DispatchDetailView(),
-      binding: DispatchBinding(),
+      name: _Paths.OUTFLOW_ORDER_BY_REQUEST_DETAIL,
+      page: () => const OutflowOrderByRequestDetailView(),
+      binding: OutflowOrderByRequestDetailBinding(),
     ),
+    GetPage(
+      name: _Paths.OUTFLOW_ORDER_BY_CUSTOMER,
+      page: () => const OutflowOrderByCustomerView(),
+      binding: OutflowOrderByCustomerBinding(),
+    ),
+    GetPage(
+      name: _Paths.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL,
+      page: () => const OutflowOrderByCustomerDetailView(),
+      binding: OutflowOrderByCustomerDetailBinding(),
+    ),
+
     GetPage(
       name: _Paths.RETURN,
       page: () => const ReturnView(),

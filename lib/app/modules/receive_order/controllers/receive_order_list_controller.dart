@@ -2,9 +2,10 @@ import 'dart:developer';
 
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/models/receive_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_detail_controller.dart';
+import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_detail_controller.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:intl/intl.dart';
@@ -56,24 +57,10 @@ class ReceiveOrderListController extends GetxController {
       final data = await provider.getReceiveOrders();
       orders.assignAll(data);
       filteredOrders.assignAll(data);
-      Get.snackbar(
-        'Success',
-        'Receive orders loaded successfully (${data.length} records)',
-        backgroundColor: const Color(0xFF4CAF50),
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
+      successAlertBottom('Receive orders loaded successfully (${data.length} records)');
     } catch (e, st) {
       log("loadOrders error: $e \n$st", name: 'ReceiveOrderListController');
-      Get.snackbar(
-        'Failed',
-        'Unable to load receive orders.\nError: $e',
-        backgroundColor: const Color(0xFFF44336),
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
-      );
+      errorAlertBottom(title:'Failed','Unable to load receive orders.\nError: $e');
     } finally {
       isLoading.value = false;
     }
@@ -114,10 +101,9 @@ class ReceiveOrderListController extends GetxController {
     final end = endDate.value;
 
     if (start == null || end == null) {
-      Get.snackbar(
-        'Filter Tanggal',
+      infoAlertBottom(
+        title:'Filter Tanggal',
         'Silakan pilih kedua tanggal terlebih dahulu',
-        snackPosition: SnackPosition.BOTTOM,
       );
       return;
     }
@@ -141,7 +127,7 @@ class ReceiveOrderListController extends GetxController {
     startDate.value = null;
     endDate.value = null;
     filteredOrders.assignAll(orders);
-    Get.snackbar('Filter Dihapus', 'Filter tanggal telah direset');
+    infoAlertBottom(title:'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
   String formatDate(DateTime date) {
@@ -149,15 +135,15 @@ class ReceiveOrderListController extends GetxController {
   }
 
   void openDetail(ReceiveOrder order) {
-     if (Get.isRegistered<ReceiveOrderDetailController>()) {
-      Get.delete<ReceiveOrderDetailController>(force: true);
+     if (Get.isRegistered<ReceiveOrderListDetailController>()) {
+      Get.delete<ReceiveOrderListDetailController>(force: true);
     }
-    Get.toNamed(AppPages.receiveOrderDetailPage, arguments: order);
+    Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
   }
 
   /// 🔄 Manual Sync
   void syncReceiveOrder() async {
     await loadReceiveOrders();
-    Get.snackbar('Sinkronisasi', 'PO terbaru disinkronisasi');
+    infoAlertBottom(title:'Sinkronisasi', 'PO terbaru disinkronisasi');
   }
 }

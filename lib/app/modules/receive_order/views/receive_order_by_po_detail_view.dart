@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_fill_by_po_view.dart';
@@ -16,7 +17,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
       backgroundColor: theme.colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarReceive("Item Summary",routeBackName:AppPages.receiveOrderByPoPage ),
+        child: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderByPoPage),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -153,14 +154,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
             final totalFilled = controller.totalFilled;
 
             if (totalFilled == 0) {
-              Get.snackbar(
-                "No Items Filled",
-                "Please fill at least one item before continuing.",
-                backgroundColor: Colors.orange.shade50,
-                colorText: Colors.orange.shade800,
-                snackPosition: SnackPosition.BOTTOM,
-                icon: const Icon(Icons.info_rounded, color: Colors.orange),
-              );
+              warningAlertBottom(title:"No Items Filled","Please fill at least one item before continuing.");
               return;
             }
 
@@ -448,7 +442,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
       ),
       child: Row(
         children: [
-          const Icon(Icons.qr_code_rounded, color: Colors.white, size: 32),
+          const Icon(Icons.description_rounded, color: Colors.white, size: 32),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

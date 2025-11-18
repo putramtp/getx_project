@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/models/receive_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_controller.dart';
+import 'package:getx_project/app/models/outflow_order_model.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
+import '../controllers/outflow_order_list_controller.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
-  const ReceiveOrderListView({Key? key}) : super(key: key);
+class OutflowOrderListView extends GetView<OutflowOrderListController> {
+  const OutflowOrderListView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +14,9 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Receive Order List",
+        child: appBarOrder("Outflow Request List",
             icon: Icons.list_alt_sharp,
-            routeBackName: AppPages.receiveHomePage),
+            routeBackName: AppPages.outflowHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -123,7 +123,6 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
 
               const SizedBox(height: 12),
 
-              /// 📋 List of Receive Orders
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
@@ -132,7 +131,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
 
                   final orders = controller.filteredOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('No receive order data.'));
+                    return const Center(child: Text('Tidak ada data.'));
                   }
 
                   return ListView.builder(
@@ -152,7 +151,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: controller.syncReceiveOrder,
+                    onPressed: controller.syncData,
                     icon: const Icon(Icons.sync, color: Colors.white),
                     label: const Text(
                       'Synchronization',
@@ -162,7 +161,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                           color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
+                      backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -281,11 +280,8 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                                 controller.applyDateFilter();
                                 Navigator.pop(context);
                               },
-                              icon: const Icon(Icons.check,color:Colors.white),
-                              label: const Text(
-                                "Apply",
-                                style: TextStyle(color: Colors.white),
-                              ),
+                              icon: const Icon(Icons.check),
+                              label: const Text("Apply"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 padding:
@@ -346,15 +342,16 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     );
   }
 
-  Widget _buildOrderCard(ReceiveOrder order) {
+
+  Widget _buildOrderCard(OutflowOrder order) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.cyan.withOpacity(0.15),
-          child: const Icon(Icons.file_present_rounded, color: Colors.cyan),
+          backgroundColor: Colors.blue.withOpacity(0.15),
+          child: const Icon(Icons.file_present_rounded, color: Colors.blue),
         ),
         title: Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Row(
@@ -363,7 +360,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
             const Icon(Icons.star_border, size: 14, color: Colors.black54),
             const SizedBox(width:2),
             Text(
-              order.supplier,
+              order.customer,
               style: const TextStyle(fontSize: 12, color: Colors.black54),
             ),
           ],

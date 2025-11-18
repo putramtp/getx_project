@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/models/receive_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_controller.dart';
+import 'package:getx_project/app/models/outlfow_request_model.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
+import '../controllers/outflow_order_by_request_controller.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
-  const ReceiveOrderListView({Key? key}) : super(key: key);
+class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController> {
+  const OutflowOrderByRequestView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +14,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Receive Order List",
-            icon: Icons.list_alt_sharp,
-            routeBackName: AppPages.receiveHomePage),
+        child: appBarOrder("Outflow Request List", icon: Icons.list_alt_sharp,routeBackName:AppPages.outflowHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -53,15 +51,16 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
                               ),
-                              suffixIcon: isFocused
-                                  ? IconButton(
-                                      icon: const Icon(Icons.close),
-                                      onPressed: () {
-                                        searchController.clear();
-                                        FocusScope.of(context).unfocus();
-                                      },
-                                    )
-                                  : null,
+                              suffixIcon:
+                                  isFocused 
+                                      ? IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () {
+                                            searchController.clear();
+                                            FocusScope.of(context).unfocus();
+                                          },
+                                        )
+                                      : null,
                             ),
                             onChanged: controller.onSearchChanged,
                           ),
@@ -105,7 +104,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                                 const SizedBox(width: 6),
                                 // Filter button
                                 IconButton.filledTonal(
-                                  icon: const Icon(Icons.filter_alt_rounded),
+                                  icon: const Icon(Icons.filter_alt_rounded ),
                                   tooltip: 'Filter',
                                   onPressed: () => _openTopFilterSheet(context),
                                   style: IconButton.styleFrom(
@@ -123,7 +122,6 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
 
               const SizedBox(height: 12),
 
-              /// 📋 List of Receive Orders
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
@@ -132,7 +130,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
 
                   final orders = controller.filteredOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('No receive order data.'));
+                    return const Center(child: Text('No order data.'));
                   }
 
                   return ListView.builder(
@@ -152,7 +150,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: controller.syncReceiveOrder,
+                    onPressed: controller.syncData,
                     icon: const Icon(Icons.sync, color: Colors.white),
                     label: const Text(
                       'Synchronization',
@@ -281,11 +279,8 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                                 controller.applyDateFilter();
                                 Navigator.pop(context);
                               },
-                              icon: const Icon(Icons.check,color:Colors.white),
-                              label: const Text(
-                                "Apply",
-                                style: TextStyle(color: Colors.white),
-                              ),
+                              icon: const Icon(Icons.check),
+                              label: const Text("Apply"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 padding:
@@ -346,36 +341,40 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     );
   }
 
-  Widget _buildOrderCard(ReceiveOrder order) {
+  Widget _buildOrderCard(OutflowRequest order) {
+    final status = order.status;
+    final statusColor = status.toLowerCase().contains('processing')
+        ? Colors.cyan
+        : status.toLowerCase().contains('waiting')
+            ? Colors.orange
+            : Colors.green;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.cyan.withOpacity(0.15),
-          child: const Icon(Icons.file_present_rounded, color: Colors.cyan),
+          backgroundColor: statusColor.withOpacity(0.15),
+          child: Icon(Icons.check_circle, color: statusColor),
         ),
-        title: Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Icon(Icons.star_border, size: 14, color: Colors.black54),
-            const SizedBox(width:2),
-            Text(
-              order.supplier,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-          ],
+        title: Text(order.code,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(
+          order.customer,
+          style: const TextStyle(fontSize: 12, color: Colors.black54),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(order.type, style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600)),
-            Text( controller.formatYmd(order.date),
+            Text(order.items, style: const TextStyle(fontSize: 10)),
+            Text(
+              status.toString().isNotEmpty
+                  ? '${status[0].toUpperCase()}${status.substring(1)}'
+                  : '-',
               style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey[600],
+                  fontSize: 14,
+                  color: statusColor,
                   fontWeight: FontWeight.w800),
             ),
           ],

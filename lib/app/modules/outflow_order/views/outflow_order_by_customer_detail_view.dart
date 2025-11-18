@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_fill_by_supplier_view.dart';
+import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
+import 'package:getx_project/app/modules/outflow_order/views/scan_page_by_customer.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDetailController> {
-  const ReceiveOrderBySupplierDetailView({super.key});
+class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDetailController> {
+  const OutflowOrderByCustomerDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +16,8 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
       backgroundColor: theme.colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderBySupplierPage),
+        child: appBarOrder("Item Summary",
+            routeBackName: AppPages.outflowOrderByCustomerPage),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -52,12 +52,12 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                 itemBuilder: (context, index) {
                   final item = controller.items[index];
                   final expected = item['expected'] ?? 0;
-                  // Unified filled format: [{code, qty}]
-                  final List<Map<String, dynamic>> filledList =
-                      List<Map<String, dynamic>>.from(item['filled'] ?? []);
+                  // Unified scanned format: [{code, qty}]
+                  final List<Map<String, dynamic>> scannedList =
+                      List<Map<String, dynamic>>.from(item['scanned'] ?? []);
 
-                  // Sum up total filled qty
-                  final filledCount = filledList.fold<int>(
+                  // Sum up total scanned qty
+                  final scannedCount = scannedList.fold<int>(
                     0,
                     (sum, e) =>
                         sum +
@@ -65,20 +65,20 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                             ? e['qty'] as int
                             : int.tryParse('${e['qty']}') ?? 0),
                   );
-                  final received = item['received'] ?? 0;
-                  final bool isFinished = received >= expected;
-                  final receivedAndFilled = received + filledCount;
+                  final outflowed = item['received'] ?? 0;
+                  final bool isFinished = outflowed >= expected;
+                  final outflowedAndScanned = outflowed + scannedCount;
 
                   // log("${item['name']} - ${item['serialNumberType']}");
 
                   IconData icon;
                   Color bgColor;
 
-                  if (expected > 0 && receivedAndFilled >= expected) {
+                  if (expected > 0 && outflowedAndScanned >= expected) {
                     icon = Icons.check_circle_rounded;
                     bgColor = Colors.green;
-                  } else if (receivedAndFilled > 0 &&
-                      receivedAndFilled < expected) {
+                  } else if (outflowedAndScanned > 0 &&
+                      outflowedAndScanned < expected) {
                     icon = Icons.timelapse_rounded;
                     bgColor = Colors.orange;
                   } else {
@@ -95,7 +95,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold)),
                       subtitle: Text(
-                          "Expected: $expected | Received: $received | receiving: $filledCount",
+                          "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
                           style: theme.textTheme.bodyMedium
                               ?.copyWith(color: Colors.grey[700])),
                       leading: CircleAvatar(
@@ -108,10 +108,10 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                               onPressed: () {
                                 controller.selectedIndex.value = index;
                                 controller.selectedItem.value = item;
-                                Get.to(() => const ReceiveOrderFillBySupplierView());
+                                Get.to(() => const ScanPageByCustomer());
                               },
-                              icon: const Icon(Icons.edit_rounded),
-                              label: const Text("fill"),
+                              icon: const Icon(Icons.qr_code_scanner_rounded),
+                              label: const Text("Scan"),
                             )
                           : null,
                     ),
@@ -120,67 +120,39 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
               );
             })),
             const SizedBox(height: 16),
-            _buildContinueButton(theme),
+            _buildContinueButton(theme, controller),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContinueButton(ThemeData theme) {
+  Widget _buildContinueButton(ThemeData theme, controller) {
     return SizedBox(
       width: double.infinity,
       child: Obx(() {
-        final totalFilled = controller.totalFilled;
-        final isLoading = controller.isLoadingReceiving.value;
+        final totalScanned = controller.totalScanned;
+        final isLoading = controller.isLoadingOutflowing.value;
         return FilledButton.icon(
-          icon: isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.receipt_long_rounded),
+          icon: const Icon(Icons.receipt_long_rounded),
           label: Text(isLoading
               ? "Processing..."
-              : "Continue to receiving items ($totalFilled filled)"),
-          onPressed: isLoading ? null  :() async {
-            if (controller.items.isEmpty) return;
-            // Use the unified filled data
-            final allFilledUnified = controller.getAllFilledUnified();
-            final totalFilled = controller.totalFilled;
+              : "Continue to outflowing items ($totalScanned scanned)"),
+          onPressed: isLoading
+              ? null
+              : () async {
+                  if (controller.items.isEmpty) return;
+                  // Use the unified scanned data
+                  final allScannedUnified = controller.getAllScannedUnified();
+                  final totalScanned = controller.totalScanned;
 
-            if (totalFilled == 0) {
-              warningAlertBottom(
-                title:"No Items Filled",
-                "Please fill at least one item before continuing.",
-              );
-              return;
-            }
-
-            // ✅ Make sure only one dialog opens at a time
-            String? receiveNumber = controller.receiveNumber.value;
-            if (receiveNumber.isEmpty) {
-              receiveNumber = await _showReceiveNumberDialog();
-              if (receiveNumber == null || receiveNumber.trim().isEmpty) {
-                return; // user cancelled or input empty
-              }
-              controller.receiveNumber.value = receiveNumber.trim();
-            }
-
-            // ✅ Ensure previous dialog is fully closed before showing next
-            await Future.delayed(const Duration(milliseconds: 200));
-
-            final confirm = await Get.dialog<bool>(
-              _buildConfirmDialog(allFilledUnified, totalFilled),
-            );
-            if (confirm == true) {
-              controller.startReceivingItem();
-            }
-          },
+                  final confirm = await Get.dialog<bool>(
+                    _buildConfirmDialog(allScannedUnified, totalScanned),
+                  );
+                  if (confirm == true) {
+                    controller.startOutflowingItem();
+                  }
+                },
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape:
@@ -192,8 +164,8 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
   }
 
   Widget _buildConfirmDialog(
-    Map<dynamic, List<Map<String, dynamic>>> allFilled,
-    int totalFilled,
+    Map<dynamic, List<Map<String, dynamic>>> allScanned,
+    int totalScanned,
   ) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -212,46 +184,19 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                 padding: const EdgeInsets.all(16),
                 child: const Icon(
                   Icons.receipt_long_rounded,
-                  color: Colors.teal,
+                  color: Colors.blue,
                   size: 40,
                 ),
               ),
               const SizedBox(height: 18),
-              TextButton(
-                onPressed: () async {
-                  final newNumber = await _showReceiveNumberDialog(
-                    initialValue: controller.receiveNumber.value,
-                  );
-                  if (newNumber != null && newNumber.trim().isNotEmpty) {
-                    controller.receiveNumber.value = newNumber.trim();
-                  }
-                },
-                child: Column(
-                  children: [
-                    const Text(
-                      'Continue to Receiving ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Obx(() => Text(
-                          '#${controller.receiveNumber.value}?',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Colors.blue,
-                          ),
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                ),
+              const Text(
+                'Continue to Outflowing Items?',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                'Total receiving quantity: $totalFilled',
+                'Total Outflowing quantity: $totalScanned',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -260,15 +205,14 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
               ),
               const SizedBox(height: 12),
 
-              // 🔹 Loop through each item and show filled  + total qty
+              // 🔹 Loop through each item and show scanned codes + total qty
               ...controller.items.map((item) {
-                final lineId = item['line_id'];
+                final id = item['line_id'];
                 final name = item['name'] ?? 'Unnamed';
-                final serialNumberType = item['serialNumberType'] ?? 'other';
-                final filledList = allFilled[lineId] ?? [];
+                final scannedList = allScanned[id] ?? [];
 
                 // Calculate total qty for this item
-                final itemQty = filledList.fold<int>(
+                final itemQty = scannedList.fold<int>(
                   0,
                   (sum, entry) =>
                       sum +
@@ -303,36 +247,39 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                               ),
                             ),
                           ),
-                          serialNumberType == 'BATCH'
-                              ? Text(
-                                  'Total: $itemQty',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black54,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                          Text(
+                            'Total: $itemQty',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black54,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      if (filledList.isNotEmpty)
+                      if (scannedList.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(left: 4, top: 4),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: filledList.map((entry) {
+                            children: scannedList.map((entry) {
+                              final code = entry['code'];
                               final qty = entry['qty'];
+                              final displayText =
+                                  (qty == 1) ? code : "$code (qty: $qty)";
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 2),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.list_rounded,
+                                    const Icon(Icons.qr_code_2,
                                         size: 16, color: Colors.grey),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        "Filled: $qty",
+                                        code != null
+                                            ? displayText
+                                            : "scanned: $qty",
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: Colors.black54,
@@ -349,7 +296,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                         const Padding(
                           padding: EdgeInsets.only(left: 4, top: 4),
                           child: Text(
-                            "No filled quantities yet.",
+                            "No scanned codes yet.",
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.black45,
@@ -375,14 +322,8 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                      ),
                       onPressed: () => Get.back(result: true),
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text('Continue'),
                     ),
                   ),
                 ],
@@ -394,44 +335,10 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
     );
   }
 
-  Future<String?> _showReceiveNumberDialog({String? initialValue}) async {
-    final TextEditingController textController =
-        TextEditingController(text: initialValue ?? '');
-
-    return Get.dialog<String>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Receive Number'),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Enter receive number',
-            prefixIcon: Icon(Icons.confirmation_number),
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final val = textController.text.trim();
-              Get.back(result: val);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildHeader() {
-    final supplier = controller.currentSupplier;
-    final supplierName = supplier.name ;
-    final supplierCode = supplier.code ;
+    final or = controller.currentOrCustomer;
+    final customerCode = or.customerCode;
+    final customerName = or.name;
 
     return Container(
       width: double.infinity,
@@ -446,19 +353,35 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
       ),
       child: Row(
         children: [
-          const Icon(Icons.store_rounded, color: Colors.white, size: 34),
+          const Icon(Icons.qr_code_rounded, color: Colors.white, size: 32),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Supplier / Vendor",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("#$supplierName ($supplierCode)",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Customer",
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "#$customerName",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20),
+                    ),
+                    Text(
+                     "($customerCode)",
+                      style:  TextStyle(
+                          color: Colors.grey.shade200,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

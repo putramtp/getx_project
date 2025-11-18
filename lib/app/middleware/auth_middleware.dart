@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/modules/services/auth_service.dart';
@@ -20,7 +18,7 @@ class AuthMiddleware extends GetMiddleware {
     // Attempt to retrieve the token. 
     // This safely checks the in-memory cache and GetStorage.
     final String? token = _authService.currentToken;
-    log("authService.currentToken : $token");
+    // log("authService.currentToken : $token");
 
     // Check if the token is null or empty
     if (token == null || token.isEmpty) {
