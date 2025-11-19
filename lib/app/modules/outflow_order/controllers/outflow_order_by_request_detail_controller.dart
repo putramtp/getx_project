@@ -1,13 +1,11 @@
-import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/models/outflow_request_line_item_model.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/outlfow_request_model.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_request_controller.dart';
 import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
-
 
 class OutflowOrderByRequestDetailController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
@@ -31,41 +29,36 @@ class OutflowOrderByRequestDetailController extends GetxController {
       currentOr = args;
       loadOrItems();
     } else {
-      log("⚠️ Invalid or missing arguments in currentOrder: $args");
+      errorAlert("⚠️ Invalid or missing arguments in currentOrder: $args");
     }
   }
 
   Future<void> loadOrItems() async {
-    try {
-      isLoading.value = true;
-      final orderId = currentOr.id;
+    final orderId = currentOr.id;
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getOutflowRequestLineItem(orderId),
+    );
+    // If network failed or exception handled, data is null
+    if (data == null) return;
 
-      final List<OutflowRequestLineItem> data =
-          await provider.getOutflowRequestLineItem(orderId);
+    final normalizedData = data.map((item) {
+      final scanned = (item.scanned != null && item.scanned!.isNotEmpty)
+          ? item.scanned!
+          : <String>[];
 
-      final normalizedData = data.map((item) {
-        final scanned = (item.scanned != null && item.scanned!.isNotEmpty)
-            ? item.scanned!
-            : <String>[];
+      return {
+        "line_id": item.lineId,
+        "name": item.name,
+        "serialNumberType": item.serialNumberType,
+        "manageExpired": item.manageExpired,
+        "expected": item.expected,
+        "received": item.received,
+        "scanned": scanned,
+      };
+    }).toList();
 
-        return {
-          "line_id": item.lineId,
-          "name": item.name,
-          "serialNumberType": item.serialNumberType,
-          "manageExpired": item.manageExpired,
-          "expected": item.expected,
-          "received": item.received,
-          "scanned": scanned,
-        };
-      }).toList();
-
-      items.assignAll(normalizedData);
-    } catch (e) {
-      log("loadOutflowRequestItems error: $e");
-      errorAlertBottom("Unable to load outflow request line items.\nError: $e");
-    } finally {
-      isLoading.value = false;
-    }
+    items.assignAll(normalizedData);
   }
 
   void addScannedCode(String code,
@@ -188,11 +181,10 @@ class OutflowOrderByRequestDetailController extends GetxController {
     return result;
   }
 
- int get totalScanned {
+  int get totalScanned {
     final all = getAllScannedUnified();
     return all.values.fold<int>(0, (sum, list) {
-      return sum +
-          list.fold<int>(0, (inner, e) => inner + safeToInt(e['qty']));
+      return sum + list.fold<int>(0, (inner, e) => inner + safeToInt(e['qty']));
     });
   }
 

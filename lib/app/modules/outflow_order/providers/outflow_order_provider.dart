@@ -1,7 +1,5 @@
-import 'dart:developer';
 import 'package:getx_project/app/api_providers.dart';
 import 'package:getx_project/app/models/outflow_order_detail_model.dart';
-import 'package:getx_project/app/models/outflow_order_model.dart';
 import 'package:getx_project/app/models/outflow_request_customer_model.dart';
 import 'package:getx_project/app/models/outflow_request_line_item_model.dart';
 import 'package:getx_project/app/models/outlfow_request_model.dart';
@@ -12,13 +10,17 @@ class OutflowOrderProvider extends ApiProvider {
   //   httpClient.baseUrl = '';
   // }
 
-  Future<List<OutflowOrder>> getOutflowOrders() async {
-    final response = await get('/outflow-order');
+  Future<Map<String, dynamic>> getOutflowOrders({String? cursor}) async {
+    final response = await get(
+      '/outflow-order/pagination',
+      query: cursor != null ? {'cursor': cursor} : {},
+    );
+
     if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OutflowOrder.fromJson(e)).toList();
+      return response.body; // return full data including cursor
     } else {
-      throw Exception('Failed to load getOutflowOrders: ${response.statusText}');
+      throw Exception(
+          'Failed to load getOutflowOrders: ${response.statusText}');
     }
   }
 
@@ -32,10 +34,10 @@ class OutflowOrderProvider extends ApiProvider {
         throw Exception('Unexpected response format: data is not a Map');
       }
     } else {
-      throw Exception('Failed to load getOutflowOrderDetail: ${response.statusText}');
+      throw Exception(
+          'Failed to load getOutflowOrderDetail: ${response.statusText}');
     }
   }
-  
 
   Future<List<OutflowRequest>> getOutflowRequests() async {
     final response = await get('/outflow-request/summary');
@@ -43,26 +45,32 @@ class OutflowOrderProvider extends ApiProvider {
       final data = response.body['data'] as List<dynamic>;
       return data.map((e) => OutflowRequest.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load getOutflowRequests: ${response.statusText}');
+      throw Exception(
+          'Failed to load getOutflowRequests: ${response.statusText}');
     }
   }
 
-  Future<List<OutflowRequestLineItem>> getOutflowRequestLineItem(int orderId) async {
+  Future<List<OutflowRequestLineItem>> getOutflowRequestLineItem(
+      int orderId) async {
     final response = await get('/outflow-request/$orderId/summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
       return data.map((e) => OutflowRequestLineItem.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load getOutflowRequestLineItem: ${response.statusText}');
+      throw Exception(
+          'Failed to load getOutflowRequestLineItem: ${response.statusText}');
     }
   }
-  Future<List<OutflowRequestLineItem>> getOutflowRequestLineItemByCustomer( int customerId) async {
+
+  Future<List<OutflowRequestLineItem>> getOutflowRequestLineItemByCustomer(
+      int customerId) async {
     final response = await get('/outflow-request/$customerId/customer-summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
       return data.map((e) => OutflowRequestLineItem.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load getOutflowRequestLineItemByCustomer: ${response.statusText}');
+      throw Exception(
+          'Failed to load getOutflowRequestLineItemByCustomer: ${response.statusText}');
     }
   }
 
@@ -70,13 +78,12 @@ class OutflowOrderProvider extends ApiProvider {
     try {
       final response = await post('/outflow-request/outflowData', payload);
       return response;
-    } catch (e,st) {
-      log('❌ postPoLineToReceivedData error: $e\n$st', name: 'ReceiveOrderProvider');
+    } catch (e) {
       rethrow;
     }
   }
 
-   Future<List<OrCustomer>> getCustomers() async {
+  Future<List<OrCustomer>> getCustomers() async {
     final response = await get('/outflow-request/customer-summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;

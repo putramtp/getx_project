@@ -1,9 +1,6 @@
-import 'dart:developer';
-import 'dart:convert';
-
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/models/purchase_order_line_item_model.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/purchase_order_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_controller.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
@@ -31,41 +28,34 @@ class ReceiveOrderByPoDetailController extends GetxController {
       currentOrder = args;
       loadPurchaseOrderItems();
     } else {
-      log("⚠️ Invalid or missing arguments in currentOrder: $args");
+      errorAlert("⚠️ Invalid or missing arguments in currentOrder: $args");
     }
   }
 
   /// 🔹 Fetch items for this order
   Future<void> loadPurchaseOrderItems() async {
-    try {
-      isLoading.value = true;
-      final orderId = currentOrder.id;
+    final orderId = currentOrder.id;
+    final data = await ApiExecutor.run(
+        isLoading: isLoading,
+        task: () => provider.getPurchaseOrderLineItem(orderId));
+    if (data == null) return;
 
-      final List<PurchaseOrderLineItem> data =
-          await provider.getPurchaseOrderLineItem(orderId);
-      log("loadReceiveOrderItems success : ${jsonEncode(data.map((e) => e.toJson()).toList())}");
-      // Normalize each item: ensure filled list & received count are consistent
-      final normalizedData = data.map((item) {
-        final filled = (item.filled != null && item.filled!.isNotEmpty)
-            ? item.filled!
-            : <String>[];
-        return {
-          "line_id": item.lineId,
-          "name": item.name,
-          "serialNumberType": item.serialNumberType,
-          "manageExpired": item.manageExpired,
-          "expected": item.expected,
-          "received": item.received,
-          "filled": filled,
-        };
-      }).toList();
+    final normalizedData = data.map((item) {
+      final filled = (item.filled != null && item.filled!.isNotEmpty)
+          ? item.filled!
+          : <String>[];
+      return {
+        "line_id": item.lineId,
+        "name": item.name,
+        "serialNumberType": item.serialNumberType,
+        "manageExpired": item.manageExpired,
+        "expected": item.expected,
+        "received": item.received,
+        "filled": filled,
+      };
+    }).toList();
 
-      items.assignAll(normalizedData);
-    } catch (e) {
-      errorAlertBottom('Unable to load receive order items.\nError: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    items.assignAll(normalizedData);
   }
 
   /// 🔹 Add new filled barcode (Unified format for UNIQUE + BATCH)
@@ -95,13 +85,16 @@ class ReceiveOrderByPoDetailController extends GetxController {
     final qtyToAdd = batchQty ?? 1;
 
     if (serialType != 'BATCH' && filled.isNotEmpty) {
-      warningAlertBottom( title:"Not Allowed","Only one fill is allowed for $itemName.");
+      warningAlertBottom(
+          title: "Not Allowed", "Only one fill is allowed for $itemName.");
       return;
     }
 
     // 🔹 Over-fill protection
     if ((totalFilledQty + qtyToAdd + receivedQty) > expectedQty) {
-      errorAlertBottom(title:"Exceeded Quantity","Filling this item would exceed the expected qty ($expectedQty) for $itemName.");
+      errorAlertBottom(
+          title: "Exceeded Quantity",
+          "Filling this item would exceed the expected qty ($expectedQty) for $itemName.");
       return;
     }
 
@@ -134,7 +127,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
       filled[foundIndex]['code'] = newCode;
       item['filled'] = filled;
       items.refresh();
-      log('Edited code $oldCode → $newCode');
+      // log('Edited code $oldCode → $newCode');
     }
   }
 
@@ -144,7 +137,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
     item['filled']
         ?.removeWhere((e) => e['code']?.toString() == code.toString());
     items.refresh();
-    log('Removed code $code');
+    // log('Removed code $code');
   }
 
   /// ✅ Clear all filled qty for the currently selected item
@@ -158,7 +151,8 @@ class ReceiveOrderByPoDetailController extends GetxController {
       item["filled"] = [];
       items[index] = Map<String, dynamic>.from(item); // trigger update
       items.refresh();
-      infoAlertBottom(title:"Cleared","Removed $clearedCount filled qty from $name");
+      infoAlertBottom(
+          title: "Cleared", "Removed $clearedCount filled qty from $name");
     }
   }
 
@@ -168,8 +162,8 @@ class ReceiveOrderByPoDetailController extends GetxController {
 
     if (nextIndex < items.length) {
       selectedIndex.value = nextIndex;
-      final nextName = items[nextIndex]["name"] ?? "Next Item";
-      log("➡️ Moved to next item: $nextName");
+      // final nextName = items[nextIndex]["name"] ?? "Next Item";
+      // log("➡️ Moved to next item: $nextName");
     } else {
       Get.back(result: true); // close fill page
     }
@@ -223,7 +217,8 @@ class ReceiveOrderByPoDetailController extends GetxController {
         if (Get.isDialogOpen == true) {
           Get.back(); // closes confirmation dialog
         }
-        successAlertBottom("Receiving process for $poNumber started successfully.");
+        successAlertBottom(
+            "Receiving process for $poNumber started successfully.");
         // ✅ Navigate to the target page after a short delay
         Future.delayed(const Duration(milliseconds: 500), () async {
           // Ensure this controller is deleted before navigating
@@ -233,12 +228,13 @@ class ReceiveOrderByPoDetailController extends GetxController {
           // Navigate and recreate a fresh controller on that page
           await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
         });
-
       } else {
-        errorAlertBottom("Unable to start receiving for $poNumber. Please try again.");
+        errorAlertBottom(
+            "Unable to start receiving for $poNumber. Please try again.");
       }
     } catch (e) {
-      errorAlertBottom("An unexpected error occurred while starting the receiving process:$e");
+      errorAlertBottom(
+          "An unexpected error occurred while starting the receiving process:$e");
     } finally {
       isLoadingReceiving.value = false;
     }

@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/outlfow_request_model.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
 import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
@@ -52,21 +51,16 @@ class OutflowOrderByRequestController extends GetxController {
     filterList(value);
   }
 
-  
-
   Future<void> loadRequestOrders() async {
-    try {
-      isLoading.value = true;
-      final data = await provider.getOutflowRequests();
-      orders.assignAll(data);
-      filteredOrders.assignAll(data);
-      successAlertBottom('Outflow request loaded successfully (${data.length} records)');
-    } catch (e) {
-      log("loadOrders error: $e");
-      errorAlertBottom('Unable to load outflow request.\nError: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getOutflowRequests(),
+    );
+    // If network failed or exception handled, data is null
+    if (data == null) return;
+    orders.assignAll(data);
+    filteredOrders.assignAll(data);
+    successAlertBottom('Outflow request loaded successfully (${data.length} records)');
   }
 
   /// 🔍 Filter list by PO number
@@ -78,8 +72,7 @@ class OutflowOrderByRequestController extends GetxController {
       filteredOrders.assignAll(
         orders.where((order) =>
             order.code.toLowerCase().contains(lowerQuery) ||
-            order.customer.toLowerCase().contains(lowerQuery)
-            ),
+            order.customer.toLowerCase().contains(lowerQuery)),
       );
     }
   }
@@ -98,7 +91,9 @@ class OutflowOrderByRequestController extends GetxController {
   // 📆 Apply date range filter
   void applyDateFilter() {
     if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(title:'Filter Tanggal', 'Silakan pilih kedua tanggal terlebih dahulu');
+      infoAlertBottom(
+          title: 'Filter Tanggal',
+          'Silakan pilih kedua tanggal terlebih dahulu');
       return;
     }
 
@@ -114,7 +109,7 @@ class OutflowOrderByRequestController extends GetxController {
     startDate.value = null;
     endDate.value = null;
     filteredOrders.assignAll(orders);
-    infoAlertBottom(title:'Filter Dihapus', 'Filter tanggal telah direset');
+    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
   String formatDate(DateTime date) {
@@ -131,6 +126,6 @@ class OutflowOrderByRequestController extends GetxController {
   /// 🔄 Manual Sync
   void syncData() async {
     await loadRequestOrders();
-    infoAlertBottom(title:'Sinkronisasi', 'Data terbaru disinkronisasi');
+    infoAlertBottom(title: 'Sinkronisasi', 'Data terbaru disinkronisasi');
   }
 }

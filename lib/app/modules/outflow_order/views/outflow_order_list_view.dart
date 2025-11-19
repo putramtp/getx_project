@@ -135,10 +135,52 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                   }
 
                   return ListView.builder(
-                    itemCount: orders.length,
+                    controller: controller.scrollController,
+                    itemCount: orders.length +
+                        1, // extra slot for loader / no-more indicator
                     itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return _buildOrderCard(order);
+                      if (index < orders.length) {
+                        return _buildOrderCard(orders[index]);
+                      }
+
+                      // 👇 bottom section
+                      return Obx(() {
+                        // 🟡 1. Still loading more → show loader
+                        if (controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 3),
+                              ),
+                            ),
+                          );
+                        }
+
+                        // 🔵 2. No more cursor → show END OF LIST message
+                        if (controller.cursorNext == null &&
+                            orders.isNotEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        // ⚪ 3. Default → empty
+                        return const SizedBox.shrink();
+                      });
                     },
                   );
                 }),
@@ -342,7 +384,6 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
     );
   }
 
-
   Widget _buildOrderCard(OutflowOrder order) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -353,12 +394,13 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
           backgroundColor: Colors.blue.withOpacity(0.15),
           child: const Icon(Icons.file_present_rounded, color: Colors.blue),
         ),
-        title: Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(order.code,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const Icon(Icons.star_border, size: 14, color: Colors.black54),
-            const SizedBox(width:2),
+            const SizedBox(width: 2),
             Text(
               order.customer,
               style: const TextStyle(fontSize: 12, color: Colors.black54),
@@ -368,8 +410,11 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(order.type, style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600)),
-            Text( controller.formatYmd(order.date),
+            Text(order.type,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              controller.formatYmd(order.date),
               style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey[600],

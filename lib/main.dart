@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:getx_project/app/api_providers.dart';
-import 'package:getx_project/app/modules/services/auth_service.dart';
+import 'package:getx_project/app/services/auth_service.dart';
+import 'package:getx_project/app/services/network_service.dart';
 
 import 'app/global/size_config.dart';
 import 'app/routes/app_pages.dart';
@@ -10,7 +11,8 @@ import 'app/routes/app_pages.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Get.put(AuthService()); 
-  Get.put<ApiProvider>(ApiProvider()); 
+  Get.put(ApiProvider()); 
+  Get.put(NetworkService());
   runApp(const MyApp());
 }
 

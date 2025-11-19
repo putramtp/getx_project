@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/receive_order_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_detail_controller.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
@@ -52,18 +51,19 @@ class ReceiveOrderListController extends GetxController {
   }
 
   Future<void> loadReceiveOrders() async {
-    try {
-      isLoading.value = true;
-      final data = await provider.getReceiveOrders();
-      orders.assignAll(data);
-      filteredOrders.assignAll(data);
-      successAlertBottom('Receive orders loaded successfully (${data.length} records)');
-    } catch (e, st) {
-      log("loadOrders error: $e \n$st", name: 'ReceiveOrderListController');
-      errorAlertBottom(title:'Failed','Unable to load receive orders.\nError: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getReceiveOrders(),
+    );
+
+    // If network failed or exception handled, data is null
+    if (data == null) return;
+
+    orders.assignAll(data);
+    filteredOrders.assignAll(data);
+    successAlertBottom(
+      'Receive orders loaded successfully (${data.length} records)',
+    );
   }
 
   String formatYmd(DateTime date) {
@@ -102,7 +102,7 @@ class ReceiveOrderListController extends GetxController {
 
     if (start == null || end == null) {
       infoAlertBottom(
-        title:'Filter Tanggal',
+        title: 'Filter Tanggal',
         'Silakan pilih kedua tanggal terlebih dahulu',
       );
       return;
@@ -127,7 +127,7 @@ class ReceiveOrderListController extends GetxController {
     startDate.value = null;
     endDate.value = null;
     filteredOrders.assignAll(orders);
-    infoAlertBottom(title:'Filter Dihapus', 'Filter tanggal telah direset');
+    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
   String formatDate(DateTime date) {
@@ -135,7 +135,7 @@ class ReceiveOrderListController extends GetxController {
   }
 
   void openDetail(ReceiveOrder order) {
-     if (Get.isRegistered<ReceiveOrderListDetailController>()) {
+    if (Get.isRegistered<ReceiveOrderListDetailController>()) {
       Get.delete<ReceiveOrderListDetailController>(force: true);
     }
     Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
@@ -144,6 +144,6 @@ class ReceiveOrderListController extends GetxController {
   /// 🔄 Manual Sync
   void syncReceiveOrder() async {
     await loadReceiveOrders();
-    infoAlertBottom(title:'Sinkronisasi', 'PO terbaru disinkronisasi');
+    infoAlertBottom(title: 'Sinkronisasi', 'PO terbaru disinkronisasi');
   }
 }

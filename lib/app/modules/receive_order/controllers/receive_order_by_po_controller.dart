@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/purchase_order_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
@@ -49,19 +50,17 @@ class ReceiveOrderByPoController extends GetxController {
   void onSearchChanged(String value) {
     filterList(value);
   }
-  
+
   Future<void> loadPurchaseOrders() async {
-    try {
-      isLoading.value = true;
-      final data = await provider.getPurchaseOrders();
-      orders.assignAll(data);
-      filteredOrders.assignAll(data);
-      successAlertBottom('Purchase orders loaded successfully (${data.length} records)');
-    } catch (e) {
-      errorAlertBottom('Unable to load purchase orders.\nError: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getPurchaseOrders(),
+    );
+    // If network failed or exception handled, data is null
+    if (data == null) return;
+    filteredOrders.assignAll(data);
+    successAlertBottom(
+        'Purchase orders loaded successfully (${data.length} records)');
   }
 
   /// 🔍 Filter list by PO number
@@ -90,7 +89,9 @@ class ReceiveOrderByPoController extends GetxController {
   // 📆 Apply date range filter
   void applyDateFilter() {
     if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(title:"Filter Tanggal",'Silakan pilih kedua tanggal terlebih dahulu');
+      infoAlertBottom(
+          title: "Filter Tanggal",
+          'Silakan pilih kedua tanggal terlebih dahulu');
       return;
     }
 
@@ -106,7 +107,7 @@ class ReceiveOrderByPoController extends GetxController {
     startDate.value = null;
     endDate.value = null;
     filteredOrders.assignAll(orders);
-    infoAlertBottom(title:'Filter Dihapus','Filter tanggal telah direset');
+    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
   String formatDate(DateTime date) {

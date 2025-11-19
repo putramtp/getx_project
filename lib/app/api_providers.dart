@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/modules/services/auth_service.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 
 class ApiProvider extends GetConnect {
   final AuthService _authService = Get.find<AuthService>();

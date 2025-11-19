@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/outflow_request_customer_model.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
@@ -50,20 +51,18 @@ class OutflowOrderByCustomerController extends GetxController {
   }
 
   Future<void> loadCustomers() async {
-    try {
-      isLoading.value = true;
-      final data = await provider.getCustomers();
-      orders.assignAll(data);
-      filteredCustomers.assignAll(data);
-      successAlertBottom(
-        title:'Success',
-        'Customers loaded successfully (${data.length} records)',
-      );
-    } catch (e) {
-      errorAlertBottom('Unable to load Customers.\nError: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getCustomers(),
+    );
+    // If network failed or exception handled, data is null
+    if (data == null) return;
+    orders.assignAll(data);
+    filteredCustomers.assignAll(data);
+    successAlertBottom(
+      title: 'Success',
+      'Customers loaded successfully (${data.length} records)',
+    );
   }
 
   /// 🔍 Filter list by customer name
@@ -75,7 +74,8 @@ class OutflowOrderByCustomerController extends GetxController {
         orders.where((order) {
           final lowerQuery = query.toLowerCase();
           final nameMatch = order.name.toLowerCase().contains(lowerQuery);
-          final codeMatch = order.customerCode.toLowerCase().contains(lowerQuery);
+          final codeMatch =
+              order.customerCode.toLowerCase().contains(lowerQuery);
           return nameMatch || codeMatch;
         }),
       );
@@ -96,7 +96,9 @@ class OutflowOrderByCustomerController extends GetxController {
   // 📆 Apply date range filter
   void applyDateFilter() {
     if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(title: 'Filter Tanggal','Silakan pilih kedua tanggal terlebih dahulu');
+      infoAlertBottom(
+          title: 'Filter Tanggal',
+          'Silakan pilih kedua tanggal terlebih dahulu');
       return;
     }
 
@@ -112,7 +114,7 @@ class OutflowOrderByCustomerController extends GetxController {
     startDate.value = null;
     endDate.value = null;
     filteredCustomers.assignAll(orders);
-    infoAlertBottom(title:'Filter Dihapus', 'Filter tanggal telah direset');
+    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
   String formatDate(DateTime date) {

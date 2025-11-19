@@ -1,9 +1,6 @@
-import 'dart:developer';
-import 'dart:convert';
-
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/models/purchase_order_line_item_by_supplier_model.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_controller.dart';
 import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
@@ -30,42 +27,35 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       currentSupplier = args;
       loadPurchaseOrderItemBySupplier();
     } else {
-      log("⚠️ Invalid or missing arguments in currentSupplier: $args");
+      errorAlert("⚠️ Invalid or missing arguments in currentSupplier: $args");
     }
   }
 
   /// 🔹 Fetch items for this order
   Future<void> loadPurchaseOrderItemBySupplier() async {
-    try {
-      isLoading.value = true;
-      final orderId = currentSupplier.id;
+    final orderId = currentSupplier.id;
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getPurchaseOrderItemBySupplier(orderId),
+    );
+    if (data == null) return;
 
-      final List<PurchaseOrderLineItemBySupplier> data =
-          await provider.getPurchaseOrderItemBySupplier(orderId);
-      log("loadReceiveOrderItems success : ${jsonEncode(data.map((e) => e.toJson()).toList())}");
-      // Normalize each item: ensure filled list & received count are consistent
-      final normalizedData = data.map((item) {
-        final filled = (item.filled != null && item.filled!.isNotEmpty)
-            ? item.filled!
-            : <String>[];
-        return {
-          "line_id": item.lineId,
-          "name": item.name,
-          "serialNumberType": item.serialNumberType,
-          "manageExpired": item.manageExpired,
-          "expected": item.expected,
-          "received": item.received,
-          "filled": filled,
-        };
-      }).toList();
+    final normalizedData = data.map((item) {
+      final filled = (item.filled != null && item.filled!.isNotEmpty)
+          ? item.filled!
+          : <String>[];
+      return {
+        "line_id": item.lineId,
+        "name": item.name,
+        "serialNumberType": item.serialNumberType,
+        "manageExpired": item.manageExpired,
+        "expected": item.expected,
+        "received": item.received,
+        "filled": filled,
+      };
+    }).toList();
 
-      items.assignAll(normalizedData);
-    } catch (e) {
-      log("loadReceiveOrderItems error: $e");
-      errorAlertBottom(title:"failed",'Unable to load receive order items.\nError: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    items.assignAll(normalizedData);
   }
 
   /// 🔹 Add new filled barcode (Unified format for UNIQUE + BATCH)
@@ -95,13 +85,16 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     final qtyToAdd = batchQty ?? 1;
 
     if (serialType != 'BATCH' && filled.isNotEmpty) {
-      warningAlertBottom(title:"Not Allowed","Only one fill is allowed for $itemName.");
+      warningAlertBottom(
+          title: "Not Allowed", "Only one fill is allowed for $itemName.");
       return;
     }
 
     // 🔹 Over-fill protection
     if ((totalFilledQty + qtyToAdd + receivedQty) > expectedQty) {
-      errorAlertBottom(title: "Exceeded Quantity","Filling this item would exceed the expected qty ($expectedQty) for $itemName.");
+      errorAlertBottom(
+          title: "Exceeded Quantity",
+          "Filling this item would exceed the expected qty ($expectedQty) for $itemName.");
       return;
     }
 
@@ -134,7 +127,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       filled[foundIndex]['code'] = newCode;
       item['filled'] = filled;
       items.refresh();
-      log('Edited code $oldCode → $newCode');
+      // log('Edited code $oldCode → $newCode');
     }
   }
 
@@ -144,7 +137,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     item['filled']
         ?.removeWhere((e) => e['code']?.toString() == code.toString());
     items.refresh();
-    log('Removed code $code');
+    // log('Removed code $code');
   }
 
   /// ✅ Clear all filled qty for the currently selected item
@@ -158,7 +151,8 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       item["filled"] = [];
       items[index] = Map<String, dynamic>.from(item); // trigger update
       items.refresh();
-      errorAlertBottom(title:"Cleared","Removed $clearedCount filled qty from $name");
+      errorAlertBottom(
+          title: "Cleared", "Removed $clearedCount filled qty from $name");
     }
   }
 
@@ -168,8 +162,8 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
 
     if (nextIndex < items.length) {
       selectedIndex.value = nextIndex;
-      final nextName = items[nextIndex]["name"] ?? "Next Item";
-      log("➡️ Moved to next item: $nextName");
+      // final nextName = items[nextIndex]["name"] ?? "Next Item";
+      // log("➡️ Moved to next item: $nextName");
     } else {
       Get.back(result: true); // close fill page
     }
@@ -223,8 +217,9 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
         if (Get.isDialogOpen == true) {
           Get.back(); // closes confirmation dialog
         }
-        successAlertBottom("Receiving process for $supplierName started successfully.");
-       
+        successAlertBottom(
+            "Receiving process for $supplierName started successfully.");
+
         // ✅ Navigate to the target page after a short delay
         Future.delayed(const Duration(milliseconds: 500), () async {
           // Ensure this controller is deleted before navigating
@@ -235,10 +230,12 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
           await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
         });
       } else {
-        errorAlertBottom("Unable to start receiving for $supplierName. Please try again.");
+        errorAlertBottom(
+            "Unable to start receiving for $supplierName. Please try again.");
       }
     } catch (e) {
-      errorAlertBottom("An unexpected error occurred while starting the receiving process.");
+      errorAlertBottom(
+          "An unexpected error occurred while starting the receiving process.");
     } finally {
       isLoadingReceiving.value = false;
     }

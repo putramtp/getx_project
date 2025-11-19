@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:getx_project/app/modules/services/auth_service.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {

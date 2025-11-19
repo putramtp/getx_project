@@ -444,17 +444,19 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
         children: [
           const Icon(Icons.description_rounded, color: Colors.white, size: 32),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Purchase Order",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("#$poNumber",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Purchase Order",
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Text("#$poNumber",
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20)),
+              ],
+            ),
           ),
         ],
       ),

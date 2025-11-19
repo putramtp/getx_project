@@ -448,17 +448,29 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
         children: [
           const Icon(Icons.store_rounded, color: Colors.white, size: 34),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Supplier / Vendor",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("#$supplierName ($supplierCode)",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Supplier / Vendor",
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("#$supplierName",
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20)),
+                    Text("($supplierCode)",
+                        style:  TextStyle(
+                            color: Colors.grey.shade200,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/modules/services/auth_service.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 // Adjust the path to your AuthService based on your project structure
 

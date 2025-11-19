@@ -62,7 +62,7 @@ infoAlertBottom(String messageText ,{String? title}) {
    Get.snackbar(
     titleText,
     messageText,
-    backgroundColor: const Color(0xFFFFE5E5),
+    backgroundColor:  Colors.grey.shade50,
     colorText: Colors.black,
     snackPosition: SnackPosition.BOTTOM,
     icon: const Icon(Icons.info_outline, color: Colors.grey),

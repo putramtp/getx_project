@@ -182,17 +182,19 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
         children: [
           const Icon(Icons.inventory_rounded, color: Colors.white, size: 34),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Receive Order",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("#$roCode",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Receive Order",
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Text("#$roCode",
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20)),
+              ],
+            ),
           ),
         ],
       ),

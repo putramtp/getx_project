@@ -1,4 +1,3 @@
-import 'dart:developer'; 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart'; 
 
@@ -26,11 +25,11 @@ class AuthService extends GetxService {
     username.value = _storage.read<String>(_usernameKey);
     roles.value = _storage.read<String>(_rolesKey);
 
-    if (token.value != null) {
-      log('✅ AuthService initialized. Token loaded: ${token.value}');
-    } else {
-      log('ℹ️ AuthService initialized with no stored token.');
-    }
+    // if (token.value != null) {
+    //   log('✅ AuthService initialized. Token loaded: ${token.value}');
+    // } else {
+    //   log('ℹ️ AuthService initialized with no stored token.');
+    // }
   }
 
   /// ✅ Public getter to retrieve current token directly
@@ -41,8 +40,7 @@ class AuthService extends GetxService {
   /// Save token to memory and storage
   void setToken(String newToken) {
     token.value = newToken;
-    _storage.write(_tokenKey, newToken);
-    log('🔐 Token saved: $newToken');
+    _storage.write(_tokenKey, newToken); //Token saved
   }
 
   /// Save username to memory and storage
@@ -67,7 +65,7 @@ class AuthService extends GetxService {
     _storage.remove(_usernameKey);
     _storage.remove(_rolesKey);
 
-    log('🚪 Auth credentials cleared.');
+    // log('🚪 Auth credentials cleared.');
   }
 
   /// Convenience getters

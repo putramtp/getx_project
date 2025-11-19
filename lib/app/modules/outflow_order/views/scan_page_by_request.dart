@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
@@ -101,7 +99,6 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
             final index = controller.selectedIndex.value;
             final item = controller.items[index];
             final serialType = item['serialNumberType'];
-            log('serialType : $serialType');
 
             if (serialType == 'BATCH') {
               final qty = await _showBatchQtyDialog();
@@ -115,7 +112,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
                   barcode,
                   batchQty: result['qty'],
                 );
-                log('🔹 Added OTHER item: $barcode | ${result['qty']} ');
+                // log('🔹 Added OTHER item: $barcode | ${result['qty']} ');
               }
             } else {
               controller.addScannedCode(barcode);

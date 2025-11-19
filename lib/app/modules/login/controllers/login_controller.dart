@@ -1,8 +1,8 @@
-import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/modules/login/providers/login_provider.dart';
-import 'package:getx_project/app/modules/services/auth_service.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
@@ -68,26 +68,23 @@ class LoginController extends GetxController {
     Future<void> checkAlreadyLoggedIn() async {
       final token = _authService.getToken(); // or read from storage if you use GetStorage
       if (token != null && token.isNotEmpty) {
-        log("🔑 User already logged in with token: $token");
         Get.offAllNamed(Routes.HOME);
-      } else {
-        log("ℹ️ No active session found, stay on login page.");
-      }
+      } 
     }
 
   /// ✅ Login API call
   Future<void> authLogin() async {
-    if (isLoading.value) return;
-    isLoading.value = true;
+    // Use ApiExecutor to handle loading + network automatically
+    final response = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => _apiLogin.login(emailValue.value, passwordValue.value),
+    );
+
+    // If response is null → network failed or exception handled
+    if (response == null) return;
 
     try {
-      final response = await _apiLogin.login(
-        emailValue.value,
-        passwordValue.value,
-      );
-      // log("Login API Response: ${response.body}", name: "LoginController");
-      // log("Status Code: ${response.statusCode}", name: "LoginController");
-      // log("Status Text: ${response.statusText}", name: "LoginController");
+      // Check status code and body
       if (response.statusCode == 200 && response.body != null) {
         final data = response.body['data'];
         final token = data?['token'];
@@ -95,25 +92,30 @@ class LoginController extends GetxController {
         final roles = data?['roles'];
 
         if (token != null && token.isNotEmpty) {
-          await saveLogin(); // <- ✅ Save email/password if rememberMe is checked
+          // ✅ Save email/password if remember me is checked
+          await saveLogin();
+
+          // ✅ Save auth data in AuthService
           _authService.setToken(token);
           _authService.setUsername(username);
-          var rawRoles = (roles.isNotEmpty) ? roles.join(', ') : '-';
-          _authService.setRoles(rawRoles);
+          _authService.setRoles(
+              (roles != null && roles.isNotEmpty) ? roles.join(', ') : '-');
+
+          // ✅ Success alert
           successAlert("Success Login as ${username ?? 'User'}");
+
+          // ✅ Navigate to HOME
           Get.offAllNamed(Routes.HOME);
         } else {
-          errorAlert("Login successful, but token missing.");
+          errorAlert("Login successful, but token is missing.");
         }
       } else {
-        final msg = response.body?['message'] ?? "Login failed. Please check your credentials.";
+        final msg = response.body?['message'] ??
+            "Login failed. Please check your credentials.";
         errorAlert(msg);
       }
     } catch (e) {
-      log("Login Error: $e");
-      errorAlert("Unexpected error during login.");
-    } finally {
-      isLoading.value = false;
+      errorAlert("Unexpected error during login: $e");
     }
   }
 }

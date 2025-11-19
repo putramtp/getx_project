@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:getx_project/app/api_providers.dart';
 import 'package:getx_project/app/models/purchase_order_line_item_by_supplier_model.dart';
@@ -67,8 +65,7 @@ class ReceiveOrderProvider extends ApiProvider {
     try {
       final response = await post('/purchase-order/receiveData', payload);
       return response;
-    } catch (e, st) {
-      log('❌ postPoLineToReceivedData error: $e\n$st', name: 'ReceiveOrderProvider');
+    } catch (e) {
       rethrow;
     }
   }
