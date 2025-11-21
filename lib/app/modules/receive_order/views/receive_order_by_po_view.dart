@@ -14,7 +14,9 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Purchase Order List", icon: Icons.list_alt_sharp,routeBackName:AppPages.receiveHomePage),
+        child: appBarOrder("Purchase Order List",
+            icon: Icons.list_alt_sharp,
+            routeBackName: AppPages.receiveHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -51,16 +53,15 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
                               ),
-                              suffixIcon:
-                                  isFocused 
-                                      ? IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            searchController.clear();
-                                            FocusScope.of(context).unfocus();
-                                          },
-                                        )
-                                      : null,
+                              suffixIcon: isFocused
+                                  ? IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () {
+                                        searchController.clear();
+                                        FocusScope.of(context).unfocus();
+                                      },
+                                    )
+                                  : null,
                             ),
                             onChanged: controller.onSearchChanged,
                           ),
@@ -104,7 +105,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                                 const SizedBox(width: 6),
                                 // Filter button
                                 IconButton.filledTonal(
-                                  icon: const Icon(Icons.filter_alt_rounded ),
+                                  icon: const Icon(Icons.filter_alt_rounded),
                                   tooltip: 'Filter',
                                   onPressed: () => _openTopFilterSheet(context),
                                   style: IconButton.styleFrom(
@@ -135,10 +136,47 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                   }
 
                   return ListView.builder(
-                    itemCount: orders.length,
+                    controller: controller.scrollController,
+                    itemCount: orders.length + 1,
                     itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return _buildOrderCard(order);
+                      if (index < orders.length) {
+                        return _buildOrderCard(orders[index]);
+                      }
+
+                      return Obx(() {
+                        if (controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 3),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (controller.cursorNext == null &&
+                            orders.isNotEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      });
                     },
                   );
                 }),

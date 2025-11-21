@@ -196,48 +196,33 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
   }
 
   void startReceivingItem() async {
-    if (isLoadingReceiving.value) return; // ✅ Prevent double submit
-    isLoadingReceiving.value = true;
-    try {
-      final supplier = currentSupplier;
-      final supplierName = supplier.name;
+    final supplier = currentSupplier;
+    final supplierName = supplier.name;
 
-      final Map<String, dynamic> payload = {
-        "receive_number": receiveNumber.value,
-        "supplier_id": supplier.id,
-        "items": items.map((e) => e).toList(), // ensure list of maps
-      };
+    final Map<String, dynamic> payload = {
+      "receive_number": receiveNumber.value,
+      "supplier_id": supplier.id,
+      "items": items.map((e) => e).toList(), // ensure list of maps
+    };
+    final response = await ApiExecutor.run(
+      isLoading: isLoadingReceiving,
+      task: () => provider.postPoLineToReceivedData(payload),
+    );
+    // If network failed or exception handled, data is null
+    if (response == null) return;
 
-      // log("📦 Payload:\n${jsonEncode(payload)}", name: 'startReceivingItem');
-      final response = await provider.postPoLineToReceivedData(payload);
+    if (response.isOk && (response.body?['success'] == true)) {
+      if (Get.isDialogOpen == true) Get.back(); // closes confirmation dialog
+      successAlertBottom("Receiving process for $supplierName started successfully.");
 
-      if (response.isOk && (response.body?['success'] == true)) {
-        // log("Receiving process for $poNumber completed successfully.", name: 'startReceivingItem');
-
-        if (Get.isDialogOpen == true) {
-          Get.back(); // closes confirmation dialog
+      Future.delayed(const Duration(milliseconds: 500), () async {
+        if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
+          Get.delete<ReceiveOrderBySupplierController>(force: true);
         }
-        successAlertBottom(
-            "Receiving process for $supplierName started successfully.");
-
-        // ✅ Navigate to the target page after a short delay
-        Future.delayed(const Duration(milliseconds: 500), () async {
-          // Ensure this controller is deleted before navigating
-          if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
-            Get.delete<ReceiveOrderBySupplierController>(force: true);
-          }
-          // Navigate and recreate a fresh controller on that page
-          await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
-        });
-      } else {
-        errorAlertBottom(
-            "Unable to start receiving for $supplierName. Please try again.");
-      }
-    } catch (e) {
-      errorAlertBottom(
-          "An unexpected error occurred while starting the receiving process.");
-    } finally {
-      isLoadingReceiving.value = false;
+        await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
+      });
+    } else {
+      errorAlertBottom( "Unable to start receiving for $supplierName. Please try again.");
     }
   }
 

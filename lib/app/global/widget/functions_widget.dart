@@ -61,13 +61,15 @@ PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2
             )
             : const SizedBox.shrink(),
         const SizedBox(width: 12),
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: 20,
-            letterSpacing: 0.3,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 20,
+              letterSpacing: 0.3,
+            ),
           ),
         ),
       ],

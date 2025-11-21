@@ -56,6 +56,15 @@ class OutflowOrderListController extends GetxController {
     }
   }
 
+  @override
+  void onClose() {
+    scrollController.removeListener(_scrollListener);
+    scrollController.dispose();
+    searchController.dispose();
+    searchFocus.dispose();
+    super.onClose();
+  }
+
   // FIRST LOAD
   Future<void> loadOutflowOrders() async {
     final res = await ApiExecutor.run(

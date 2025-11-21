@@ -2,7 +2,6 @@ import 'package:getx_project/app/api_providers.dart';
 import 'package:getx_project/app/models/outflow_order_detail_model.dart';
 import 'package:getx_project/app/models/outflow_request_customer_model.dart';
 import 'package:getx_project/app/models/outflow_request_line_item_model.dart';
-import 'package:getx_project/app/models/outlfow_request_model.dart';
 
 class OutflowOrderProvider extends ApiProvider {
   // @override
@@ -38,15 +37,17 @@ class OutflowOrderProvider extends ApiProvider {
           'Failed to load getOutflowOrderDetail: ${response.statusText}');
     }
   }
+  
+  Future<Map<String, dynamic>> getOutflowRequests({String? cursor}) async {
+    final response = await get(
+      '/outflow-request/pagination',
+      query: cursor != null ? {'cursor': cursor} : {},
+    );
 
-  Future<List<OutflowRequest>> getOutflowRequests() async {
-    final response = await get('/outflow-request/summary');
     if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OutflowRequest.fromJson(e)).toList();
+      return response.body; // return full data including cursor
     } else {
-      throw Exception(
-          'Failed to load getOutflowRequests: ${response.statusText}');
+      throw Exception( 'Failed to load getOutflowRequests: ${response.statusText}');
     }
   }
 

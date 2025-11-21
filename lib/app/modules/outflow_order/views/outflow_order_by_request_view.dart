@@ -5,7 +5,8 @@ import 'package:getx_project/app/routes/app_pages.dart';
 import '../controllers/outflow_order_by_request_controller.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController> {
+class OutflowOrderByRequestView
+    extends GetView<OutflowOrderByRequestController> {
   const OutflowOrderByRequestView({Key? key}) : super(key: key);
 
   @override
@@ -14,7 +15,9 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Outflow Request List", icon: Icons.list_alt_sharp,routeBackName:AppPages.outflowHomePage),
+        child: appBarOrder("Outflow Request List",
+            icon: Icons.list_alt_sharp,
+            routeBackName: AppPages.outflowHomePage),
       ),
       body: SafeArea(
         child: Padding(
@@ -51,16 +54,15 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
                               ),
-                              suffixIcon:
-                                  isFocused 
-                                      ? IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            searchController.clear();
-                                            FocusScope.of(context).unfocus();
-                                          },
-                                        )
-                                      : null,
+                              suffixIcon: isFocused
+                                  ? IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () {
+                                        searchController.clear();
+                                        FocusScope.of(context).unfocus();
+                                      },
+                                    )
+                                  : null,
                             ),
                             onChanged: controller.onSearchChanged,
                           ),
@@ -104,7 +106,7 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
                                 const SizedBox(width: 6),
                                 // Filter button
                                 IconButton.filledTonal(
-                                  icon: const Icon(Icons.filter_alt_rounded ),
+                                  icon: const Icon(Icons.filter_alt_rounded),
                                   tooltip: 'Filter',
                                   onPressed: () => _openTopFilterSheet(context),
                                   style: IconButton.styleFrom(
@@ -134,10 +136,49 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
                   }
 
                   return ListView.builder(
-                    itemCount: orders.length,
+                    controller: controller.scrollController,
+                    itemCount: orders.length + 1,
+                    shrinkWrap: true, // 👈 **fix #1**
+                    physics:const BouncingScrollPhysics(), // 👈 allow only this to scroll
                     itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return _buildOrderCard(order);
+                      if (index < orders.length) {
+                        return _buildOrderCard(orders[index]);
+                      }
+
+                      return Obx(() {
+                        if (controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 3),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (controller.cursorNext == null &&
+                            orders.isNotEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      });
                     },
                   );
                 }),

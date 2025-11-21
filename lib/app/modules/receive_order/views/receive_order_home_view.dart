@@ -15,10 +15,10 @@ class ReceiveOrderHomeView extends GetView {
       {'title': 'By Purchase-order', 'icon': Icons.receipt_long_rounded,'color': Colors.indigoAccent,'routes':AppPages.receiveOrderByPoPage},
       {'title': 'By Supplier', 'icon': Icons.group_rounded,'color': Colors.blue,'routes':AppPages.receiveOrderBySupplierPage},
       {'title': 'List', 'icon': Icons.category_rounded,'color': Colors.green,'routes':AppPages.receiveOrderListPage},
-      {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
-      {'title': 'Report', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
-      {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
-      {'title': 'Support', 'icon': Icons.help_outline_rounded,'color': Colors.redAccent},
+      // {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
+      // {'title': 'Report', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
+      // {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
+      // {'title': 'Support', 'icon': Icons.help_outline_rounded,'color': Colors.redAccent},
     ];
 
     return Scaffold(
@@ -74,12 +74,14 @@ class ReceiveOrderHomeView extends GetView {
                           child: Icon(icon, color: color, size: 30),
                         ),
                         const SizedBox(height: 14),
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                        Expanded(
+                          child: Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
                         ),
                       ],

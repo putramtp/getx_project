@@ -2,10 +2,8 @@ import 'package:get/get.dart';
 import 'package:getx_project/app/api_providers.dart';
 import 'package:getx_project/app/models/purchase_order_line_item_by_supplier_model.dart';
 import 'package:getx_project/app/models/purchase_order_line_item_model.dart';
-import 'package:getx_project/app/models/purchase_order_model.dart';
 import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
 import 'package:getx_project/app/models/receive_order_detail_model.dart';
-import 'package:getx_project/app/models/receive_order_model.dart';
 
 class ReceiveOrderProvider extends ApiProvider {
   // @override
@@ -13,15 +11,16 @@ class ReceiveOrderProvider extends ApiProvider {
   //   httpClient.baseUrl = '';
   // }
 
-  Future<List<ReceiveOrder>> getReceiveOrders() async {
-    final response = await get('/receive-order');
+  Future<Map<String, dynamic>> getReceiveOrders({String? cursor}) async {
+    final response = await get(
+      '/receive-order/pagination',
+      query: cursor != null ? {'cursor': cursor} : {},
+    );
+
     if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      // log("getReceiveOrders : $data");
-      return data.map((e) => ReceiveOrder.fromJson(e)).toList();
+      return response.body; // return full data including cursor
     } else {
-      throw Exception(
-          'Failed to load getPurchaseOrders: ${response.statusText}');
+      throw Exception( 'Failed to load getReceiveOrders: ${response.statusText}');
     }
   }
 
@@ -35,18 +34,21 @@ class ReceiveOrderProvider extends ApiProvider {
         throw Exception('Unexpected response format: data is not a Map');
       }
     } else {
-      throw Exception('Failed to load getReceiveOrderDetail: ${response.statusText}');
+      throw Exception(
+          'Failed to load getReceiveOrderDetail: ${response.statusText}');
     }
   }
 
-  Future<List<PurchaseOrder>> getPurchaseOrders() async {
-    final response = await get('/purchase-order/summary');
+  Future<Map<String, dynamic>> getPurchaseOrders({String? cursor}) async {
+    final response = await get(
+      '/purchase-order/pagination',
+      query: cursor != null ? {'cursor': cursor} : {},
+    );
+
     if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => PurchaseOrder.fromJson(e)).toList();
+      return response.body; // return full data including cursor
     } else {
-      throw Exception(
-          'Failed to load getPurchaseOrders: ${response.statusText}');
+      throw Exception( 'Failed to load getPurchaseOrders: ${response.statusText}');
     }
   }
 
@@ -56,7 +58,8 @@ class ReceiveOrderProvider extends ApiProvider {
       final data = response.body['data'] as List<dynamic>;
       return data.map((e) => PurchaseOrderLineItem.fromJson(e)).toList();
     } else {
-      throw Exception( 'Failed to load getPurchaseOrderLineItem: ${response.statusText}');
+      throw Exception(
+          'Failed to load getPurchaseOrderLineItem: ${response.statusText}');
     }
   }
 
@@ -93,5 +96,4 @@ class ReceiveOrderProvider extends ApiProvider {
           'Failed to load getPurchaseOrderItemBySupplier: ${response.statusText}');
     }
   }
-
 }

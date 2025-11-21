@@ -15,10 +15,10 @@ class OutflowOrderHomeView extends GetView {
       {'title': 'By Request', 'icon': Icons.receipt_long_rounded,'color': Colors.indigoAccent,'routes':AppPages.outflowOrderByRequestPage},
       {'title': 'By Customer', 'icon': Icons.group_rounded,'color': Colors.blue,'routes':AppPages.outflowOrderByCustomerPage},
       {'title': 'List', 'icon': Icons.category_rounded,'color': Colors.green,'routes':AppPages.outflowOrderListPage},
-      {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
-      {'title': 'Report', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
-      {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
-      {'title': 'Support', 'icon': Icons.help_outline_rounded,'color': Colors.redAccent},
+      // {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
+      // {'title': 'Report', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
+      // {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
+      // {'title': 'Support', 'icon': Icons.help_outline_rounded,'color': Colors.redAccent},
     ];
 
     return Scaffold(

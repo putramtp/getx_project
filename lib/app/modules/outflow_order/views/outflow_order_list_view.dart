@@ -136,8 +136,9 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
 
                   return ListView.builder(
                     controller: controller.scrollController,
-                    itemCount: orders.length +
-                        1, // extra slot for loader / no-more indicator
+                    shrinkWrap: true, // 👈 **fix #1**
+                    physics: const BouncingScrollPhysics(), // 👈 allow only this to scroll
+                    itemCount: orders.length + 1,
                     itemBuilder: (context, index) {
                       if (index < orders.length) {
                         return _buildOrderCard(orders[index]);

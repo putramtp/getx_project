@@ -196,47 +196,31 @@ class ReceiveOrderByPoDetailController extends GetxController {
   }
 
   void startReceivingItem() async {
-    if (isLoadingReceiving.value) return; // ✅ Prevent double submit
-    isLoadingReceiving.value = true;
-    try {
-      final po = currentOrder;
-      final poNumber = po.poNumber;
-
-      final Map<String, dynamic> payload = {
-        "receive_number": receiveNumber.value,
-        "po_id": po.id,
-        "items": items.map((e) => e).toList(), // ensure list of maps
-      };
-
-      // log("📦 Payload:\n${jsonEncode(payload)}", name: 'startReceivingItem');
-      final response = await provider.postPoLineToReceivedData(payload);
-
-      if (response.isOk && (response.body?['success'] == true)) {
-        // log("Receiving process for $poNumber completed successfully.", name: 'startReceivingItem');
-
-        if (Get.isDialogOpen == true) {
-          Get.back(); // closes confirmation dialog
+    final po = currentOrder;
+    final poNumber = po.poNumber;
+    final Map<String, dynamic> payload = {
+      "receive_number": receiveNumber.value,
+      "po_id": po.id,
+      "items": items.map((e) => e).toList(), // ensure list of maps
+    };
+    final response = await ApiExecutor.run(
+      isLoading: isLoadingReceiving,
+      task: () => provider.postPoLineToReceivedData(payload),
+    );
+    // If network failed or exception handled, data is null
+    if (response == null) return;
+    if (response.isOk && (response.body?['success'] == true)) {
+      if (Get.isDialogOpen == true) Get.back(); // closes confirmation dialog
+      
+      successAlertBottom("Receiving process for $poNumber started successfully.");
+      Future.delayed(const Duration(milliseconds: 500), () async {
+        if (Get.isRegistered<ReceiveOrderByPoController>()) {
+          Get.delete<ReceiveOrderByPoController>(force: true);
         }
-        successAlertBottom(
-            "Receiving process for $poNumber started successfully.");
-        // ✅ Navigate to the target page after a short delay
-        Future.delayed(const Duration(milliseconds: 500), () async {
-          // Ensure this controller is deleted before navigating
-          if (Get.isRegistered<ReceiveOrderByPoController>()) {
-            Get.delete<ReceiveOrderByPoController>(force: true);
-          }
-          // Navigate and recreate a fresh controller on that page
-          await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
-        });
-      } else {
-        errorAlertBottom(
-            "Unable to start receiving for $poNumber. Please try again.");
-      }
-    } catch (e) {
-      errorAlertBottom(
-          "An unexpected error occurred while starting the receiving process:$e");
-    } finally {
-      isLoadingReceiving.value = false;
+        await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
+      });
+    } else {
+      errorAlertBottom("Unable to start receiving for $poNumber. Please try again.");
     }
   }
 

@@ -162,37 +162,31 @@ class OutflowOrderByCustomerDetailController extends GetxController {
   }
 
   void startOutflowingItem() async {
-    if (isLoadingOutflowing.value) return;
+    final customer = currentOrCustomer;
 
-    isLoadingOutflowing.value = true;
+    final payload = {
+      "customer_id": customer.id,
+      "items": items.toList(),
+    };
+    final response = await ApiExecutor.run(
+      isLoading: isLoadingOutflowing,
+      task: () => provider.postOrLineToOutflowedData(payload),
+    );
+    // If network failed or exception handled, data is null
+    if (response == null) return;
 
-    try {
-      final customer = currentOrCustomer;
+    if (response.isOk && response.body?["success"] == true) {
+      successAlertBottom("Outflow for ${customer.name} completed!");
 
-      final payload = {
-        "customer_id": customer.id,
-        "items": items.toList(),
-      };
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      final response = await provider.postOrLineToOutflowedData(payload);
-
-      if (response.isOk && response.body?["success"] == true) {
-        successAlertBottom("Outflow for ${customer.name} completed!");
-
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        if (Get.isRegistered<OutflowOrderByCustomerController>()) {
-          Get.delete<OutflowOrderByCustomerController>(force: true);
-        }
-
-        Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
-      } else {
-        errorAlertBottom("Failed to process outflow.");
+      if (Get.isRegistered<OutflowOrderByCustomerController>()) {
+        Get.delete<OutflowOrderByCustomerController>(force: true);
       }
-    } catch (e) {
-      errorAlertBottom("Unexpected error: $e");
-    } finally {
-      isLoadingOutflowing.value = false;
+
+      Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
+    } else {
+      errorAlertBottom("Failed to process outflow.");
     }
   }
 }

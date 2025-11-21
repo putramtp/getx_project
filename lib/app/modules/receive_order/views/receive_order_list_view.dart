@@ -123,7 +123,6 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
 
               const SizedBox(height: 12),
 
-              /// 📋 List of Receive Orders
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
@@ -136,10 +135,47 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                   }
 
                   return ListView.builder(
-                    itemCount: orders.length,
+                    controller: controller.scrollController,
+                    itemCount: orders.length + 1,
                     itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return _buildOrderCard(order);
+                      if (index < orders.length) {
+                        return _buildOrderCard(orders[index]);
+                      }
+
+                      return Obx(() {
+                        if (controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 3),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (controller.cursorNext == null &&
+                            orders.isNotEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      });
                     },
                   );
                 }),
@@ -281,7 +317,8 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                                 controller.applyDateFilter();
                                 Navigator.pop(context);
                               },
-                              icon: const Icon(Icons.check,color:Colors.white),
+                              icon:
+                                  const Icon(Icons.check, color: Colors.white),
                               label: const Text(
                                 "Apply",
                                 style: TextStyle(color: Colors.white),
@@ -356,12 +393,13 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
           backgroundColor: Colors.cyan.withOpacity(0.15),
           child: const Icon(Icons.file_present_rounded, color: Colors.cyan),
         ),
-        title: Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(order.code,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const Icon(Icons.star_border, size: 14, color: Colors.black54),
-            const SizedBox(width:2),
+            const SizedBox(width: 2),
             Text(
               order.supplier,
               style: const TextStyle(fontSize: 12, color: Colors.black54),
@@ -371,8 +409,11 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(order.type, style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600)),
-            Text( controller.formatYmd(order.date),
+            Text(order.type,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              controller.formatYmd(order.date),
               style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey[600],
