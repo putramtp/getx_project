@@ -146,7 +146,7 @@ class OutflowOrderByRequestView
                       }
 
                       return Obx(() {
-                        if (controller.cursorNext != null) {
+                        if (controller.cursorNext.value != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -160,7 +160,7 @@ class OutflowOrderByRequestView
                           );
                         }
 
-                        if (controller.cursorNext == null &&
+                        if (controller.cursorNext.value == null &&
                             orders.isNotEmpty) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),

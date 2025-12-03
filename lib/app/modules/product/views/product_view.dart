@@ -79,7 +79,7 @@ class ProductView extends GetView<ProductController> {
                       final productSummary = products[index];
                       return _productTile(productSummary,size);
                     }
-                    if (controller.cursorNext != null ) {
+                    if (controller.cursorNext.value != null ) {
                       return  Padding(
                         padding:  EdgeInsets.symmetric(vertical: size * 3),
                         child: const Center(
@@ -87,7 +87,7 @@ class ProductView extends GetView<ProductController> {
                         ),
                       );
                     }
-                    if (controller.cursorNext == null && products.isNotEmpty) {
+                    if (controller.cursorNext.value == null && products.isNotEmpty) {
                       return  Padding(
                         padding:  EdgeInsets.symmetric(vertical: size * 3),
                         child: Center(

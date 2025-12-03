@@ -28,8 +28,8 @@ class OutflowOrderByRequestController extends GetxController {
   final ScrollController scrollController = ScrollController();
 
   // Cursors
-  String? cursorNext;
-  String? cursorPrev;
+  final RxnString cursorNext = RxnString();
+  final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
   var startDate = Rxn<DateTime>();
@@ -58,8 +58,6 @@ class OutflowOrderByRequestController extends GetxController {
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
-    scrollController.dispose();
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -97,8 +95,8 @@ class OutflowOrderByRequestController extends GetxController {
     if (res['data'] == null) {
       orders.clear();
       filteredOrders.clear();
-      cursorNext = null;
-      cursorPrev = null;
+      cursorNext.value = null;
+      cursorPrev.value = null;
       hasMore.value = false;
       return;
     }
@@ -106,11 +104,11 @@ class OutflowOrderByRequestController extends GetxController {
     final List rawList = res['data'] ?? [];
 
     // Assign cursors ⭐
-    cursorNext = res['next_cursor'];
-    cursorPrev = res['prev_cursor'];
+    cursorNext.value = res['next_cursor'];
+    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
-    hasMore.value = cursorNext != null;
+    hasMore.value = cursorNext.value != null;
 
     final mapped = rawList.map((e) => OutflowRequestModel.fromJson(e)).toList();
     orders.assignAll(mapped);
@@ -120,12 +118,12 @@ class OutflowOrderByRequestController extends GetxController {
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
     if (!hasMore.value) return; // ⭐ stop if no more data
-    if (cursorNext == null) return; // no cursor → stop
+    if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getOutflowRequests(cursor: cursorNext),
+      task: () => provider.getOutflowRequests(cursor: cursorNext.value),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -134,11 +132,11 @@ class OutflowOrderByRequestController extends GetxController {
     final newOrders = rawList.map((e) => OutflowRequestModel.fromJson(e)).toList();
 
     // ⭐ Update next cursor
-    cursorNext = res['next_cursor'];
-    cursorPrev = res['prev_cursor'];
+    cursorNext.value = res['next_cursor'];
+    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
-    if (cursorNext == null) {
+    if (cursorNext.value == null) {
       hasMore.value = false;
     }
 

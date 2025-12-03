@@ -144,7 +144,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                       }
 
                       return Obx(() {
-                        if (controller.cursorNext != null) {
+                        if (controller.cursorNext.value != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -158,8 +158,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                           );
                         }
 
-                        if (controller.cursorNext == null &&
-                            orders.isNotEmpty) {
+                        if (controller.cursorNext.value == null && orders.isNotEmpty) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(

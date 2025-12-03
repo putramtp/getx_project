@@ -19,7 +19,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: Stack(children: [
-        _buildHeaderGradient(),
+        _buildHeaderGradient(size),
 
         // MAIN CONTENT
         Obx(() {
@@ -71,7 +71,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
 
                   const SizedBox(height: 30),
 
-                  if (detail != null) _buildActionButtons(),
+                  // if (detail != null) _buildActionButtons(),
                 ],
               ),
             ),
@@ -84,9 +84,9 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // HEADER
   // --------------------------------------------------------------------------
-  Widget _buildHeaderGradient() {
+  Widget _buildHeaderGradient(size) {
     return Container(
-      height: 240,
+      height: size *23,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [HexColor('#124076'), HexColor('#7F9F80')],

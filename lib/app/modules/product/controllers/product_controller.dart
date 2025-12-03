@@ -30,8 +30,8 @@ class ProductController extends GetxController {
   var isStillSearch = false.obs;
 
   // Cursors
-  String? cursorNext;
-  String? cursorPrev;
+  final RxnString cursorNext = RxnString();
+  final RxnString cursorPrev = RxnString();
 
   // Scroll listener
   final ScrollController scrollController = ScrollController();
@@ -45,8 +45,6 @@ class ProductController extends GetxController {
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
-    scrollController.dispose();
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -94,11 +92,11 @@ class ProductController extends GetxController {
     stockInHand.value = safeToInt(res['stock_in_hand']);
 
       // Assign cursors ⭐
-    cursorNext = res['next_cursor'];
-    cursorPrev = res['prev_cursor'];
+    cursorNext.value = res['next_cursor'];
+    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
-    hasMore.value = cursorNext != null;
+    hasMore.value = cursorNext.value != null;
 
     final mapped = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
 
@@ -109,12 +107,12 @@ class ProductController extends GetxController {
     // LOAD NEXT PAGE
   Future<void> loadMore() async {
     if (!hasMore.value) return; // ⭐ stop if no more data
-    if (cursorNext == null) return; // no cursor → stop
+    if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getProductSummaries(cursor: cursorNext),
+      task: () => provider.getProductSummaries(cursor: cursorNext.value),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -123,11 +121,11 @@ class ProductController extends GetxController {
     final newOrders = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
 
     // ⭐ Update next cursor
-    cursorNext = res['next_cursor'];
-    cursorPrev = res['prev_cursor'];
+    cursorNext.value = res['next_cursor'];
+    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
-    if (cursorNext == null) {
+    if (cursorNext.value == null) {
       hasMore.value = false;
     }
 

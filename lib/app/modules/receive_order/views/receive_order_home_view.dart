@@ -11,8 +11,8 @@ class ReceiveOrderHomeView extends GetView {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> menuItems = [
-      {'title': 'By Purchase-order','icon': Icons.request_page_rounded,'color': HexColor("#155E95"),'routes': AppPages.receiveOrderByPoPage},
-      {'title': 'By Supplier','icon': Icons.group_rounded,'color': HexColor("B1C29E"),'routes': AppPages.receiveOrderBySupplierPage},
+      {'title': 'By Purchase-order','icon': Icons.request_page_rounded,'color': HexColor("#155E95"),'route': AppPages.receiveOrderByPoPage},
+      {'title': 'By Supplier','icon': Icons.group_rounded,'color': HexColor("B1C29E"),'route': AppPages.receiveOrderBySupplierPage},
       // {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
       // {'title': 'Return', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
       // {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},

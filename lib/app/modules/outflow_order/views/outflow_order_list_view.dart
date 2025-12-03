@@ -147,7 +147,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                       // 👇 bottom section
                       return Obx(() {
                         // 🟡 1. Still loading more → show loader
-                        if (controller.cursorNext != null) {
+                        if (controller.cursorNext.value != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -162,7 +162,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                         }
 
                         // 🔵 2. No more cursor → show END OF LIST message
-                        if (controller.cursorNext == null &&
+                        if (controller.cursorNext.value == null &&
                             orders.isNotEmpty) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
