@@ -1,4 +1,4 @@
-class PoSupplier {
+class PoSupplierModel {
   final int id;
   final String code;
   final String name;
@@ -7,7 +7,7 @@ class PoSupplier {
   final String items; // e.g. "3/10 Item"
   final String status;
 
-  PoSupplier({
+  PoSupplierModel({
     required this.id,
     required this.code,
     required this.name,
@@ -17,8 +17,8 @@ class PoSupplier {
     required this.status,
   });
 
-  factory PoSupplier.fromJson(Map<String, dynamic> json) {
-    return PoSupplier(
+  factory PoSupplierModel.fromJson(Map<String, dynamic> json) {
+    return PoSupplierModel(
       id: json['id'],
       code: json['code'],
       name: json['name'],

@@ -1,4 +1,4 @@
-class SerialNumber {
+class SerialNumberModel {
   final int id;
   final String serialNumber;
   final String internalCode;
@@ -7,7 +7,7 @@ class SerialNumber {
   final bool isActive;
   final int qty;
 
-  SerialNumber({
+  SerialNumberModel({
     required this.id,
     required this.serialNumber,
     required this.internalCode,
@@ -17,8 +17,8 @@ class SerialNumber {
     required this.qty,
   });
 
-  factory SerialNumber.fromJson(Map<String, dynamic> json) {
-    return SerialNumber(
+  factory SerialNumberModel.fromJson(Map<String, dynamic> json) {
+    return SerialNumberModel(
       id: json['id'],
       serialNumber: json['serial_number'] ?? '',
       internalCode: json['internal_code'] ?? '',

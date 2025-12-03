@@ -15,8 +15,8 @@ class OutflowOrderByCustomerController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   var isLoading = false.obs;
-  var orders = <OrCustomer>[].obs;
-  var filteredCustomers = <OrCustomer>[].obs;
+  var orders = <OrCustomerModel>[].obs;
+  var filteredCustomers = <OrCustomerModel>[].obs;
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
 
@@ -121,7 +121,7 @@ class OutflowOrderByCustomerController extends GetxController {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(OrCustomer customer) {
+  void openDetail(OrCustomerModel customer) {
     if (Get.isRegistered<OutflowOrderByCustomerDetailController>()) {
       Get.delete<OutflowOrderByCustomerDetailController>(force: true);
     }

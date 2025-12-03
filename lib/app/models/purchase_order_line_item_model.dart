@@ -1,4 +1,4 @@
-class PurchaseOrderLineItem {
+class PurchaseOrderLineItemModel {
   final int lineId;
   final String name;
   final String serialNumberType;
@@ -7,7 +7,7 @@ class PurchaseOrderLineItem {
   int? received; // nullable if you prefer to derive from filled
   List<String>? filled;
 
-  PurchaseOrderLineItem({
+  PurchaseOrderLineItemModel({
     required this.lineId,
     required this.name,
     required this.serialNumberType,
@@ -23,8 +23,8 @@ class PurchaseOrderLineItem {
   // prefer explicit received if set, otherwise return filledCount
   int get receivedCount => received ?? filledCount;
 
-  factory PurchaseOrderLineItem.fromJson(Map<String, dynamic> json) {
-    return PurchaseOrderLineItem(
+  factory PurchaseOrderLineItemModel.fromJson(Map<String, dynamic> json) {
+    return PurchaseOrderLineItemModel(
       lineId: json['line_id'],
       name: json['item_name'] ?? '-',
       serialNumberType: json['serial_number_type'] ?? '-',

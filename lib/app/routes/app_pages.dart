@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:getx_project/app/modules/product/bindings/product_detail_binding.dart';
+import 'package:getx_project/app/modules/product/views/product_detail_view.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
@@ -27,9 +29,8 @@ import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po
 import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
-import '../modules/inventory/bindings/inventory_binding.dart';
-import '../modules/inventory/views/inventory_view.dart';
-import '../modules/inventory/views/item_category_view.dart';
+import '../modules/product/bindings/product_binding.dart';
+import '../modules/product/views/product_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/return/bindings/return_binding.dart';
@@ -44,7 +45,8 @@ class AppPages {
   static const homePage = Routes.HOME;
   static const loginPage = Routes.LOGIN;
 
-  static const inventoryPage = Routes.INVENTORY;
+  static const productPage = Routes.PRODUCT;
+  static const productDetailPage = Routes.PRODUCT_DETAIL;
   static const itemPage = Routes.ITEM;
   //RECEIVE ORDER
   static const receiveHomePage = Routes.RECEIVE_ORDER_HOME;
@@ -78,15 +80,15 @@ class AppPages {
       middlewares: [AuthMiddleware()],
     ),
     GetPage(
-      name: _Paths.INVENTORY,
-      page: () => const InventoryView(),
-      binding: InventoryBinding(),
+      name: _Paths.PRODUCT,
+      page: () => const ProductView(),
+      binding: ProductBinding(),
     ),
     GetPage(
-        name: _Paths.ITEM,
-        page: () => const ItemCategoryView(),
-        binding: InventoryBinding(),
-        transition: Transition.leftToRight),
+      name: _Paths.PRODUCT_DETAIL,
+      page: () => const ProductDetailView(),
+      binding: ProductDetailBinding(),
+    ),
     //RECEIVE ORDER
     GetPage(
       name: _Paths.RECEIVE_ORDER_HOME,

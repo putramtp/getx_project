@@ -17,7 +17,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
   var isLoading = false.obs;
   var isLoadingOutflowing = false.obs;
 
-  late final OutflowRequest currentOr;
+  late final OutflowRequestModel currentOr;
 
   @override
   void onInit() {
@@ -25,7 +25,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
     final args = Get.arguments;
 
-    if (args != null && args is OutflowRequest) {
+    if (args != null && args is OutflowRequestModel) {
       currentOr = args;
       loadOrItems();
     } else {

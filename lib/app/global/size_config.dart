@@ -24,4 +24,9 @@ class SizeConfig {
   static Orientation getOrientation() {
     return _orientation;
   }
+  
+  // Add a font scaling helper
+  static double fontSize(double multiplier) {
+    return defaultSize * multiplier;
+  }
 }

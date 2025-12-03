@@ -146,7 +146,7 @@ class OutflowOrderByRequestView
                       }
 
                       return Obx(() {
-                        if (controller.isLoadingMore.value) {
+                        if (controller.cursorNext != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -382,7 +382,7 @@ class OutflowOrderByRequestView
     );
   }
 
-  Widget _buildOrderCard(OutflowRequest order) {
+  Widget _buildOrderCard(OutflowRequestModel order) {
     final status = order.status;
     final statusColor = status.toLowerCase().contains('processing')
         ? Colors.cyan

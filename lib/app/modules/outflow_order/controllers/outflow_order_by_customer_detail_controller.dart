@@ -17,13 +17,13 @@ class OutflowOrderByCustomerDetailController extends GetxController {
   var isLoading = false.obs;
   var isLoadingOutflowing = false.obs;
 
-  late final OrCustomer currentOrCustomer;
+  late final OrCustomerModel currentOrCustomer;
 
   @override
   void onInit() {
     super.onInit();
     final args = Get.arguments;
-    if (args != null && args is OrCustomer) {
+    if (args != null && args is OrCustomerModel) {
       currentOrCustomer = args;
       loadOrByCustomerItems();
     } else {

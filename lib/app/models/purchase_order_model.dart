@@ -1,4 +1,4 @@
-class PurchaseOrder {
+class PurchaseOrderModel {
   final int id;
   final String poNumber;
   final String supplier;
@@ -8,7 +8,7 @@ class PurchaseOrder {
   final String status;
   final DateTime date;
 
-  PurchaseOrder({
+  PurchaseOrderModel({
     required this.id,
     required this.poNumber,
     required this.supplier,
@@ -19,8 +19,8 @@ class PurchaseOrder {
     required this.date,
   });
 
-  factory PurchaseOrder.fromJson(Map<String, dynamic> json) {
-    return PurchaseOrder(
+  factory PurchaseOrderModel.fromJson(Map<String, dynamic> json) {
+    return PurchaseOrderModel(
       id: json['id'] ?? 0,
       poNumber: json['po_number'] ?? 'Unknown',
       supplier: json['supplier'] ?? '-',

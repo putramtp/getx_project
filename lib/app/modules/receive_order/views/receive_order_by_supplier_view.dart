@@ -343,7 +343,7 @@ class ReceiveOrderBySupplierView
   //   );
   // }
 
-  Widget _buildOrderCard(PoSupplier supplier) {
+  Widget _buildOrderCard(PoSupplierModel supplier) {
     final status = supplier.status;
     final statusColor = status.toLowerCase().contains('processing')
         ? Colors.cyan

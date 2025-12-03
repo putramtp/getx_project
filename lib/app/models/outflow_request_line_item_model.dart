@@ -1,4 +1,4 @@
-class OutflowRequestLineItem {
+class OutflowRequestLineItemModel {
   final int lineId;
   final String name;
   final String serialNumberType;
@@ -7,7 +7,7 @@ class OutflowRequestLineItem {
   int? received; // nullable if you prefer to derive from scanned
   List<String>? scanned;
 
-  OutflowRequestLineItem({
+  OutflowRequestLineItemModel({
     required this.lineId,
     required this.name,
     required this.serialNumberType,
@@ -23,8 +23,8 @@ class OutflowRequestLineItem {
   // prefer explicit received if set, otherwise return scannedCount
   int get receivedCount => received ?? scannedCount;
 
-  factory OutflowRequestLineItem.fromJson(Map<String, dynamic> json) {
-    return OutflowRequestLineItem(
+  factory OutflowRequestLineItemModel.fromJson(Map<String, dynamic> json) {
+    return OutflowRequestLineItemModel(
       lineId: json['line_id'],
       name: json['item_name'] ?? '-',
       serialNumberType: json['serial_number_type'] ?? '-',

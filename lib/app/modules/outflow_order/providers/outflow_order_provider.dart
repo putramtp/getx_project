@@ -23,12 +23,12 @@ class OutflowOrderProvider extends ApiProvider {
     }
   }
 
-  Future<OutflowOrderDetail> getOutflowOrderDetail(int ooId) async {
+  Future<OutflowOrderDetailModel> getOutflowOrderDetail(int ooId) async {
     final response = await get('/outflow-order/$ooId');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'];
       if (data is Map<String, dynamic>) {
-        return OutflowOrderDetail.fromJson(data);
+        return OutflowOrderDetailModel.fromJson(data);
       } else {
         throw Exception('Unexpected response format: data is not a Map');
       }
@@ -51,24 +51,24 @@ class OutflowOrderProvider extends ApiProvider {
     }
   }
 
-  Future<List<OutflowRequestLineItem>> getOutflowRequestLineItem(
+  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItem(
       int orderId) async {
     final response = await get('/outflow-request/$orderId/summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OutflowRequestLineItem.fromJson(e)).toList();
+      return data.map((e) => OutflowRequestLineItemModel.fromJson(e)).toList();
     } else {
       throw Exception(
           'Failed to load getOutflowRequestLineItem: ${response.statusText}');
     }
   }
 
-  Future<List<OutflowRequestLineItem>> getOutflowRequestLineItemByCustomer(
+  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItemByCustomer(
       int customerId) async {
     final response = await get('/outflow-request/$customerId/customer-summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OutflowRequestLineItem.fromJson(e)).toList();
+      return data.map((e) => OutflowRequestLineItemModel.fromJson(e)).toList();
     } else {
       throw Exception(
           'Failed to load getOutflowRequestLineItemByCustomer: ${response.statusText}');
@@ -84,11 +84,11 @@ class OutflowOrderProvider extends ApiProvider {
     }
   }
 
-  Future<List<OrCustomer>> getCustomers() async {
+  Future<List<OrCustomerModel>> getCustomers() async {
     final response = await get('/outflow-request/customer-summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OrCustomer.fromJson(e)).toList();
+      return data.map((e) => OrCustomerModel.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load getCustomers: ${response.statusText}');
     }

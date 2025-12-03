@@ -8,16 +8,16 @@ import 'package:getx_project/app/modules/receive_order/providers/receive_order_p
 class ReceiveOrderListDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
 
-  final receiveOrderDetail = Rxn<ReceiveOrderDetail>();
+  final receiveOrderDetail = Rxn<ReceiveOrderDetailModel>();
   var isLoading = false.obs;
-  late final ReceiveOrder curretReceiveOrder;
+  late final ReceiveOrderModel curretReceiveOrder;
 
   @override
   void onInit() {
     super.onInit();
 
     final args = Get.arguments;
-    if (args != null && args is ReceiveOrder) {
+    if (args != null && args is ReceiveOrderModel) {
       curretReceiveOrder = args;
       loadReceiveOrderDetail();
     } else {
@@ -29,7 +29,7 @@ class ReceiveOrderListDetailController extends GetxController {
   Future<void> loadReceiveOrderDetail() async {
     final orderId = curretReceiveOrder.id;
 
-    final data = await ApiExecutor.run<ReceiveOrderDetail>(
+    final data = await ApiExecutor.run<ReceiveOrderDetailModel>(
       isLoading: isLoading,
       task: () => provider.getReceiveOrderDetail(orderId),
     );

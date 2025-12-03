@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hexcolor/hexcolor.dart';
 
 AppBar costumAppbar(String title) {
   return AppBar(
@@ -32,50 +33,52 @@ Widget testContainer(double size) {
   return Container(height: size, width: size, color: Colors.brown);
 }
 
-PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2, String? routeBackName,bool showIcon = true }) {
-  return AppBar(
-    automaticallyImplyLeading: false,
-    flexibleSpace: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF1E3A8A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-    ),
-    title: Row(
-      children: [
-        IconButton(
-          icon:
-              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () =>
-              (routeBackName != null) ? Get.toNamed(routeBackName) : Get.back(),
-        ),
-        showIcon 
-            ? Row(
-              children: [
-                const SizedBox(width: 8),
-                Icon(icon, color: Colors.white, size: 26),
-              ],
-            )
-            : const SizedBox.shrink(),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 20,
-              letterSpacing: 0.3,
-            ),
+PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2, String? routeBackName,bool showIcon = true, String? hex1,String? hex2}) {
+  return PreferredSize(
+    preferredSize: const Size.fromHeight(65),
+    child: AppBar(
+      automaticallyImplyLeading: false,
+      flexibleSpace: Container(
+        decoration:  BoxDecoration(
+          gradient: LinearGradient(
+            colors: [HexColor(hex1 ?? "#4A70A9"),HexColor(hex2 ?? '#8FABD4')],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-      ],
+      ),
+      title: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () =>
+                (routeBackName != null) ? Get.toNamed(routeBackName) : Get.back(),
+          ),
+          showIcon 
+              ? Row(
+                children: [
+                  const SizedBox(width: 8),
+                  Icon(icon, color: Colors.white, size: 26),
+                ],
+              )
+              : const SizedBox.shrink(),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontSize: 20,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+      elevation: 4,
+      centerTitle: false,
     ),
-    elevation: 4,
-    centerTitle: false,
   );
 }
 

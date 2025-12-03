@@ -1,4 +1,4 @@
-class OutflowRequest {
+class OutflowRequestModel {
   final int id;
   final String code;
   final String customer;
@@ -8,7 +8,7 @@ class OutflowRequest {
   final String status;
   final DateTime date;
 
-  OutflowRequest({
+  OutflowRequestModel({
     required this.id,
     required this.code,
     required this.customer,
@@ -19,8 +19,8 @@ class OutflowRequest {
     required this.date,
   });
 
-  factory OutflowRequest.fromJson(Map<String, dynamic> json) {
-    return OutflowRequest(
+  factory OutflowRequestModel.fromJson(Map<String, dynamic> json) {
+    return OutflowRequestModel(
       id: json['id'] ?? 0,
       code: json['code'] ?? 'Unknown',
       customer: json['customer'] ?? '-',

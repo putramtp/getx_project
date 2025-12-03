@@ -1,6 +1,6 @@
 import 'serial_number_model.dart';
 
-class ReceiveOrderDetail {
+class ReceiveOrderDetailModel {
   final int id;
   final String code;
   final String type;
@@ -14,7 +14,7 @@ class ReceiveOrderDetail {
   final String? receiveNumber;
   final List<ReceiveOrderLine> receiveOrderLines;
 
-  ReceiveOrderDetail({
+  ReceiveOrderDetailModel({
     required this.id,
     required this.code,
     required this.type,
@@ -29,8 +29,8 @@ class ReceiveOrderDetail {
     required this.receiveOrderLines,
   });
 
-  factory ReceiveOrderDetail.fromJson(Map<String, dynamic> json) {
-    return ReceiveOrderDetail(
+  factory ReceiveOrderDetailModel.fromJson(Map<String, dynamic> json) {
+    return ReceiveOrderDetailModel(
       id: json['id'],
       code: json['code'] ?? '-',
       type: json['type'] ?? '-',
@@ -78,7 +78,7 @@ class ReceiveOrderLine {
   final int qty;
   final double pricePerUnit;
   final double priceTotal;
-  final List<SerialNumber> serialNumbers;
+  final List<SerialNumberModel> serialNumbers;
 
   ReceiveOrderLine({
     required this.id,
@@ -103,7 +103,7 @@ class ReceiveOrderLine {
       pricePerUnit: (json['price_per_unit'] ?? 0).toDouble(),
       priceTotal: (json['price_total'] ?? 0).toDouble(),
       serialNumbers: (json['serial_numbers'] as List<dynamic>? ?? [])
-          .map((e) => SerialNumber.fromJson(e))
+          .map((e) => SerialNumberModel.fromJson(e))
           .toList(),
     );
   }

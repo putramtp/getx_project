@@ -15,8 +15,8 @@ class ReceiveOrderListController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   // Data
-  var orders = <ReceiveOrder>[].obs;
-  var filteredOrders = <ReceiveOrder>[].obs;
+  var orders = <ReceiveOrderModel>[].obs;
+  var filteredOrders = <ReceiveOrderModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -113,7 +113,7 @@ class ReceiveOrderListController extends GetxController {
     // If backend says no more pages
     hasMore.value = cursorNext != null;
 
-    final mapped = rawList.map((e) => ReceiveOrder.fromJson(e)).toList();
+    final mapped = rawList.map((e) => ReceiveOrderModel.fromJson(e)).toList();
 
     orders.assignAll(mapped);
     filteredOrders.assignAll(mapped);
@@ -133,7 +133,7 @@ class ReceiveOrderListController extends GetxController {
     if (res == null) return;
 
     final List rawList = res['data'] ?? [];
-    final newOrders = rawList.map((e) => ReceiveOrder.fromJson(e)).toList();
+    final newOrders = rawList.map((e) => ReceiveOrderModel.fromJson(e)).toList();
 
     // ⭐ Update next cursor
     cursorNext = res['next_cursor'];
@@ -216,7 +216,7 @@ class ReceiveOrderListController extends GetxController {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(ReceiveOrder order) {
+  void openDetail(ReceiveOrderModel order) {
     if (Get.isRegistered<ReceiveOrderListDetailController>()) {
       Get.delete<ReceiveOrderListDetailController>(force: true);
     }

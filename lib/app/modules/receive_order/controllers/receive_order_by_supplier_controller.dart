@@ -15,8 +15,8 @@ class ReceiveOrderBySupplierController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   var isLoading = false.obs;
-  var orders = <PoSupplier>[].obs;
-  var filteredSuppliers = <PoSupplier>[].obs;
+  var orders = <PoSupplierModel>[].obs;
+  var filteredSuppliers = <PoSupplierModel>[].obs;
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
 
@@ -120,7 +120,7 @@ class ReceiveOrderBySupplierController extends GetxController {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(PoSupplier supplier) {
+  void openDetail(PoSupplierModel supplier) {
     if (Get.isRegistered<ReceiveOrderBySupplierDetailController>()) {
       Get.delete<ReceiveOrderBySupplierDetailController>(force: true);
     }

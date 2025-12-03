@@ -1,11 +1,11 @@
-class OutflowOrder {
+class OutflowOrderModel {
   final int id;
   final String code;
   final String type;
   final String customer;
   final DateTime date;
 
-  OutflowOrder({
+  OutflowOrderModel({
     required this.id,
     required this.code,
     required this.type,
@@ -13,11 +13,11 @@ class OutflowOrder {
     required this.date,
   });
 
-  factory OutflowOrder.fromJson(Map<String, dynamic> json) {
+  factory OutflowOrderModel.fromJson(Map<String, dynamic> json) {
     final dateStr = json['date']?.toString() ?? '';
     final parsedDate = DateTime.tryParse(dateStr);
 
-    return OutflowOrder(
+    return OutflowOrderModel(
       id: json['id'],
       code: json['code'],
       type: json['type']?.toString() ?? '-',

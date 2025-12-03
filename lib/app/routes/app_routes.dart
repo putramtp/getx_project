@@ -7,7 +7,8 @@ abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
   static const LOGIN = _Paths.LOGIN;
-  static const INVENTORY = _Paths.INVENTORY;
+  static const PRODUCT = _Paths.PRODUCT;
+  static const PRODUCT_DETAIL = _Paths.PRODUCT_DETAIL;
   static const ITEM = _Paths.ITEM;
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = _Paths.RECEIVE_ORDER_LIST;
@@ -35,7 +36,8 @@ abstract class _Paths {
   static const LOGIN = '/login';
 
   static const ITEM = '/item';
-  static const INVENTORY = '/inventory';
+  static const PRODUCT = '/product';
+  static const PRODUCT_DETAIL = '/product/detail';
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = '/receive-order/list';
   static const RECEIVE_ORDER_LIST_DETAIL = '/receive-order/detail';

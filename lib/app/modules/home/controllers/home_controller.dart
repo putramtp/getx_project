@@ -4,7 +4,6 @@ import 'package:getx_project/app/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {
-
   // Inject AuthService (This assumes it has been registered in main.dart)
   final AuthService _authService = Get.find<AuthService>();
 
@@ -14,7 +13,7 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-      Timer.periodic(const Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
       currentTime.value = DateTime.now();
     });
   }
@@ -31,25 +30,28 @@ class HomeController extends GetxController {
 
   // void increment() => count.value++;
 
-  void goToInventoryPage(){
-     Get.toNamed(AppPages.inventoryPage);
-  }
-  void goToReceiveOrderHomePage(){
-     Get.toNamed(AppPages.receiveHomePage);
-  }
-  void goToOutflowOrderHomePage(){
-     Get.toNamed(AppPages.outflowHomePage);
-  }
-  void goToReturnPage(){
-     Get.toNamed(AppPages.returnPage);
+  void goToProductPage() {
+    Get.toNamed(AppPages.productPage);
   }
 
-  String getName(){
+  void goToReceiveOrderHomePage() {
+    Get.toNamed(AppPages.receiveHomePage);
+  }
+
+  void goToOutflowOrderHomePage() {
+    Get.toNamed(AppPages.outflowHomePage);
+  }
+
+  void goToReturnPage() {
+    Get.toNamed(AppPages.returnPage);
+  }
+
+  String getName() {
     String? name = _authService.currentUsername;
     return name ?? "";
   }
 
-  String getRoles(){
+  String getRoles() {
     String? name = _authService.currentUserRoles;
     return name ?? "";
   }
@@ -59,5 +61,18 @@ class HomeController extends GetxController {
     _authService.clearToken();
     // Use offAllNamed to remove all previous routes from the stack
     Get.offAllNamed(Routes.LOGIN);
+  }
+
+  String getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return "Good Morning 🌅";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good Afternoon ☀️";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good Evening 🌇";
+    } else {
+      return "Good Night 🌙";
+    }
   }
 }

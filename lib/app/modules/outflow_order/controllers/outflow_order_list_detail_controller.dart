@@ -8,16 +8,16 @@ import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_p
 class OutflowOrderListDetailController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
 
-  final outflowOrderDetail = Rxn<OutflowOrderDetail>();
+  final outflowOrderDetail = Rxn<OutflowOrderDetailModel>();
   var isLoading = false.obs;
-  late final OutflowOrder curretOutflowOrder;
+  late final OutflowOrderModel curretOutflowOrder;
 
   @override
   void onInit() {
     super.onInit();
 
     final args = Get.arguments;
-    if (args != null && args is OutflowOrder) {
+    if (args != null && args is OutflowOrderModel) {
       curretOutflowOrder = args;
       loadOutflowOrderDetail();
     } else {

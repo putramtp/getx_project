@@ -14,7 +14,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Outflow Request List",
+        child: appBarOrder("Outflow Order List",
             icon: Icons.list_alt_sharp,
             routeBackName: AppPages.outflowHomePage),
       ),
@@ -147,7 +147,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                       // 👇 bottom section
                       return Obx(() {
                         // 🟡 1. Still loading more → show loader
-                        if (controller.isLoadingMore.value) {
+                        if (controller.cursorNext != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -204,7 +204,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                           color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: const Color(0xff4A70A9),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -385,7 +385,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
     );
   }
 
-  Widget _buildOrderCard(OutflowOrder order) {
+  Widget _buildOrderCard(OutflowOrderModel order) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

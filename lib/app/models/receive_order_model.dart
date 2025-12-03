@@ -1,11 +1,11 @@
-class ReceiveOrder {
+class ReceiveOrderModel {
   final int id;
   final String code;
   final String type;
   final String supplier;
   final DateTime date;
 
-  ReceiveOrder({
+  ReceiveOrderModel({
     required this.id,
     required this.code,
     required this.type,
@@ -13,11 +13,11 @@ class ReceiveOrder {
     required this.date,
   });
 
-  factory ReceiveOrder.fromJson(Map<String, dynamic> json) {
+  factory ReceiveOrderModel.fromJson(Map<String, dynamic> json) {
     final dateStr = json['date']?.toString() ?? '';
     final parsedDate = DateTime.tryParse(dateStr);
 
-    return ReceiveOrder(
+    return ReceiveOrderModel(
       id: json['id'],
       code: json['code'],
       type: json['type']?.toString() ?? '-',

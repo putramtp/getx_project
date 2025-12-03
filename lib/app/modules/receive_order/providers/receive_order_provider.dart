@@ -24,12 +24,12 @@ class ReceiveOrderProvider extends ApiProvider {
     }
   }
 
-  Future<ReceiveOrderDetail> getReceiveOrderDetail(int roId) async {
+  Future<ReceiveOrderDetailModel> getReceiveOrderDetail(int roId) async {
     final response = await get('/receive-order/$roId');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'];
       if (data is Map<String, dynamic>) {
-        return ReceiveOrderDetail.fromJson(data);
+        return ReceiveOrderDetailModel.fromJson(data);
       } else {
         throw Exception('Unexpected response format: data is not a Map');
       }
@@ -46,17 +46,17 @@ class ReceiveOrderProvider extends ApiProvider {
     );
 
     if (response.statusCode == 200 && response.body != null) {
-      return response.body; // return full data including cursor
+    return response.body; // return full data including cursor
     } else {
       throw Exception( 'Failed to load getPurchaseOrders: ${response.statusText}');
     }
   }
 
-  Future<List<PurchaseOrderLineItem>> getPurchaseOrderLineItem(int poId) async {
+  Future<List<PurchaseOrderLineItemModel>> getPurchaseOrderLineItem(int poId) async {
     final response = await get('/purchase-order/$poId/summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => PurchaseOrderLineItem.fromJson(e)).toList();
+      return data.map((e) => PurchaseOrderLineItemModel.fromJson(e)).toList();
     } else {
       throw Exception(
           'Failed to load getPurchaseOrderLineItem: ${response.statusText}');
@@ -73,23 +73,23 @@ class ReceiveOrderProvider extends ApiProvider {
     }
   }
 
-  Future<List<PoSupplier>> getSuppliers() async {
+  Future<List<PoSupplierModel>> getSuppliers() async {
     final response = await get('/purchase-order/supplier-summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => PoSupplier.fromJson(e)).toList();
+      return data.map((e) => PoSupplierModel.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load getSuppliers: ${response.statusText}');
     }
   }
 
-  Future<List<PurchaseOrderLineItemBySupplier>> getPurchaseOrderItemBySupplier(
+  Future<List<PurchaseOrderLineItemBySupplierModel>> getPurchaseOrderItemBySupplier(
       int supplierId) async {
     final response = await get('/purchase-order/$supplierId/supplier-summary');
     if (response.statusCode == 200 && response.body != null) {
       final data = response.body['data'] as List<dynamic>;
       return data
-          .map((e) => PurchaseOrderLineItemBySupplier.fromJson(e))
+          .map((e) => PurchaseOrderLineItemBySupplierModel.fromJson(e))
           .toList();
     } else {
       throw Exception(

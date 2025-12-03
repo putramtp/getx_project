@@ -1,6 +1,6 @@
 import 'serial_number_model.dart';
 
-class OutflowOrderDetail {
+class OutflowOrderDetailModel {
   final int id;
   final String code;
   final String type;
@@ -14,7 +14,7 @@ class OutflowOrderDetail {
   final String? billNumber;
   final List<OutflowOrderLine> outflowOrderLines;
 
-  OutflowOrderDetail({
+  OutflowOrderDetailModel({
     required this.id,
     required this.code,
     required this.type,
@@ -29,8 +29,8 @@ class OutflowOrderDetail {
     required this.outflowOrderLines,
   });
 
-  factory OutflowOrderDetail.fromJson(Map<String, dynamic> json) {
-    return OutflowOrderDetail(
+  factory OutflowOrderDetailModel.fromJson(Map<String, dynamic> json) {
+    return OutflowOrderDetailModel(
       id: json['id'],
       code: json['code'] ?? '-',
       type: json['type'] ?? '-',
@@ -76,7 +76,7 @@ class OutflowOrderLine {
   final int qty;
   final double pricePerUnit;
   final double priceTotal;
-  final List<SerialNumber> serialNumbers;
+  final List<SerialNumberModel> serialNumbers;
 
   OutflowOrderLine({
     required this.id,
@@ -101,7 +101,7 @@ class OutflowOrderLine {
       pricePerUnit: (json['price_per_unit'] ?? 0).toDouble(),
       priceTotal: (json['price_total'] ?? 0).toDouble(),
       serialNumbers: (json['serial_numbers'] as List<dynamic>? ?? [])
-          .map((e) => SerialNumber.fromJson(e))
+          .map((e) => SerialNumberModel.fromJson(e))
           .toList(),
     );
   }

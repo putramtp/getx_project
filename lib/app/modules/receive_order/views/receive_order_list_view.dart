@@ -143,7 +143,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                       }
 
                       return Obx(() {
-                        if (controller.isLoadingMore.value) {
+                        if (controller.cursorNext != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -157,8 +157,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                           );
                         }
 
-                        if (controller.cursorNext == null &&
-                            orders.isNotEmpty) {
+                        if (controller.cursorNext == null &&  orders.isNotEmpty) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -198,7 +197,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                           color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
+                      backgroundColor: const Color(0xff4A70A9),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -383,7 +382,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     );
   }
 
-  Widget _buildOrderCard(ReceiveOrder order) {
+  Widget _buildOrderCard(ReceiveOrderModel order) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -15,8 +15,8 @@ class OutflowOrderByRequestController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   // Data
-  var orders = <OutflowRequest>[].obs;
-  var filteredOrders = <OutflowRequest>[].obs;
+  var orders = <OutflowRequestModel>[].obs;
+  var filteredOrders = <OutflowRequestModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -112,7 +112,7 @@ class OutflowOrderByRequestController extends GetxController {
     // If backend says no more pages
     hasMore.value = cursorNext != null;
 
-    final mapped = rawList.map((e) => OutflowRequest.fromJson(e)).toList();
+    final mapped = rawList.map((e) => OutflowRequestModel.fromJson(e)).toList();
     orders.assignAll(mapped);
     filteredOrders.assignAll(mapped);
   }
@@ -131,7 +131,7 @@ class OutflowOrderByRequestController extends GetxController {
     if (res == null) return;
 
     final List rawList = res['data'] ?? [];
-    final newOrders = rawList.map((e) => OutflowRequest.fromJson(e)).toList();
+    final newOrders = rawList.map((e) => OutflowRequestModel.fromJson(e)).toList();
 
     // ⭐ Update next cursor
     cursorNext = res['next_cursor'];
@@ -199,7 +199,7 @@ class OutflowOrderByRequestController extends GetxController {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(OutflowRequest order) {
+  void openDetail(OutflowRequestModel order) {
     if (Get.isRegistered<OutflowOrderByRequestDetailController>()) {
       Get.delete<OutflowOrderByRequestDetailController>(force: true);
     }

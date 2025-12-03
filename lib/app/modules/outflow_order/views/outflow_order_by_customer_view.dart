@@ -339,7 +339,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
   //   );
   // }
 
-  Widget _buildOrderCard(OrCustomer customer) {
+  Widget _buildOrderCard(OrCustomerModel customer) {
     final status = customer.status;
     final statusColor = status.toLowerCase().contains('processing')
         ? Colors.cyan

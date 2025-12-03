@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:intl/intl.dart';
 
 String capitalizeFirstofEach(String text) {
   List<String> words = text.split(" ");
@@ -86,12 +87,17 @@ Future<DateTime?> pickDate(
   );
 }
 
+int safeToInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}
 
-  int safeToInt(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) return int.tryParse(value) ?? 0;
-    return 0;
-  }
+String formatPrice(dynamic value) {
+  if (value == null) return "-";
 
+  final number = num.tryParse(value.toString()) ?? 0;
+  return NumberFormat.decimalPattern('id_ID').format(number);
+}

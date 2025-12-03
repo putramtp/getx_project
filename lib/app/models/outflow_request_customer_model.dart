@@ -1,4 +1,4 @@
-class OrCustomer {
+class OrCustomerModel {
   final int id;
   final String customerCode;
   final String name;
@@ -7,7 +7,7 @@ class OrCustomer {
   final String items; // e.g. "3/10 Item"
   final String status;
 
-  OrCustomer({
+  OrCustomerModel({
     required this.id,
     required this.customerCode,
     required this.name,
@@ -17,8 +17,8 @@ class OrCustomer {
     required this.status,
   });
 
-  factory OrCustomer.fromJson(Map<String, dynamic> json) {
-    return OrCustomer(
+  factory OrCustomerModel.fromJson(Map<String, dynamic> json) {
+    return OrCustomerModel(
       id: json['id'],
       customerCode: json['code'],
       name: json['name'],

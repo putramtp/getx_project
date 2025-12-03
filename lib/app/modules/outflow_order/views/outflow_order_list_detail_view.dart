@@ -55,7 +55,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final line = lines[index];
-                  final List<SerialNumber> serialNumbers = line.serialNumbers;
+                  final List<SerialNumberModel> serialNumbers = line.serialNumbers;
                   return Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(

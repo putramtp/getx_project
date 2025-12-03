@@ -144,7 +144,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                       }
 
                       return Obx(() {
-                        if (controller.isLoadingMore.value) {
+                        if (controller.cursorNext != null) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 18),
                             child: Center(
@@ -380,7 +380,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
     );
   }
 
-  Widget _buildOrderCard(PurchaseOrder order) {
+  Widget _buildOrderCard(PurchaseOrderModel order) {
     final status = order.status;
     final statusColor = status.toLowerCase().contains('processing')
         ? Colors.cyan

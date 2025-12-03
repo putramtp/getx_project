@@ -15,7 +15,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
   var filledResults = <String>[].obs;
   var isLoading = false.obs;
   var isLoadingReceiving = false.obs;
-  late final PoSupplier currentSupplier;
+  late final PoSupplierModel currentSupplier;
   final receiveNumber = ''.obs;
 
   @override
@@ -23,7 +23,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     super.onInit();
 
     final args = Get.arguments;
-    if (args != null && args is PoSupplier) {
+    if (args != null && args is PoSupplierModel) {
       currentSupplier = args;
       loadPurchaseOrderItemBySupplier();
     } else {
