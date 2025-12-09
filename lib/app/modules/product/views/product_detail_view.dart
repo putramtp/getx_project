@@ -12,15 +12,12 @@ class ProductDetailView extends GetView<ProductDetailController> {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
-    final size = SizeConfig.defaultSize;
-
+    final double size = SizeConfig.defaultSize;
     final product = controller.currentProduct;
-
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: Stack(children: [
         _buildHeaderGradient(size),
-
         // MAIN CONTENT
         Obx(() {
           final detail = controller.productDetail.value;
@@ -29,15 +26,14 @@ class ProductDetailView extends GetView<ProductDetailController> {
           return FadeTransition(
             opacity: controller.fadeAnim,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 40, 16, 20),
+              padding: const EdgeInsets.fromLTRB(16, 30, 16, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAppBar(),
+                  _buildAppBar(size),
                   const SizedBox(height: 20),
-                  _buildProductCard(product, detail),
+                  _buildProductCard(product, detail,size),
                   const SizedBox(height: 28),
-
                   // SECTION: BASIC INFO
                   _sectionCard(
                     title: "Basic Information",
@@ -100,19 +96,19 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // APP BAR
   // --------------------------------------------------------------------------
-  Widget _buildAppBar() {
+  Widget _buildAppBar(size) {
     return Row(
       children: [
         IconButton(
           onPressed: () => Get.back(),
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: Colors.white, size: 28),
+          icon:  Icon(Icons.arrow_back_rounded,
+              color: Colors.white, size:size * 2),
         ),
-        const Text(
+         Text(
           "Product Detail",
           style: TextStyle(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: size *2,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -123,7 +119,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // PRODUCT CARD (Glassmorphism)
   // --------------------------------------------------------------------------
-  Widget _buildProductCard(product, detail) {
+  Widget _buildProductCard(product, detail,size) {
     return Hero(
       tag: "product_${product.itemId}",
       child: Material(
@@ -149,16 +145,14 @@ class ProductDetailView extends GetView<ProductDetailController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.itemName,
-                      style: const TextStyle(
-                          fontSize: 26, fontWeight: FontWeight.w700)),
+                  Text(product.itemName,style:  TextStyle(fontSize: size * 2.2, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 10),
 
                   // ITEM CODE TAG
-                  _buildTag("Code: ${product.itemCode}"),
+                  _buildTag("Code: ${product.itemCode}",size),
 
                   const SizedBox(height: 16),
-                  _buildStockRow(product, detail),
+                  _buildStockRow(product, detail,size),
                 ],
               ),
             ),
@@ -168,7 +162,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
     );
   }
 
-  Widget _buildTag(String text) {
+  Widget _buildTag(String text,size) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -178,34 +172,33 @@ class ProductDetailView extends GetView<ProductDetailController> {
       child: Text(
         text,
         style: TextStyle(
-            fontSize: 14,
+            fontSize: size * 1.4,
             fontWeight: FontWeight.w600,
             color: Colors.blue.shade800),
       ),
     );
   }
 
-  Widget _buildStockRow(product, detail) {
+  Widget _buildStockRow(product, detail,size) {
     final low = product.lowStock;
-
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         Icon(
           low ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
-          size: 26,
+          size: size *2.4,
           color: low ? Colors.orange.shade700 : Colors.green.shade600,
         ),
         const SizedBox(width: 8),
         Text(
           low ? "Low Stock" : "Available",
           style: TextStyle(
-            fontSize: 16,
+            fontSize: size *2,
             fontWeight: FontWeight.w600,
             color: low ? Colors.orange.shade700 : Colors.green.shade700,
           ),
         ),
         const Spacer(),
-
         // QTY TAG
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -219,8 +212,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
           ),
           child: Text(
             "${product.qtyRemaining} ${detail?.unitName ?? ''}",
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontSize: size *1.8),
           ),
         ),
       ],
@@ -279,7 +271,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
           Expanded(
             child: Text(
               loading
-                  ? "Loading..."
+                  ? "  ..."
                   : (value?.isNotEmpty == true ? value! : "-"),
               style: TextStyle(
                 fontSize: size * 1.4,
@@ -298,7 +290,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   Widget _buildDescription(detail, double size, bool loading) {
     if (loading) {
-      return Text("Loading...",
+      return Text("  ...",
           style: TextStyle(color: Colors.grey, fontSize: size * 1.4));
     }
 

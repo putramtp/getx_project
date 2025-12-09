@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import 'package:getx_project/app/modules/outflow_order/views/scan_page_by_customer.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
+import 'package:hexcolor/hexcolor.dart';
 
 class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDetailController> {
   const OutflowOrderByCustomerDetailView({super.key});
@@ -11,14 +13,11 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    SizeConfig.init(context);
+    final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Item Summary",
-            routeBackName: AppPages.outflowOrderByCustomerPage),
-      ),
+      appBar: appBarOrder("Item Summary",routeBackName: AppPages.outflowOrderByCustomerPage,hex1:"778873",hex2:'A1BC98'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -88,30 +87,34 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
 
                   return Card(
                     elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
                       title: Text(item['name'] ?? "Unnamed",
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold)),
                       subtitle: Text(
                           "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700])),
+                          style: TextStyle(color: Colors.grey[700],fontSize: size *1.2)),
                       leading: CircleAvatar(
-                        radius: 24,
+                        radius: size * 2.2,
                         backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: 26),
+                        child: Icon(icon, color: bgColor, size: size *2),
                       ),
                       trailing: !isFinished
                           ? ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
+                                padding:  const EdgeInsets.all(12), 
+                                minimumSize: Size.zero,           
+                                visualDensity: VisualDensity.compact,
+                              ),
                               onPressed: () {
                                 controller.selectedIndex.value = index;
                                 controller.selectedItem.value = item;
                                 Get.to(() => const ScanPageByCustomer());
                               },
-                              icon: const Icon(Icons.qr_code_scanner_rounded),
-                              label: const Text("Scan"),
+                              icon:  Icon(Icons.qr_code_scanner_rounded,size: size *1.5,color:Colors.black87),
+                              label:  Text("Scan",style:TextStyle(fontSize: size *1.2,color:Colors.black87)),
                             )
                           : null,
                     ),
@@ -120,14 +123,14 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
               );
             })),
             const SizedBox(height: 16),
-            _buildContinueButton(theme, controller),
+            _buildContinueButton(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContinueButton(ThemeData theme, controller) {
+  Widget _buildContinueButton() {
     return SizedBox(
       width: double.infinity,
       child: Obx(() {
@@ -154,9 +157,9 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                   }
                 },
           style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xff435663),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         );
       }),
@@ -272,8 +275,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                                     const EdgeInsets.symmetric(vertical: 2),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.qr_code_2,
-                                        size: 16, color: Colors.grey),
+                                    const Icon(Icons.qr_code_2,size: 16, color: Colors.grey),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
@@ -344,8 +346,8 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF528FF3), Color(0xFF2163F0), Color(0xFF1B3B94)],
+        gradient:  LinearGradient(
+          colors: [HexColor("778873"), HexColor("A1BC98"), HexColor("D2DCB6")],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

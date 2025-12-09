@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
@@ -8,6 +9,8 @@ class LoginView extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
+    final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -20,8 +23,8 @@ class LoginView extends GetView<LoginController> {
                 padding: const EdgeInsets.only(top: 20.0),
                 child: Center(
                   child: Container(
-                    width: 200,
-                    height: 150,
+                    width: size *22,
+                    height: size *17,
                     decoration: const BoxDecoration(color: Colors.white),
                     child: Image.asset('assets/images/logo.png'),
                   ),
@@ -54,6 +57,7 @@ class LoginView extends GetView<LoginController> {
                           controller.isPasswordVisible.value
                               ? Icons.visibility
                               : Icons.visibility_off,
+                          size: size * 2.2,
                         ),
                         onPressed: () {
                           controller.isPasswordVisible.value =
@@ -76,15 +80,15 @@ class LoginView extends GetView<LoginController> {
                           controller.rememberMe.value = val ?? false;
                         },
                       )),
-                  const Text('Remember me'),
+                   const Text('Remember me'),
                 ],
               ),
 
               Padding(
                 padding: const EdgeInsets.only(top: 5),
                 child: Container(
-                  height: 45,
-                  width: 200,
+                  height: size * 4.5,
+                  width: size *14,
                   decoration: BoxDecoration(
                     color: Colors.blue[200],
                     borderRadius: BorderRadius.circular(20),
@@ -99,37 +103,36 @@ class LoginView extends GetView<LoginController> {
                             ? null
                             : controller.authLogin,
                         child: controller.isLoading.value
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.blue),
+                            ?  SizedBox(
+                                width:  size * 2.2,
+                                height:  size * 2.2,
+                                child: const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                                   strokeWidth: 3.0,
                                 ),
                               )
-                            : const Text(
+                            :  Text(
                                 'Login',
                                 style: TextStyle(
-                                  color: Color.fromARGB(255, 21, 55, 248),
-                                  fontSize: 20,
+                                  color:  Colors.blue[900],
+                                  fontSize: size * 2.2,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                       )),
                 ),
               ),
-
+              const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
                   infoAlertBottom(
                       title:"Forgot Password", "You clicked forgot password");
                 },
-                child: const Text(
+                child:  Text(
                   'Forgot Password',
                   style: TextStyle(
                     color: Colors.blue,
-                    fontSize: 15,
+                    fontSize: size * 1.5,
                     decoration: TextDecoration.underline,
                   ),
                 ),

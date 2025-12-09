@@ -28,7 +28,6 @@ class ReceiveOrderListDetailController extends GetxController {
   /// 🔹 Fetch items for this order
   Future<void> loadReceiveOrderDetail() async {
     final orderId = curretReceiveOrder.id;
-
     final data = await ApiExecutor.run<ReceiveOrderDetailModel>(
       isLoading: isLoading,
       task: () => provider.getReceiveOrderDetail(orderId),

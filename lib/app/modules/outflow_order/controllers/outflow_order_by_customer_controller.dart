@@ -59,10 +59,6 @@ class OutflowOrderByCustomerController extends GetxController {
     if (data == null) return;
     orders.assignAll(data);
     filteredCustomers.assignAll(data);
-    successAlertBottom(
-      title: 'Success',
-      'Customers loaded successfully (${data.length} records)',
-    );
   }
 
   /// 🔍 Filter list by customer name

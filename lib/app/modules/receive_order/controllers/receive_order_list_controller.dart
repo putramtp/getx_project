@@ -34,31 +34,27 @@ class ReceiveOrderListController extends GetxController {
   var endDate = Rxn<DateTime>();
 
   // Scroll listener
-  final ScrollController scrollController = ScrollController();
+  final ScrollController scrollController = ScrollController(debugLabel:'ReceiveOrderListController' );
 
   @override
   void onInit() {
     super.onInit();
-
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-
     scrollController.addListener(_scrollListener);
-
     loadReceiveOrders();
   }
 
   // Auto loading
   void _scrollListener() {
-    if (scrollController.position.pixels >=
-        scrollController.position.maxScrollExtent - 250) {
-      loadMore();
-    }
+    if(!scrollController.hasClients) return;
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   @override
   void onClose() {
+    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -219,11 +215,5 @@ class ReceiveOrderListController extends GetxController {
       Get.delete<ReceiveOrderListDetailController>(force: true);
     }
     Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
-  }
-
-  /// 🔄 Manual Sync
-  void syncReceiveOrder() async {
-    await loadReceiveOrders();
-    infoAlertBottom(title: 'Sinkronisasi', 'PO terbaru disinkronisasi');
   }
 }

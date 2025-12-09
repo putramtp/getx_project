@@ -266,3 +266,28 @@ Future<void> showEditCodeDialog(
     ),
   );
 }
+
+
+Widget buildSyncButton({required VoidCallback onPressed,required double size,Color color = Colors.blue,String name = 'Synchronization'}){
+   return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: size * 4,
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          icon:  Icon(Icons.sync, color: Colors.white,size: size *2,),
+          label:  Text(
+            name,
+            style: TextStyle(fontSize: size * 1.8, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+    );
+}

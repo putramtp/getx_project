@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/models/serial_number_model.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_list_detail_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
+import 'package:hexcolor/hexcolor.dart';
 
 class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
   const OutflowOrderDetailView({super.key});
@@ -11,19 +13,16 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    SizeConfig.init(context);
+    final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Outflow order detail",
-            routeBackName: AppPages.outflowOrderListPage),
-      ),
+      appBar: appBarOrder("Outflow order detail",routeBackName: AppPages.outflowOrderListPage,hex1:"#EF7722",hex2:"#FAA533"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeaderGradient(size),
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
@@ -69,13 +68,13 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                               ?.copyWith(color: Colors.grey[700])),
                       leading: CircleAvatar(
                         radius: 24,
-                        backgroundColor: Colors.indigo.withOpacity(0.15),
+                        backgroundColor: Colors.orange.withOpacity(0.15),
                         child: const Icon(Icons.handyman_rounded,
-                            color: Colors.indigo, size: 26),
+                            color: Colors.orange, size: 26),
                       ),
                       trailing:serialNumbers.isEmpty ? const SizedBox.shrink() : IconButton(
-                        icon: const Icon(Icons.visibility_rounded,
-                            color: Colors.indigo),
+                        iconSize:  size * 2,
+                        icon: const  Icon(Icons.visibility_rounded,color: Colors.orange),
                         onPressed: () {
                           // 🔹 Show serial numbers in dialog
                           Get.dialog(
@@ -85,8 +84,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                               ),
                               title: Text(
                                 "Serial Numbers - ${line.itemName}",
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               content: SizedBox(
                                 width: double.maxFinite,
@@ -163,7 +161,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
     );
   }
 
- Widget _buildHeader() {
+ Widget _buildHeaderGradient(double size) {
     final ro = controller.curretOutflowOrder;
     final roCode = ro.code;
 
@@ -171,16 +169,16 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF528FF3), Color(0xFF2163F0), Color(0xFF1B3B94)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        gradient:  LinearGradient(
+          colors: [HexColor("#EF7722"),HexColor("#FAA533")],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.inventory_rounded, color: Colors.white, size: 34),
+          Icon(Icons.inventory_rounded, color: Colors.white, size: size * 3),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,10 +186,10 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
               const Text("Outflow Order",
                   style: TextStyle(color: Colors.white70, fontSize: 13)),
               Text("#$roCode",
-                  style: const TextStyle(
+                  style:  TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20)),
+                      fontSize: size * 1.8)),
             ],
           ),
         ],

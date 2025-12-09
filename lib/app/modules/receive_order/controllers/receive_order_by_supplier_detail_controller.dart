@@ -21,7 +21,6 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     final args = Get.arguments;
     if (args != null && args is PoSupplierModel) {
       currentSupplier = args;

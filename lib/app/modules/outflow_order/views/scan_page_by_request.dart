@@ -15,7 +15,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarOrder("Scan Item",showIcon: false),
+      appBar: appBarOrder("Scan Item",showIcon: false,hex1:'5170FD',hex2:"60ABFB"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -64,7 +64,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
                 children: [
                   _buildHeaderCard(theme, item),
                   const SizedBox(height: 12),
-                  _buildQtyCard(theme, expected, received, scannedQty, remaining),
+                  _buildQtyCard(theme, expected, received, scannedQty, remaining,size),
                   const SizedBox(height: 20),
                   Text("Scanned Results",
                       style: theme.textTheme.titleMedium
@@ -79,15 +79,15 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: SizedBox(
-        width: size * 8,
-        height: size * 8,
+        width: size * 6,
+        height: size * 6,
         child: FloatingActionButton(
-          backgroundColor: theme.colorScheme.primary,
+          backgroundColor: Colors.blue[900],
           foregroundColor: Colors.white,
           elevation: 5,
           shape: const CircleBorder(),
           child: Icon(Icons.qr_code_scanner, size: size * 4),
-          onPressed: () async {
+          onPressed: () async {  
             final barcode = await FlutterBarcodeScanner.scanBarcode(
               "#ff6666",
               "Cancel",
@@ -232,37 +232,38 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             /// 🗑 Clear scanned codes for current item
-            TextButton.icon(
-              onPressed: hasItems && hasScannedCurrent
-                  ? controller.clearScannedCodes
-                  : null,
-              icon: Icon(
-                Icons.delete_forever,
-                color: hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
-              ),
-              label: Text(
-                "Clear",
-                style: TextStyle(
-                  color:
-                      hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
-                  fontWeight: FontWeight.bold,
+            Expanded(
+              child: TextButton.icon(
+                onPressed: hasItems && hasScannedCurrent
+                    ? controller.clearScannedCodes
+                    : null,
+                icon: Icon(
+                  Icons.delete_forever,
+                  color: hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
+                ),
+                label: Text(
+                  "Clear",
+                  style: TextStyle(
+                    color:
+                        hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-
-            const SizedBox(width: 56),
-
-            TextButton.icon(
-              onPressed: hasAnyScanned ? controller.goToNextItem : null,
-              icon: Icon(
-                Icons.save_rounded,
-                color: hasAnyScanned ? Colors.blue : Colors.grey,
-              ),
-              label: Text(
-                "Continue",
-                style: TextStyle(
-                  color: hasAnyScanned ? Colors.blueAccent : Colors.grey,
-                  fontWeight: FontWeight.bold,
+            Expanded(
+              child: TextButton.icon(
+                onPressed: hasAnyScanned ? controller.goToNextItem : null,
+                icon: Icon(
+                  Icons.save_rounded,
+                  color: hasAnyScanned ? Colors.blue : Colors.grey,
+                ),
+                label: Text(
+                  "Continue",
+                  style: TextStyle(
+                    color: hasAnyScanned ? Colors.blueAccent : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -305,6 +306,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     int received,
     int scannedQty,
     int remaining,
+    double size
   ) {
     return Card(
       elevation: 1,
@@ -314,35 +316,25 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildQtyInfo(
-                "Expected", expected.toString(), Colors.grey.shade700),
-            _buildQtyInfo("Received", received.toString(), Colors.blue),
-            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green),
-            _buildQtyInfo(
-              "Remaining",
-              remaining.toString(),
-              remaining <= 0 ? Colors.grey : Colors.red,
-            ),
+            _buildQtyInfo("Expected", expected.toString(), Colors.grey.shade700,size),
+            _buildQtyInfo("Received", received.toString(), Colors.blue,size),
+            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green,size),
+            _buildQtyInfo("Remaining",remaining.toString(),remaining <= 0 ? Colors.grey : Colors.red,size),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQtyInfo(String label, String value, Color color) {
+  Widget _buildQtyInfo(String label, String value, Color color,double size) {
     return Column(
       children: [
-        Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.bold, color: color, fontSize: 18)),
-        const SizedBox(height: 2),
-        Text(label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        Text(value,style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: size *2)),
+        Text(label,style: TextStyle(fontSize: size *1.3, color: Colors.grey.shade600)),
       ],
     );
   }
 
-  /// ✅ Modern scanned list
   Widget _buildScannedList(
     ThemeData theme,
     List<Map<String, dynamic>> scanned,

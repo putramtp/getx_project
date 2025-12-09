@@ -13,9 +13,8 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
     final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
-
     return Scaffold(
-      appBar: appBarOrder("Fill Item", icon: Icons.edit_rounded),
+      appBar: appBarOrder("Fill Item", icon: Icons.edit_rounded,hex1:"75a340",hex2:"B1C29E"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -65,8 +64,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
                 children: [
                   _buildHeaderCard(theme, item),
                   const SizedBox(height: 12),
-                  _buildQtyCard(
-                      theme, expected, received, filledQty, remaining),
+                  _buildQtyCard( theme, expected, received, filledQty, remaining,size),
                   const SizedBox(height: 20),
                   Text("Filled Results",
                       style: theme.textTheme.titleMedium
@@ -81,14 +79,14 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: SizedBox(
-        width: size * 8,
-        height: size * 8,
+        width: size * 6,
+        height: size * 6,
         child: FloatingActionButton(
-          backgroundColor: theme.colorScheme.primary,
+          backgroundColor:const Color(0xFF658C58),
           foregroundColor: Colors.white,
           elevation: 5,
           shape: const CircleBorder(),
-          child: Icon(Icons.edit_note_rounded, size: size * 4),
+          child: Icon(Icons.edit_note_rounded, size: size * 3),
           onPressed: () async {
             final index = controller.selectedIndex.value;
             final item = controller.items[index];
@@ -106,7 +104,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
           },
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(theme),
+      bottomNavigationBar: _buildBottomBar(theme,size),
     );
   }
 
@@ -220,8 +218,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
 
   // ===== UI helpers =====
 
-  Widget _buildBottomBar(ThemeData theme) {
-    final controller = Get.find<ReceiveOrderBySupplierDetailController>();
+  Widget _buildBottomBar(ThemeData theme,double size) {
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;
@@ -243,7 +240,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
       final bool hasAnyFilled = totalFilled > 0;
 
       return Container(
-        height: 60,
+        height: size * 4,
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceVariant,
@@ -259,7 +256,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            /// 🗑 Clear filled codes for current item
+            const SizedBox(width: 10),
             TextButton.icon(
               onPressed: hasItems && hasFilledCurrent
                   ? controller.clearFilledCodes
@@ -267,33 +264,35 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
               icon: Icon(
                 Icons.delete_forever,
                 color: hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
+                size: size * 2.6,
               ),
               label: Text(
                 "Clear",
                 style: TextStyle(
-                  color:
-                      hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
+                  fontSize: size * 1.6,
+                  color:hasItems && hasFilledCurrent ? Colors.red : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-
-            const SizedBox(width: 56),
-
+            const Spacer(),
             TextButton.icon(
               onPressed: hasAnyFilled ? controller.goToNextItem : null,
               icon: Icon(
+                 size: size * 2.6,
                 Icons.save_rounded,
                 color: hasAnyFilled ? Colors.blue : Colors.grey,
               ),
               label: Text(
                 "Continue",
                 style: TextStyle(
+                  fontSize: size * 1.6,
                   color: hasAnyFilled ? Colors.blueAccent : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+            const SizedBox(width: 10),
           ],
         ),
       );
@@ -309,15 +308,14 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(Icons.inventory_2_rounded,
-                color: Colors.blueGrey, size: 32),
+            const Icon(Icons.inventory_2_rounded,color: Colors.blueGrey, size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 item["name"].toString(),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
+                  color:Colors.blueGrey ,
                 ),
               ),
             ),
@@ -333,6 +331,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
     int received,
     int filledQty,
     int remaining,
+    double size,
   ) {
     return Card(
       elevation: 1,
@@ -342,30 +341,22 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildQtyInfo(
-                "Expected", expected.toString(), Colors.grey.shade700),
-            _buildQtyInfo("Received", received.toString(), Colors.blue),
-            _buildQtyInfo("Filled", filledQty.toString(), Colors.green),
-            _buildQtyInfo(
-              "Remaining",
-              remaining.toString(),
-              remaining <= 0 ? Colors.grey : Colors.red,
-            ),
+            _buildQtyInfo("Expected", expected.toString(), Colors.grey.shade700,size),
+            _buildQtyInfo("Received", received.toString(), Colors.blue,size),
+            _buildQtyInfo("Filled", filledQty.toString(), Colors.green,size),
+            _buildQtyInfo("Remaining",remaining.toString(),remaining <= 0 ? Colors.grey : Colors.red,size),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQtyInfo(String label, String value, Color color) {
+  Widget _buildQtyInfo(String label, String value, Color color,double size) {
     return Column(
       children: [
-        Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.bold, color: color, fontSize: 18)),
+        Text(value,style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: size *1.3)),
         const SizedBox(height: 2),
-        Text(label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        Text(label,style: TextStyle(fontSize: size *1.3, color: Colors.grey.shade600)),
       ],
     );
   }

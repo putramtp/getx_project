@@ -25,7 +25,7 @@ class OutflowOrderByRequestController extends GetxController {
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
   // Scroll listener
-  final ScrollController scrollController = ScrollController();
+  final ScrollController scrollController = ScrollController(debugLabel: "OutflowOrderByRequestController");
 
   // Cursors
   final RxnString cursorNext = RxnString();
@@ -38,26 +38,22 @@ class OutflowOrderByRequestController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-
     scrollController.addListener(_scrollListener);
-
     loadRequestOrders();
   }
 
   // Auto loading
   void _scrollListener() {
-    if (scrollController.position.pixels >=
-        scrollController.position.maxScrollExtent - 250) {
-      loadMore();
-    }
+    if(!scrollController.hasClients) return;
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   @override
   void onClose() {
+    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -204,9 +200,4 @@ class OutflowOrderByRequestController extends GetxController {
     Get.toNamed(AppPages.outflowOrderByRequestDetailPage, arguments: order);
   }
 
-  /// 🔄 Manual Sync
-  void syncData() async {
-    await loadRequestOrders();
-    infoAlertBottom(title: 'Sinkronisasi', 'Data terbaru disinkronisasi');
-  }
 }

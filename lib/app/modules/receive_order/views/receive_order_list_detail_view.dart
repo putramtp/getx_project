@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/models/serial_number_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_detail_controller.dart';
@@ -11,19 +12,16 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    SizeConfig.init(context);
+    final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Receive order detail",
-            routeBackName: AppPages.receiveOrderListPage),
-      ),
+      appBar: appBarOrder("Receive order detail",routeBackName: AppPages.receiveOrderListPage),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeaderGradient(size),
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
@@ -68,14 +66,12 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
                           style: theme.textTheme.bodyMedium
                               ?.copyWith(color: Colors.grey[700])),
                       leading: CircleAvatar(
-                        radius: 24,
+                        radius: size *1.6,
                         backgroundColor: Colors.indigo.withOpacity(0.15),
-                        child: const Icon(Icons.handyman_rounded,
-                            color: Colors.indigo, size: 26),
+                        child:  Icon(Icons.handyman_rounded,color: Colors.indigo, size: size *1.6),
                       ),
                       trailing:serialNumbers.isEmpty ? const SizedBox.shrink() : IconButton(
-                        icon: const Icon(Icons.visibility_rounded,
-                            color: Colors.indigo),
+                        icon:  Icon(Icons.visibility_rounded,size:size *2, color: Colors.indigo),
                         onPressed: () {
                           // 🔹 Show serial numbers in dialog
                           Get.dialog(
@@ -163,10 +159,9 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeaderGradient(double size) {
     final ro = controller.curretReceiveOrder;
     final roCode = ro.code;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -180,19 +175,18 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
       ),
       child: Row(
         children: [
-          const Icon(Icons.inventory_rounded, color: Colors.white, size: 34),
+          Icon(Icons.inventory_rounded, color: Colors.white, size: size *3),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Receive Order",
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Text("Receive Order",style: TextStyle(color: Colors.white70, fontSize: size * 1.3)),
                 Text("#$roCode",
-                    style: const TextStyle(
+                    style:  TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 20)),
+                        fontSize: size *1.8)),
               ],
             ),
           ),

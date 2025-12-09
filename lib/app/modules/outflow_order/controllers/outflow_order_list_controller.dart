@@ -33,31 +33,27 @@ class OutflowOrderListController extends GetxController {
   var endDate = Rxn<DateTime>();
 
   // Scroll listener
-  final ScrollController scrollController = ScrollController();
-
+  final ScrollController scrollController = ScrollController(debugLabel:'OutflowOrderListController');
+ 
   @override
   void onInit() {
     super.onInit();
-
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-
     scrollController.addListener(_scrollListener);
-
     loadOutflowOrders();
   }
 
   // Auto loading
   void _scrollListener() {
-    if (scrollController.position.pixels >=
-        scrollController.position.maxScrollExtent - 250) {
-      loadMore();
-    }
+    if(!scrollController.hasClients) return;
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   @override
   void onClose() {
+    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -204,9 +200,4 @@ class OutflowOrderListController extends GetxController {
     Get.toNamed(AppPages.outflowOrderListDetailPage, arguments: order);
   }
 
-  // MANUAL REFRESH
-  Future<void> syncData() async {
-    await loadOutflowOrders();
-    infoAlertBottom(title: 'Sync', 'Data updated');
-  }
 }

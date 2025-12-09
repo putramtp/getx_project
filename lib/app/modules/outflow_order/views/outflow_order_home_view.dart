@@ -11,8 +11,8 @@ class OutflowOrderHomeView extends GetView {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> menuItems = [
-      {'title': 'By Request','icon': Icons.receipt_long_rounded,'color': HexColor("#FFC50F"),'routes': AppPages.outflowOrderByRequestPage},
-      {'title': 'By Customer','icon': Icons.group_rounded,'color': HexColor("#239BA7"),'routes': AppPages.outflowOrderByCustomerPage},
+      {'title': 'By Request','icon': Icons.receipt_long_rounded,'color': HexColor("#5170FD"),'route': AppPages.outflowOrderByRequestPage},
+      {'title': 'By Customer','icon': Icons.group_rounded,'color': HexColor("#239BA7"),'route': AppPages.outflowOrderByCustomerPage},
       // {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
       // {'title': 'Return', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
       // {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
@@ -21,13 +21,7 @@ class OutflowOrderHomeView extends GetView {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder(
-        "Outflow Order Menu",
-        icon: Icons.grid_view_outlined,
-        routeBackName: AppPages.homePage,
-        hex1: "#FF6F3C",
-        hex2: "#e68d40",
-      ),
+      appBar: appBarOrder("Outflow Order Menu",icon: Icons.grid_view_outlined,routeBackName: AppPages.homePage,hex1: "#FF6F3C",hex2: "#e68d40"),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -40,11 +34,12 @@ class OutflowOrderHomeView extends GetView {
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
                   gradient:  LinearGradient(
-                    begin: Alignment.topLeft,
+                    begin: Alignment.topCenter,
                     end: Alignment.bottomRight,
                     colors: [
-                      HexColor("#f2ba2e"),
-                      HexColor("#ABE0F0"),
+                      HexColor("#EF7722"),
+                      HexColor("#FAA533"),
+                      HexColor("#FFC29B"),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(28),
@@ -101,8 +96,8 @@ class OutflowOrderHomeView extends GetView {
                     ),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      color: Colors.white.withOpacity(0.8),
-                      size: 20,
+                      color: Colors.white,
+                      size: size *2,
                     ),
                   ],
                 ),

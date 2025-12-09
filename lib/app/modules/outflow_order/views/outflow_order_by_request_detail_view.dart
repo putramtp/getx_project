@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
 import 'package:getx_project/app/modules/outflow_order/views/scan_page_by_request.dart';
@@ -11,18 +12,16 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    SizeConfig.init(context);
+    final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Item Summary",routeBackName: AppPages.outflowOrderByRequestPage),
-      ),
+      appBar: appBarOrder("Item Summary",routeBackName: AppPages.outflowOrderByRequestPage,hex1:'5170FD',hex2:"60ABFB"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(size),
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
@@ -86,30 +85,33 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
 
                   return Card(
                     elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
                       title: Text(item['name'] ?? "Unnamed",
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                          "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700])),
+                      subtitle: Text("Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
+                          style: TextStyle(color: Colors.grey[700],fontSize: size *1.2)),
                       leading: CircleAvatar(
-                        radius: 24,
+                        radius: size * 2.2,
                         backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: 26),
+                        child: Icon(icon, color: bgColor, size: size *2),
                       ),
                       trailing: !isFinished
                           ? ElevatedButton.icon(
+                               style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
+                                padding:  const EdgeInsets.all(12), 
+                                minimumSize: Size.zero,           
+                                visualDensity: VisualDensity.compact,
+                              ),
                               onPressed: () {
                                 controller.selectedIndex.value = index;
                                 controller.selectedItem.value = item;
                                 Get.to(() => const ScanPageByRequest());
                               },
-                              icon: const Icon(Icons.qr_code_scanner_rounded),
-                              label: const Text("Scan"),
+                              icon:  Icon(Icons.qr_code_scanner_rounded,size: size *1.5,color:Colors.black87),
+                              label:  Text("Scan",style:TextStyle(fontSize: size *1.2,color:Colors.black87)),
                             )
                           : null,
                     ),
@@ -118,14 +120,14 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
               );
             })),
             const SizedBox(height: 16),
-            _buildContinueButton(theme,controller),
+            _buildContinueButton(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContinueButton(ThemeData theme,controller) {
+  Widget _buildContinueButton() {
     return SizedBox(
       width: double.infinity,
       child: Obx(() {
@@ -150,9 +152,11 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
             }
           },
           style: FilledButton.styleFrom(
+            backgroundColor: Colors.blue[900],
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(16),
+            
+            ),
           ),
         );
       }),
@@ -330,7 +334,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(double size) {
     final or = controller.currentOr;
     final orCode = or.code;
 
@@ -347,18 +351,17 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
       ),
       child: Row(
         children: [
-          const Icon(Icons.qr_code_rounded, color: Colors.white, size: 32),
+          Icon(Icons.qr_code_rounded, color: Colors.white, size: size *3.2),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Outflow Request",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              Text("Outflow Request",style: TextStyle(color: Colors.white70, fontSize: size * 1.3)),
               Text("#$orCode",
-                  style: const TextStyle(
+                  style:  TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20)),
+                      fontSize: size * 2)),
             ],
           ),
         ],

@@ -100,7 +100,7 @@ class ReceiveOrderHomeView extends GetView {
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       color: Colors.white.withOpacity(0.8),
-                      size: 20,
+                      size: size * 2,
                     ),
                   ],
                 ),

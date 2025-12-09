@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_fill_by_supplier_view.dart';
@@ -12,18 +13,16 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    SizeConfig.init(context);
+    final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderBySupplierPage),
-      ),
+      appBar: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderBySupplierPage,hex1:"75a340",hex2:"B1C29E"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeaderGradient(size),
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
@@ -99,7 +98,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                           style: theme.textTheme.bodyMedium
                               ?.copyWith(color: Colors.grey[700])),
                       leading: CircleAvatar(
-                        radius: 24,
+                        radius: size * 2.2,
                         backgroundColor: bgColor.withOpacity(0.15),
                         child: Icon(icon, color: bgColor, size: 26),
                       ),
@@ -110,8 +109,14 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                                 controller.selectedItem.value = item;
                                 Get.to(() => const ReceiveOrderFillBySupplierView());
                               },
-                              icon: const Icon(Icons.edit_rounded),
-                              label: const Text("fill"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
+                                padding:  const EdgeInsets.all(12), 
+                                minimumSize: Size.zero,           
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              icon:  Icon(Icons.edit_rounded,size: size *1.5,color: Colors.black87,),
+                              label:  Text("fill",style: TextStyle(fontSize: size * 1.2,color: Colors.black87)),
                             )
                           : null,
                     ),
@@ -183,8 +188,8 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
           },
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: const Color(0xFF31694E)
           ),
         );
       }),
@@ -428,7 +433,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeaderGradient(double size) {
     final supplier = controller.currentSupplier;
     final supplierName = supplier.name ;
     final supplierCode = supplier.code ;
@@ -438,9 +443,9 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF528FF3), Color(0xFF2163F0), Color(0xFF1B3B94)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [ Color(0xFF31694E), Color(0xFF658C58),Color(0xffBBC863)],
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -452,21 +457,23 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Supplier / Vendor",
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Text("Supplier / Vendor",style: TextStyle(color: Colors.white70, fontSize: size *1.4)),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("#$supplierName",
-                        style: const TextStyle(
+                        style:  TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 20)),
-                    Text("($supplierCode)",
-                        style:  TextStyle(
-                            color: Colors.grey.shade200,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12)),
+                            fontSize: size * 2.2)),
+                    Padding(
+                      padding:  EdgeInsets.only(left:size),
+                      child: Text(supplierCode,
+                          style:  TextStyle(
+                              color: Colors.grey.shade300,
+                              fontWeight: FontWeight.bold,
+                              fontSize: size * 1.2)),
+                    ),
                   ],
                 ),
               ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/size_config.dart';
+import 'package:getx_project/app/global/widget/search_bar.dart';
 import 'package:getx_project/app/models/receive_order_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
@@ -10,119 +12,29 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
+    final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Receive Order List",
-            icon: Icons.list_alt_sharp,
-            routeBackName: AppPages.receiveHomePage),
-      ),
+      appBar: appBarOrder("Receive Order List",
+          icon: Icons.list_alt_sharp,
+          routeBackName: AppPages.receiveHomePage),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             children: [
               const SizedBox(height: 12),
-
-              /// 🔍 Animated Search, Sort & Filter Row
-              Obx(() {
-                final bool isFocused = controller.isSearchFocused.value;
-                final searchController = controller.searchController;
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    /// 🔍 Animated Search Bar (takes all available space)
-                    Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        height: 50,
-                        child: Focus(
-                          focusNode: controller.searchFocus,
-                          child: TextField(
-                            controller: searchController,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText: 'Search...',
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 0, horizontal: 12),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              suffixIcon: isFocused
-                                  ? IconButton(
-                                      icon: const Icon(Icons.close),
-                                      onPressed: () {
-                                        searchController.clear();
-                                        FocusScope.of(context).unfocus();
-                                      },
-                                    )
-                                  : null,
-                            ),
-                            onChanged: controller.onSearchChanged,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    /// ✨ Animated Sort & Filter Buttons
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, anim) => FadeTransition(
-                        opacity: anim,
-                        child: SizeTransition(
-                          sizeFactor: anim,
-                          axis: Axis.horizontal,
-                          child: child,
-                        ),
-                      ),
-                      child: !isFocused
-                          ? Row(
-                              key: const ValueKey('buttons'),
-                              children: [
-                                const SizedBox(width: 6),
-                                // Sort button
-                                Obx(() => IconButton.filledTonal(
-                                      tooltip: controller.isAscending.value
-                                          ? "Sort Z–A"
-                                          : "Sort A–Z",
-                                      icon: Icon(
-                                        controller.isAscending.value
-                                            ? Icons.sort_by_alpha_rounded
-                                            : Icons.arrow_upward_rounded,
-                                        color: Colors.blueAccent,
-                                      ),
-                                      onPressed: controller.toggleSort,
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        padding: const EdgeInsets.all(12),
-                                      ),
-                                    )),
-                                const SizedBox(width: 6),
-                                // Filter button
-                                IconButton.filledTonal(
-                                  icon: const Icon(Icons.filter_alt_rounded),
-                                  tooltip: 'Filter',
-                                  onPressed: () => _openTopFilterSheet(context),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    padding: const EdgeInsets.all(12),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : const SizedBox.shrink(key: ValueKey('empty')),
-                    ),
-                  ],
-                );
-              }),
-
+              Obx(() => SearchBarWidget(
+                  isFocused: controller.isSearchFocused.value,
+                  isAscending: controller.isAscending.value,
+                  searchController: controller.searchController,
+                  focusNode: controller.searchFocus,
+                  onSearchChanged: controller.onSearchChanged,
+                  onToggleSort: controller.toggleSort,
+                  onOpenFilter: () => _openTopFilterSheet(context),
+              )),
               const SizedBox(height: 12),
-
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
@@ -139,72 +51,45 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                     itemCount: orders.length + 1,
                     itemBuilder: (context, index) {
                       if (index < orders.length) {
-                        return _buildOrderCard(orders[index]);
+                        return _buildOrderCard(orders[index],size);
                       }
 
-                      return Obx(() {
-                        if (controller.cursorNext.value != null) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: SizedBox(
-                                width: 26,
-                                height: 26,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 3),
+                      if (controller.cursorNext.value != null) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Center(
+                            child: SizedBox(
+                              width: 26,
+                              height: 26,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 3),
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Center(
+                            child: Text(
+                              "No more data",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          );
-                        }
+                          ),
+                        );
+                      }
 
-                        if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: Text(
-                                "No more data",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        return const SizedBox.shrink();
-                      });
+                      return const SizedBox.shrink();
                     },
                   );
                 }),
               ),
-
-              /// 🔄 Sync Button
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: controller.syncReceiveOrder,
-                    icon: const Icon(Icons.sync, color: Colors.white),
-                    label: const Text(
-                      'Synchronization',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff4A70A9),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              buildSyncButton(name: 'Sync',size: size,onPressed:controller.loadReceiveOrders,color: const Color(0xff4A70A9))
             ],
           ),
         ),
@@ -382,46 +267,65 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     );
   }
 
-  Widget _buildOrderCard(ReceiveOrderModel order) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.cyan.withOpacity(0.15),
-          child: const Icon(Icons.file_present_rounded, color: Colors.cyan),
-        ),
-        title: Text(order.code,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Icon(Icons.star_border, size: 14, color: Colors.black54),
-            const SizedBox(width: 2),
-            Text(
-              order.supplier,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
+  Widget _buildOrderCard(ReceiveOrderModel order, double size) {
+    return GestureDetector(
+      onTap: () => controller.openDetail(order),
+      child: Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: size * 1.6,
+                      backgroundColor: Colors.cyan.withOpacity(0.15),
+                      child:Icon(Icons.file_present_rounded, color: Colors.cyan,size: size * 2),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.star_border,
+                                size: size * 1.2, color: Colors.black54),
+                            const SizedBox(width: 2),
+                            Text(
+                              order.supplier,
+                              style:
+                                  TextStyle(fontSize: size * 1.2, color: Colors.black54),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(order.type,style: TextStyle(fontSize: size , fontWeight: FontWeight.w600)),
+                    Text(
+                      controller.formatYmd(order.date),
+                      style: TextStyle(
+                          fontSize: size,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(order.type,
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-            Text(
-              controller.formatYmd(order.date),
-              style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-        onTap: () => controller.openDetail(order),
-      ),
+          )),
     );
   }
 }

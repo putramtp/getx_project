@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:getx_project/app/global/widget/animated_counter.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class MenuGrid extends StatelessWidget {
@@ -6,6 +7,7 @@ class MenuGrid extends StatelessWidget {
   final String hex1;
   final String hex2;
   final String status;
+  final String? statusLabel;
   final String title;
   final IconData iconData;
   final VoidCallback onTap;
@@ -16,6 +18,7 @@ class MenuGrid extends StatelessWidget {
     required this.hex1,
     required this.hex2,
     required this.status,
+    this.statusLabel,
     required this.title,
     required this.iconData,
     required this.onTap,
@@ -58,12 +61,28 @@ class MenuGrid extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    status,
-                    style: TextStyle(
-                        fontSize: size * 1,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      AnimatedCounter(
+                        value : int.tryParse(status) ?? 0,
+                        style: TextStyle(
+                            fontSize: size * 1.2,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      // const SizedBox(width: 3),
+                      // statusLabel == null
+                      //   ? const SizedBox.shrink()
+                      //   : Text(
+                      //       statusLabel ?? "",
+                      //       style: TextStyle(
+                      //         fontSize: size * 1,
+                      //         fontWeight: FontWeight.bold,
+                      //         color: Colors.white70,
+                      //       ),
+                      //   )
+                    ],
                   ),
                   Text(
                     title,

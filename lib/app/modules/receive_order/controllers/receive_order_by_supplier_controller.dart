@@ -33,6 +33,13 @@ class ReceiveOrderBySupplierController extends GetxController {
     loadSuppliers();
   }
 
+ @override
+  void onClose() {
+    searchController.dispose();
+    searchFocus.dispose();
+    super.onClose();
+  }
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
     filteredSuppliers.sort((a, b) => isAscending.value
@@ -60,9 +67,6 @@ class ReceiveOrderBySupplierController extends GetxController {
     if (data == null) return;
     orders.assignAll(data);
     filteredSuppliers.assignAll(data);
-    successAlertBottom(
-      'Suppliers loaded successfully (${data.length} records)',
-    );
   }
 
   /// 🔍 Filter list by supplier name
@@ -125,9 +129,5 @@ class ReceiveOrderBySupplierController extends GetxController {
       Get.delete<ReceiveOrderBySupplierDetailController>(force: true);
     }
     Get.toNamed(AppPages.receiveOrderBySupplierDetailPage, arguments: supplier);
-  }
-
-  void syncPO() async {
-    await loadSuppliers();
   }
 }

@@ -10,7 +10,6 @@ import '../controllers/product_controller.dart';
 
 class ProductView extends GetView<ProductController> {
   const ProductView({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
@@ -64,9 +63,9 @@ class ProductView extends GetView<ProductController> {
               }
 
               if (controller.filteredProductSummaries.isEmpty) {
-                return const SliverFillRemaining(
+                return  SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text("No products available")),
+                  child: Center(child: Text("No products available.",style: TextStyle(fontSize: size * 1.4,fontWeight: FontWeight.w400 ),)),
                 );
               }
 
@@ -162,7 +161,7 @@ class ProductView extends GetView<ProductController> {
             CircleAvatar(
               radius: size * 2.8,
               backgroundColor: const Color.fromARGB(255, 220, 230, 221),
-              child: const Icon(Icons.stars_rounded,color: Color.fromARGB(255, 77, 164, 175), ),
+              child:  Icon(Icons.stars_rounded,color: const Color.fromARGB(255, 77, 164, 175),size : size * 2.4 ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -231,7 +230,7 @@ class ProductView extends GetView<ProductController> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right)
+            Icon(Icons.chevron_right,size: size *2)
           ],
         ),
       ),
@@ -244,31 +243,35 @@ class ProductView extends GetView<ProductController> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('Products list', style: Theme.of(context).textTheme.titleLarge),
-        Row(
-          children: [
-            IconButton(
-              tooltip: 'Sort',
-              padding: EdgeInsets.symmetric(horizontal: size *1),
-              constraints: const BoxConstraints(),
-              onPressed: controller.toggleSort,  
-              icon: Icon(controller.isAscending.value ? Icons.arrow_drop_down : Icons.arrow_drop_up, size: size * 2),
-            ),
-            IconButton(
-              tooltip: 'Search',
-              padding: EdgeInsets.symmetric(horizontal: size *1),
-              constraints: const BoxConstraints(),
-              onPressed: controller.startSearch,   // ← Tap to search
-              icon: Icon(Icons.search, size: size * 2),
-            ),
-            IconButton(
-              tooltip: 'Sync data',
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: controller.loadCategories,
-              icon: Icon(Icons.sync, size: size * 2),
-            ),
-             
-          ],
+        Padding(
+          padding:  EdgeInsets.only(right: size * 0.5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                tooltip: 'Sort',
+                padding: EdgeInsets.symmetric(horizontal: size *1),
+                constraints: const BoxConstraints(),
+                onPressed: controller.toggleSort,  
+                icon: Icon(controller.isAscending.value ? Icons.arrow_drop_down : Icons.arrow_drop_up, size: size *3),
+              ),
+              IconButton(
+                tooltip: 'Search',
+                padding: EdgeInsets.symmetric(horizontal: size *1),
+                constraints: const BoxConstraints(),
+                onPressed: controller.startSearch,   // ← Tap to search
+                icon: Icon(Icons.search, size: size * 2),
+              ),
+              IconButton(
+                tooltip: 'Sync data',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: controller.loadCategories,
+                icon: Icon(Icons.sync, size: size * 2),
+              ),
+               
+            ],
+          ),
         ),
       ],
     );
@@ -285,11 +288,11 @@ class ProductView extends GetView<ProductController> {
             decoration: InputDecoration(
               hintText: 'Search products...',
               border: InputBorder.none,
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon:  Icon(Icons.search,size:size *2),
               hintStyle: TextStyle(color: Colors.grey.shade500),
               suffixIcon: controller.isStillSearch.value 
               ? IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon:  Icon(Icons.clear_outlined,size: size * 1.6),
                   onPressed:controller.clearSearched,
                 )
               : const SizedBox.shrink(),
@@ -300,7 +303,7 @@ class ProductView extends GetView<ProductController> {
         ),
         TextButton(
           onPressed: controller.stopSearch,
-          child: Text('Cancel', style: TextStyle(color: Colors.blue, fontSize: size * 1.6)),
+          child: Text('Cancel', style: TextStyle(color: Colors.grey[800], fontSize: size * 1.6)),
         ),
       ],
     );

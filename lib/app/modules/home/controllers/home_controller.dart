@@ -1,18 +1,24 @@
 import 'dart:async';
 import 'package:get/get.dart';
+import 'package:getx_project/app/helpers/api_excecutor.dart';
+import 'package:getx_project/app/models/dashboard_model.dart';
+import 'package:getx_project/app/modules/home/providers/home_provider.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {
-  // Inject AuthService (This assumes it has been registered in main.dart)
+  final HomeProvider provider = Get.find<HomeProvider>();
+
   final AuthService _authService = Get.find<AuthService>();
-
   final Rx<DateTime> currentTime = DateTime.now().obs;
-
+  final dashboard = Rxn<DashboardModel>();
+  var isLoading = false.obs;
+  
   // final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    loadDashboard();
     Timer.periodic(const Duration(seconds: 1), (timer) {
       currentTime.value = DateTime.now();
     });
@@ -29,6 +35,23 @@ class HomeController extends GetxController {
   // }
 
   // void increment() => count.value++;
+
+  Future<void> loadDashboard() async {
+    final thisYear =  DateTime.now().year;
+    final res = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getDashboard(year:thisYear),
+    );
+    if (res == null) return;
+    dashboard.value = res;
+  }
+
+  void reloadDashboard(){
+     final defaultDashboard = DashboardModel(product: 0,receiveOrder: 0,outflowOrder: 0);
+     dashboard.value = defaultDashboard;
+     loadDashboard(); 
+  }
+
 
   void goToProductPage() {
     Get.toNamed(AppPages.productPage);

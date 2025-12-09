@@ -21,9 +21,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     final args = Get.arguments;
-
     if (args != null && args is PurchaseOrderModel) {
       currentOrder = args;
       loadPurchaseOrderItems();

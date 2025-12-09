@@ -13,52 +13,42 @@ class ReceiveOrderByPoController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
-
-  // Data
   var orders = <PurchaseOrderModel>[].obs;
   var filteredOrders = <PurchaseOrderModel>[].obs;
-
-  // State
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
-  var hasMore = true.obs; // ⭐ add no-more-data indicator
+  var hasMore = true.obs; 
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
-
-  // Cursors
- final RxnString cursorNext = RxnString();
- final RxnString cursorPrev = RxnString();
+  final RxnString cursorNext = RxnString();
+  final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
 
   // Scroll listener
-  final ScrollController scrollController = ScrollController();
+  final ScrollController scrollController = ScrollController(debugLabel:"ReceiveOrderByPoController");
 
   @override
   void onInit() {
     super.onInit();
-
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-
     scrollController.addListener(_scrollListener);
-    
     loadPurchaseOrders();
   }
 
   // Auto loading
   void _scrollListener() {
-    if (scrollController.position.pixels >=
-        scrollController.position.maxScrollExtent - 250) {
-      loadMore();
-    }
+    if(!scrollController.hasClients) return;
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   @override
   void onClose() {
+    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -75,7 +65,6 @@ class ReceiveOrderByPoController extends GetxController {
   void clearSearch() {
     searchController.clear();
     searchFocus.unfocus();
-    // Optionally refresh list here
   }
 
   void onSearchChanged(String value) {
@@ -203,10 +192,5 @@ class ReceiveOrderByPoController extends GetxController {
       Get.delete<ReceiveOrderByPoDetailController>(force: true);
     }
     Get.toNamed(AppPages.receiveOrderByPoDetailPage, arguments: order);
-  }
-
-  /// 🔄 Manual Sync
-  void syncPO() async {
-    await loadPurchaseOrders();
   }
 }

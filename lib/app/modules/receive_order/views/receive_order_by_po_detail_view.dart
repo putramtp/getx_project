@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_fill_by_po_view.dart';
@@ -12,18 +13,16 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    SizeConfig.init(context);
+    final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderByPoPage),
-      ),
+      appBar: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderByPoPage),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(size),
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
@@ -88,30 +87,30 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
 
                   return Card(
                     elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                          "Expected: $expected | Received: $received | receiving: $filledCount",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700])),
+                      title: Text(item['name'] ?? "Unnamed",style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      subtitle: Text("Expected: $expected | Received: $received | receiving: $filledCount",style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
                       leading: CircleAvatar(
-                        radius: 24,
+                        radius: size * 2.2,
                         backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: 26),
+                        child: Icon(icon, color: bgColor, size: size * 2),
                       ),
                       trailing: !isFinished
                           ? ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
+                                padding:  const EdgeInsets.all(12), 
+                                minimumSize: Size.zero,           
+                                visualDensity: VisualDensity.compact,
+                              ),
                               onPressed: () {
                                 controller.selectedIndex.value = index;
                                 controller.selectedItem.value = item;
                                 Get.to(() => const ReceiveOrderFillByPoView());
                               },
-                              icon: const Icon(Icons.edit_rounded),
-                              label: const Text("fill"),
+                             icon:  Icon(Icons.edit_rounded,size: size *1.5,color: Colors.black87,),
+                             label:  Text("fill",style: TextStyle(fontSize: size * 1.2,color: Colors.black87)),
                             )
                           : null,
                     ),
@@ -120,14 +119,14 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
               );
             })),
             const SizedBox(height: 16),
-            _buildContinueButton(theme),
+            _buildContinueButton(theme,size),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContinueButton(ThemeData theme) {
+  Widget _buildContinueButton(ThemeData theme,double size) {
     return SizedBox(
       width: double.infinity,
       child: Obx(() {
@@ -135,10 +134,10 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
         final isLoading = controller.isLoadingReceiving.value;
         return FilledButton.icon(
           icon: isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
+              ?  SizedBox(
+                  height: size * 2,
+                  width: size * 2,
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2,
                     color: Colors.white,
                   ),
@@ -146,7 +145,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
               : const Icon(Icons.receipt_long_rounded),
           label: Text(isLoading
               ? "Processing..."
-              : "Continue to receiving items ($totalFilled filled)"),
+              : "Continue to receiving items ($totalFilled filled)",style: TextStyle(fontSize: size * 1.4),),
           onPressed: isLoading ? null  :() async {
             if (controller.items.isEmpty) return;
             // Use the unified filled data
@@ -180,8 +179,8 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
           },
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: const Color(0xff4A70A9)
           ),
         );
       }),
@@ -425,7 +424,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(size) {
     final po = controller.currentOrder;
     final poNumber = po.poNumber;
 
@@ -434,7 +433,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF528FF3), Color(0xFF2163F0), Color(0xFF1B3B94)],
+          colors: [Color(0xff434E78), Color(0xff607B8F), Color(0xff456882)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -442,19 +441,18 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
       ),
       child: Row(
         children: [
-          const Icon(Icons.description_rounded, color: Colors.white, size: 32),
+          Icon(Icons.description_rounded, color: Colors.white, size: size * 4),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Purchase Order",
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Text("Purchase Order",style: TextStyle(color: Colors.white70, fontSize: size * 1.4)),
                 Text("#$poNumber",
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 20)),
+                        fontSize: size * 2.2)),
               ],
             ),
           ),

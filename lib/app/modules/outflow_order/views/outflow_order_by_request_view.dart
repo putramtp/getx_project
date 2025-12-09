@@ -1,129 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/size_config.dart';
+import 'package:getx_project/app/global/widget/search_bar.dart';
 import 'package:getx_project/app/models/outlfow_request_model.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import '../controllers/outflow_order_by_request_controller.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
-class OutflowOrderByRequestView
-    extends GetView<OutflowOrderByRequestController> {
+class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController> {
   const OutflowOrderByRequestView({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
+    final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Outflow Request List",
-            icon: Icons.list_alt_sharp,
-            routeBackName: AppPages.outflowHomePage),
-      ),
+      appBar: appBarOrder("Outflow Request List",icon: Icons.list_alt_sharp,routeBackName: AppPages.outflowHomePage,hex1:'5170FD',hex2:"60ABFB"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             children: [
               const SizedBox(height: 12),
-
-              /// 🔍 Animated Search, Sort & Filter Row
-              Obx(() {
-                final bool isFocused = controller.isSearchFocused.value;
-                final searchController = controller.searchController;
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    /// 🔍 Animated Search Bar (takes all available space)
-                    Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        height: 50,
-                        child: Focus(
-                          focusNode: controller.searchFocus,
-                          child: TextField(
-                            controller: searchController,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText: 'Search...',
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 0, horizontal: 12),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              suffixIcon: isFocused
-                                  ? IconButton(
-                                      icon: const Icon(Icons.close),
-                                      onPressed: () {
-                                        searchController.clear();
-                                        FocusScope.of(context).unfocus();
-                                      },
-                                    )
-                                  : null,
-                            ),
-                            onChanged: controller.onSearchChanged,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    /// ✨ Animated Sort & Filter Buttons
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, anim) => FadeTransition(
-                        opacity: anim,
-                        child: SizeTransition(
-                          sizeFactor: anim,
-                          axis: Axis.horizontal,
-                          child: child,
-                        ),
-                      ),
-                      child: !isFocused
-                          ? Row(
-                              key: const ValueKey('buttons'),
-                              children: [
-                                const SizedBox(width: 6),
-                                // Sort button
-                                Obx(() => IconButton.filledTonal(
-                                      tooltip: controller.isAscending.value
-                                          ? "Sort Z–A"
-                                          : "Sort A–Z",
-                                      icon: Icon(
-                                        controller.isAscending.value
-                                            ? Icons.sort_by_alpha_rounded
-                                            : Icons.arrow_upward_rounded,
-                                        color: Colors.blueAccent,
-                                      ),
-                                      onPressed: controller.toggleSort,
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        padding: const EdgeInsets.all(12),
-                                      ),
-                                    )),
-                                const SizedBox(width: 6),
-                                // Filter button
-                                IconButton.filledTonal(
-                                  icon: const Icon(Icons.filter_alt_rounded),
-                                  tooltip: 'Filter',
-                                  onPressed: () => _openTopFilterSheet(context),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    padding: const EdgeInsets.all(12),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : const SizedBox.shrink(key: ValueKey('empty')),
-                    ),
-                  ],
-                );
-              }),
-
+              Obx(() => SearchBarWidget(
+                    isFocused: controller.isSearchFocused.value,
+                    isAscending: controller.isAscending.value,
+                    searchController: controller.searchController,
+                    focusNode: controller.searchFocus,
+                    onSearchChanged: controller.onSearchChanged,
+                    onToggleSort: controller.toggleSort,
+                    onOpenFilter: () => _openTopFilterSheet(context),
+                  )),
               const SizedBox(height: 12),
-
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
@@ -138,77 +46,50 @@ class OutflowOrderByRequestView
                   return ListView.builder(
                     controller: controller.scrollController,
                     itemCount: orders.length + 1,
-                    shrinkWrap: true, // 👈 **fix #1**
-                    physics:const BouncingScrollPhysics(), // 👈 allow only this to scroll
                     itemBuilder: (context, index) {
                       if (index < orders.length) {
-                        return _buildOrderCard(orders[index]);
+                        return _buildOrderCard(orders[index],size);
                       }
 
-                      return Obx(() {
-                        if (controller.cursorNext.value != null) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: SizedBox(
-                                width: 26,
-                                height: 26,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 3),
+                      if (controller.cursorNext.value != null) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Center(
+                            child: SizedBox(
+                              width: 26,
+                              height: 26,
+                              child: CircularProgressIndicator(strokeWidth: 3),
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (controller.cursorNext.value == null && orders.isNotEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Center(
+                            child: Text(
+                              "No more data",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          );
-                        }
+                          ),
+                        );
+                      }
 
-                        if (controller.cursorNext.value == null &&
-                            orders.isNotEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: Text(
-                                "No more data",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        return const SizedBox.shrink();
-                      });
+                      return const SizedBox.shrink();
                     },
                   );
                 }),
               ),
-
-              /// 🔄 Sync Button
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: controller.syncData,
-                    icon: const Icon(Icons.sync, color: Colors.white),
-                    label: const Text(
-                      'Synchronization',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              buildSyncButton(
+                  name: 'Synchronization',
+                  size: size,
+                  onPressed: controller.loadRequestOrders,
+                  color: const Color(0xff5170FD))
             ],
           ),
         ),
@@ -382,7 +263,7 @@ class OutflowOrderByRequestView
     );
   }
 
-  Widget _buildOrderCard(OutflowRequestModel order) {
+  Widget _buildOrderCard(OutflowRequestModel order,double size) {
     final status = order.status;
     final statusColor = status.toLowerCase().contains('processing')
         ? Colors.cyan
@@ -390,37 +271,84 @@ class OutflowOrderByRequestView
             ? Colors.orange
             : Colors.green;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.15),
-          child: Icon(Icons.check_circle, color: statusColor),
+   return GestureDetector(
+      onTap: () => controller.openDetail(order),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0), // ✅ flexible padding
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // ✅ Leading Icon
+              CircleAvatar(
+                backgroundColor: statusColor.withOpacity(0.15),
+                radius: size * 2,
+                child: Icon(Icons.check_circle,color: statusColor,size: size * 2.6),
+              ),
+    
+              const SizedBox(width: 12),
+    
+              // ✅ Title & Subtitle (Flexible)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      order.code,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: size * 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      order.customer,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: size * 1.3,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+    
+              const SizedBox(width: 12),
+    
+              // ✅ Trailing Info (Now flexible)
+              Column(
+                mainAxisSize: MainAxisSize.min, // ✅ prevents overflow
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    order.items,
+                    style: TextStyle(fontSize: size * 1),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    status.isNotEmpty
+                        ? '${status[0].toUpperCase()}${status.substring(1)}'
+                        : '-',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: size * 1.3,
+                      color: statusColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        title: Text(order.code,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          order.customer,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(order.items, style: const TextStyle(fontSize: 10)),
-            Text(
-              status.toString().isNotEmpty
-                  ? '${status[0].toUpperCase()}${status.substring(1)}'
-                  : '-',
-              style: TextStyle(
-                  fontSize: 14,
-                  color: statusColor,
-                  fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-        onTap: () => controller.openDetail(order),
       ),
     );
   }
