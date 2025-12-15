@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hexcolor/hexcolor.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../data/models/serial_number_model.dart';
-import '../../../modules/outflow_order/controllers/outflow_order_list_detail_controller.dart';
+import '../controllers/outflow_order_list_detail_controller.dart';
 import '../../../routes/app_pages.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
   const OutflowOrderDetailView({super.key});

@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hexcolor/hexcolor.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
-import '../../../modules/product/controllers/product_detail.controller.dart';
-import 'package:hexcolor/hexcolor.dart';
+import '../controllers/product_detail.controller.dart';
 
 class ProductDetailView extends GetView<ProductDetailController> {
   const ProductDetailView({super.key});

@@ -2,11 +2,12 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/data/models/dashboard_model.dart';
-import 'package:getx_project/app/data/models/stock_transaction_model.dart';
-import 'package:getx_project/app/data/providers/home_provider.dart';
-import 'package:getx_project/app/services/auth_service.dart';
+
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/dashboard_model.dart';
+import '../../../data/models/stock_transaction_model.dart';
+import '../../../data/providers/home_provider.dart';
+import '../../../services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {

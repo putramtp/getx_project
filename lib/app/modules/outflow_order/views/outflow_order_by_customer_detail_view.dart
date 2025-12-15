@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hexcolor/hexcolor.dart';
+
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import '../../../modules/outflow_order/views/scan_page_by_customer.dart';
 import '../../../routes/app_pages.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDetailController> {
   const OutflowOrderByCustomerDetailView({super.key});

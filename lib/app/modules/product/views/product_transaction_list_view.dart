@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../controllers/product_transaction_list_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../data/models/stock_transaction_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
-import '../controllers/product_transaction_list_controller.dart';
 
 class ProductTransactionListView extends GetView<ProductTransactionListController> {
   const ProductTransactionListView({Key? key}) : super(key: key);

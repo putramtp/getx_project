@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
-import '../../../global/alert.dart';
-import '../../../services/network_service.dart';
+
+import '../global/alert.dart';
+import '../services/network_service.dart';
 
 class ApiExecutor {
   static final NetworkService _networkService = Get.find<NetworkService>();

@@ -1,6 +1,5 @@
-
-import '../../../data/providers/api_providers.dart';
-import '../../../data/models/product_detail_model.dart';
+import 'api_providers.dart';
+import '../models/product_detail_model.dart';
 
 class ProductProvider extends ApiProvider {
   // @override

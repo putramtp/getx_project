@@ -1,13 +1,14 @@
+import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/data/models/purchase_order_supplier_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
-import 'package:getx_project/app/data/providers/receive_order_provider.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
-import 'package:intl/intl.dart';
+
+import '../controllers/receive_order_by_supplier_detail_controller.dart';
+import '../../../global/alert.dart';
+import '../../../global/functions.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/purchase_order_supplier_model.dart';
+import '../../../data/providers/receive_order_provider.dart';
+import '../../../routes/app_pages.dart';
 
 class ReceiveOrderBySupplierController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();

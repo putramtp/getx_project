@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/services/network_service.dart';
+
+import '../global/alert.dart';
+import '../services/network_service.dart';
 
 
 class NetworkHelper {

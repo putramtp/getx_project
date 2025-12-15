@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hexcolor/hexcolor.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../routes/app_pages.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 class OutflowOrderHomeView extends GetView {
   const OutflowOrderHomeView({Key? key}) : super(key: key);

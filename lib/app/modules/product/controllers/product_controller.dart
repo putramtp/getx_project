@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'product_detail.controller.dart';
+import 'product_transaction_list_controller.dart';
 import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/product_summary_model.dart';
 import '../../../routes/app_pages.dart';
-import 'product_detail.controller.dart';
-import 'product_transaction_list_controller.dart';
 import '../../../data/providers/product_provider.dart';
 
 class ProductController extends GetxController {

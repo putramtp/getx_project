@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../../modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
+import '../controllers/receive_order_by_supplier_detail_controller.dart';
 import '../../../data/providers/receive_order_provider.dart';
 
 class ReceiveOrderBySupplierDetailBinding extends Bindings {

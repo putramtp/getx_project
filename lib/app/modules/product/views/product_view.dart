@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../global/widget/animated_counter.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../data/models/product_summary_model.dart';
 import '../../../routes/app_pages.dart';
-
 import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
 

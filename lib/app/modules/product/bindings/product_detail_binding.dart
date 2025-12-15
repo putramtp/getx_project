@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../controllers/product_detail.controller.dart';
 import '../../../data/providers/product_provider.dart';
 

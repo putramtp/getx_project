@@ -1,4 +1,4 @@
-import '../../../global/functions.dart';
+import 'package:getx_project/app/global/functions.dart';
 
 class ProductSummaryModel {
   final int itemId;

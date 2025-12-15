@@ -1,7 +1,7 @@
-import 'package:getx_project/app/data/providers/api_providers.dart';
-import 'package:getx_project/app/data/models/outflow_order_detail_model.dart';
-import 'package:getx_project/app/data/models/outflow_request_customer_model.dart';
-import 'package:getx_project/app/data/models/outflow_request_line_item_model.dart';
+import 'api_providers.dart';
+import '../models/outflow_order_detail_model.dart';
+import '../models/outflow_request_customer_model.dart';
+import '../models/outflow_request_line_item_model.dart';
 
 class OutflowOrderProvider extends ApiProvider {
   // @override

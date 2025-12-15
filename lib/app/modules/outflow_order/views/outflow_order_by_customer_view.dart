@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../data/models/outflow_request_customer_model.dart';

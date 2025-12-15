@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../../../global/alert.dart';
@@ -6,7 +7,6 @@ import '../../../data/models/outflow_order_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_list_detail_controller.dart';
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../routes/app_pages.dart';
-import 'package:intl/intl.dart';
 
 class OutflowOrderListController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();

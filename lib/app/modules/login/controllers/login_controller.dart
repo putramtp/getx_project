@@ -1,11 +1,13 @@
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+
 import '../../../global/alert.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/providers/login_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../routes/app_pages.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
+
 
 class LoginController extends GetxController {
   final LoginProvider _apiLogin = Get.find<LoginProvider>();

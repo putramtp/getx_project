@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
+
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
-import '../../../modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
+import '../controllers/outflow_order_by_customer_detail_controller.dart';
 
 class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController> {
   const ScanPageByCustomer({super.key});

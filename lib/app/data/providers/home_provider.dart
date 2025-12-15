@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:getx_project/app/data/providers/api_providers.dart';
-import 'package:getx_project/app/data/models/dashboard_model.dart';
-import 'package:getx_project/app/data/models/stock_transaction_model.dart';
+import 'api_providers.dart';
+import '../models/dashboard_model.dart';
+import '../models/stock_transaction_model.dart';
 
 class HomeProvider extends ApiProvider {
   // @override

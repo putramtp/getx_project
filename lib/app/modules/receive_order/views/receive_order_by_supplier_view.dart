@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../controllers/receive_order_by_supplier_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
-import '../../../data/models/purchase_order_supplier_model.dart';
-import '../../../modules/receive_order/controllers/receive_order_by_supplier_controller.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../data/models/purchase_order_supplier_model.dart';
+import '../../../routes/app_pages.dart';
 
 class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierController> {
   const ReceiveOrderBySupplierView({Key? key}) : super(key: key);

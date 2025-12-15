@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../controllers/receive_order_by_po_detail_controller.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
-import '../../../modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
 
 class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController> {
   const ReceiveOrderFillByPoView({super.key});

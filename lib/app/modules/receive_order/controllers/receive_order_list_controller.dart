@@ -1,13 +1,14 @@
+import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+
+import '../controllers/receive_order_list_detail_controller.dart';
 import '../../../global/alert.dart';
 import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/receive_order_model.dart';
-import '../../../modules/receive_order/controllers/receive_order_list_detail_controller.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
-import 'package:intl/intl.dart';
 
 class ReceiveOrderListController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();

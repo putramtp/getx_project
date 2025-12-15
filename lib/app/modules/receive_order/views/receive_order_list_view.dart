@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../controllers/receive_order_list_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../data/models/receive_order_model.dart';
-import '../../../modules/receive_order/controllers/receive_order_list_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 

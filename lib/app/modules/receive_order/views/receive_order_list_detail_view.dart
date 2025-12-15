@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../controllers/receive_order_list_detail_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../data/models/serial_number_model.dart';
-import '../../../modules/receive_order/controllers/receive_order_list_detail_controller.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailController> {

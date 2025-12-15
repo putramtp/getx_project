@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
+
+import '../controllers/receive_order_by_po_controller.dart';
 import '../../../global/alert.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/purchase_order_model.dart';
-import '../../../modules/receive_order/controllers/receive_order_by_po_controller.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
 

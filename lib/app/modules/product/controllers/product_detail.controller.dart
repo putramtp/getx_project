@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/product_detail_model.dart';
 import '../../../data/models/product_summary_model.dart';
@@ -50,7 +49,6 @@ class ProductDetailController extends GetxController with GetSingleTickerProvide
     );
     // If network failed or exception handled, data is null
     if (data == null) return;
-    log("Data : ${data.toJson()}");
     productDetail.value = data;
 
   }

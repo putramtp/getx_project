@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
+
+import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
-import '../../../modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
 
 class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
   const ScanPageByRequest({super.key});
