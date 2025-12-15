@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
-import '../../../data/models/outflow_order_model.dart';
+import '../../../data/models/stock_transaction_model.dart';
 import '../../../routes/app_pages.dart';
-import '../controllers/outflow_order_list_controller.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../controllers/product_transaction_list_controller.dart';
 
-class OutflowOrderListView extends GetView<OutflowOrderListController> {
-  const OutflowOrderListView({Key? key}) : super(key: key);
+class ProductTransactionListView extends GetView<ProductTransactionListController> {
+  const ProductTransactionListView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Outflow Order List",icon: Icons.list_alt_sharp,routeBackName: AppPages.outflowHomePage,hex1:"#EF7722",hex2:"#FAA533",),
+      appBar: appBarOrder("Transaction",icon: Icons.list_alt_sharp,routeBackName: AppPages.productPage,hex1: '#124076',hex2: '#7F9F80'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -24,13 +24,13 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
             children: [
               const SizedBox(height: 12),
               Obx(() => SearchBarWidget(
-                isFocused: controller.isSearchFocused.value,
-                isAscending: controller.isAscending.value,
-                searchController: controller.searchController,
-                focusNode: controller.searchFocus,
-                onSearchChanged: controller.onSearchChanged,
-                onToggleSort: controller.toggleSort,
-                onOpenFilter: () => _openTopFilterSheet(context),
+                  isFocused: controller.isSearchFocused.value,
+                  isAscending: controller.isAscending.value,
+                  searchController: controller.searchController,
+                  focusNode: controller.searchFocus,
+                  onSearchChanged: controller.onSearchChanged,
+                  onToggleSort: controller.toggleSort,
+                  onOpenFilter: () => _openTopFilterSheet(context),
               )),
               const SizedBox(height: 12),
               Expanded(
@@ -39,18 +39,20 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final orders = controller.filteredOrders;
-                  if (orders.isEmpty) {
-                    return const Center(child: Text('No data.'));
+                  final transactions = controller.filteredTransactions;
+                  if (transactions.isEmpty) {
+                    return const Center(child: Text('No  transaction data.'));
                   }
 
-                  return ListView.builder(
+                  return ListView.separated(
                     controller: controller.scrollController,
-                    itemCount: orders.length + 1,
+                    itemCount: transactions.length + 1,
+                    separatorBuilder: (_, __) => const Divider(),
                     itemBuilder: (context, index) {
-                      if (index < orders.length) {
-                        return _buildOrderCard(orders[index],size);
+                      if (index < transactions.length) {
+                        return _buildOrderCard(transactions[index],size);
                       }
+
                       if (controller.cursorNext.value != null) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 18),
@@ -64,14 +66,15 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                           ),
                         );
                       }
-                      if (controller.cursorNext.value == null && orders.isNotEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
+
+                      if (controller.cursorNext.value == null &&  transactions.isNotEmpty) {
+                        return  Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           child: Center(
                             child: Text(
                               "No more data",
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: size * 1.2,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -85,7 +88,6 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                   );
                 }),
               ),
-              buildSyncButton(size: size,onPressed:controller.loadOutflowOrders,color: const Color(0xffEF7722))
             ],
           ),
         ),
@@ -197,8 +199,12 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                                 controller.applyDateFilter();
                                 Navigator.pop(context);
                               },
-                              icon: const Icon(Icons.check),
-                              label: const Text("Apply"),
+                              icon:
+                                  const Icon(Icons.check, color: Colors.white),
+                              label: const Text(
+                                "Apply",
+                                style: TextStyle(color: Colors.white),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 padding:
@@ -259,65 +265,92 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
     );
   }
 
-  Widget _buildOrderCard(OutflowOrderModel order,double size) {
-     return GestureDetector(
-      onTap: () => controller.openDetail(order),
-      child: Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: size * 1.6,
-                      backgroundColor: Colors.blue.withOpacity(0.15),
-                      child:Icon(Icons.file_present_rounded, color: Colors.blue,size: size * 2),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(order.code,style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.star_border,
-                                size: size * 1.2, color: Colors.black54),
-                            const SizedBox(width: 2),
-                            Text(
-                              order.customer,
-                              style:
-                                  TextStyle(fontSize: size * 1.2, color: Colors.black54),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+  Widget _buildOrderCard(StockTransactionModel transaction, double size) {
+    final String orderCode = transaction.order?.code ?? "";
+    final isIn = transaction.flowType == "IN";
+    final color = isIn ? Colors.green : Colors.red;
+
+    return Row(
+      children: [
+        /// Status Icon
+        Container(
+          width: size * 4,
+          height: size * 4,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            isIn ? Icons.arrow_downward : Icons.arrow_upward,
+            color: color,
+            size: size *2,
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        /// Product Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                orderCode,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(order.type,style: TextStyle(fontSize: size , fontWeight: FontWeight.w600)),
-                    Text(
-                      controller.formatYmd(order.date),
-                      style: TextStyle(
-                          fontSize: size,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w800),
-                    ),
-                  ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                transaction.time,
+                style: TextStyle(
+                  fontSize: size *1.3,
+                  color: Colors.grey.shade600,
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+
+        /// Qty & Status
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              "${isIn ? '+' : '-'}${transaction.qty}",
+              style: TextStyle(
+                fontSize: size * 1.2,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          )),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: isIn
+                    ? Colors.blue.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                transaction.type,
+                style: TextStyle(
+                  fontSize: size * 1.2,
+                  color: isIn
+                      ? Colors.blue
+                      : Colors.orange,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

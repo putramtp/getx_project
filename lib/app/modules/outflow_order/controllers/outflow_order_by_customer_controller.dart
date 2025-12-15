@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/outflow_request_customer_model.dart';
+import 'package:getx_project/app/data/models/outflow_request_customer_model.dart';
 import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
-import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
+import 'package:getx_project/app/data/providers/outflow_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:intl/intl.dart';
 
@@ -94,7 +94,7 @@ class OutflowOrderByCustomerController extends GetxController {
     if (startDate.value == null || endDate.value == null) {
       infoAlertBottom(
           title: 'Filter Tanggal',
-          'Silakan pilih kedua tanggal terlebih dahulu');
+          'Please select both dates first.');
       return;
     }
 

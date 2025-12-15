@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/search_bar.dart';
-import 'package:getx_project/app/models/purchase_order_model.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/search_bar.dart';
+import '../../../data/models/purchase_order_model.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/receive_order_by_po_controller.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
+import '../../../global/widget/functions_widget.dart';
 
 class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
   const ReceiveOrderByPoView({Key? key}) : super(key: key);
@@ -79,7 +79,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                             child: Text(
                               "No more data",
                               style: TextStyle(
-                                fontSize: size * 1.4,
+                                fontSize: size * 1.2,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w500,
                               ),

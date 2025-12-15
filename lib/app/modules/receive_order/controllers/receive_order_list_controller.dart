@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/receive_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_detail_controller.dart';
-import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/alert.dart';
+import '../../../global/functions.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/receive_order_model.dart';
+import '../../../modules/receive_order/controllers/receive_order_list_detail_controller.dart';
+import '../../../data/providers/receive_order_provider.dart';
+import '../../../routes/app_pages.dart';
 import 'package:intl/intl.dart';
 
 class ReceiveOrderListController extends GetxController {
@@ -179,7 +179,7 @@ class ReceiveOrderListController extends GetxController {
     if (start == null || end == null) {
       infoAlertBottom(
         title: 'Filter Tanggal',
-        'Silakan pilih kedua tanggal terlebih dahulu',
+        'Please select both dates first.',
       );
       return;
     }

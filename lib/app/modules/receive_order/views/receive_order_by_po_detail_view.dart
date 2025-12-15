@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_fill_by_po_view.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/alert.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/functions_widget.dart';
+import '../../../modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
+import '../../../modules/receive_order/views/receive_order_fill_by_po_view.dart';
+import '../../../routes/app_pages.dart';
 
 class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailController> {
   const ReceiveOrderByPoDetailView({super.key});
@@ -26,23 +26,23 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(
+                return  Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 12),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 12),
                       Text("Loading items...",
-                          style: TextStyle(fontSize: 16, color: Colors.black54))
+                          style: TextStyle(fontSize: size * 1.2, color: Colors.black54))
                     ],
                   ),
                 );
               }
 
               if (controller.items.isEmpty) {
-                return const Center(
+                return  Center(
                     child: Text("No items found.",
-                        style: TextStyle(fontSize: 16, color: Colors.black54)));
+                        style: TextStyle(fontSize: size * 1.2, color: Colors.black54)));
               }
 
               return ListView.separated(

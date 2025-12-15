@@ -1,8 +1,10 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
+import '../../../global/alert.dart';
+import '../../../modules/home/views/widgets/indicator.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 import '../../../global/functions.dart';
@@ -110,11 +112,17 @@ class HomeView extends GetView<HomeController> {
                   child: Column(
                     children: [
                       SizedBox(height: size * 12),
-                      _buildHeader(theme, size),
+                      _buildHeader(size, 'Dashboard', icon: Icons.home),
                       SizedBox(height: size * 2),
                       _buildGreetingCard(theme, size, userName, userRoles),
                       SizedBox(height: size * 2),
                       _buildDashboardGrid(size),
+                      SizedBox(height: size * 4),
+                      _lastTransactions(size),
+                      const Divider(),
+                      SizedBox(height: size * 2),
+                      _buildHeader(size, 'Statisic', icon: Icons.pie_chart),
+                      _pieChartItem(size),
                       SizedBox(height: size * 2),
                     ],
                   ),
@@ -125,29 +133,36 @@ class HomeView extends GetView<HomeController> {
           ],
         ),
         _buildTopWave(size),
-          Positioned(
-            right: size *1,
-            bottom: size *5, // ✅ lifted higher from bottom
-            child: _buildBottomRefresh(size)
-          ),
+        Positioned(
+            right: size * 1,
+            bottom: size * 5, // ✅ lifted higher from bottom
+            child: _buildBottomRefresh(size)),
       ],
     );
   }
 
   // ===================== HEADER =====================
 
-  Widget _buildHeader(ThemeData theme, double size) {
+  Widget _buildHeader(double size, String title,
+      {bool? isIconText = true, IconData icon = Icons.home}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Dashboard", style: theme.textTheme.titleLarge),
-        Row(
-          children: [
-            Icon(Icons.home, size: size * 1.7),
-            SizedBox(width: size),
-            Text("/ Dashboard", style: theme.textTheme.titleMedium),
-          ],
+        Text(
+          title,
+          style: TextStyle(
+              fontSize: SizeConfig.fontSize(2.1), fontWeight: FontWeight.bold),
         ),
+        (isIconText == true)
+            ? Row(
+                children: [
+                  Icon(icon, size: size * 1.7),
+                  SizedBox(width: size),
+                  Text("/ $title",
+                      style: TextStyle(fontSize: SizeConfig.fontSize(1.7))),
+                ],
+              )
+            : const SizedBox.shrink(),
       ],
     );
   }
@@ -189,11 +204,18 @@ class HomeView extends GetView<HomeController> {
               ],
             ),
           ),
-          Image.asset("assets/images/logo_short.png",height: size * 5, width: size * 5),
+          Image.asset("assets/images/logo_short.png",
+              height: size * 5, width: size * 5),
           SizedBox(height: size),
-          Text(controller.getGreeting(),style:theme.textTheme.titleLarge?.copyWith(color: Colors.white70)),
-          Text(userName,style:theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
-          Text("Role : $userRoles",style:theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
+          Text(controller.getGreeting(),
+              style:
+                  theme.textTheme.titleLarge?.copyWith(color: Colors.white70)),
+          Text(userName,
+              style:
+                  theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
+          Text("Role : $userRoles",
+              style:
+                  theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
         ],
       ),
     );
@@ -209,7 +231,7 @@ class HomeView extends GetView<HomeController> {
         _MenuConfig(
           title: 'PRODUCT',
           icon: CupertinoIcons.briefcase_fill,
-          status: stat(dashboard?.product),
+          status: stat(dashboard.product),
           hex1: '#124076',
           hex2: '#7F9F80',
           onTap: controller.goToProductPage,
@@ -217,8 +239,8 @@ class HomeView extends GetView<HomeController> {
         _MenuConfig(
           title: 'RECEIVE ORDER',
           icon: CupertinoIcons.bag_badge_plus,
-          statusLabel:'this year',
-          status: stat(dashboard?.receiveOrder),
+          statusLabel: 'this year',
+          status: stat(dashboard.receiveOrder),
           hex1: '#4A70A9',
           hex2: '#8FABD4',
           onTap: controller.goToReceiveOrderHomePage,
@@ -226,7 +248,7 @@ class HomeView extends GetView<HomeController> {
         _MenuConfig(
           title: 'OUTFLOW ORDER',
           icon: CupertinoIcons.bag_badge_minus,
-          status: stat(dashboard?.outflowOrder),
+          status: stat(dashboard.outflowOrder),
           statusLabel: "this year",
           hex1: '#FF6F3C',
           hex2: '#e68d40',
@@ -264,6 +286,124 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
+  // =================Latest Transaction  =====================
+  Widget _lastTransactions(double size) {
+    return Column(
+      children: [
+        _buildHeader(size, 'Lastest Transactions', isIconText: false),
+        const Divider(),
+        Obx(() {
+           if (controller.isLatestLoading.value) {
+            return  Center(
+              child:  Text("Loading items...",style: TextStyle(fontSize: size * 1.2, color: Colors.black54))
+            );
+          }
+
+          if (controller.lastTransactions.isEmpty) {
+            return Center(
+                child: Text("No data.",
+                    style: TextStyle(
+                        fontSize: size * 1.2, color: Colors.black54)));
+          }
+
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.lastTransactions.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final item = controller.lastTransactions[index];
+
+              final isIn = item.flowType == "IN";
+              final color = isIn ? Colors.green : Colors.red;
+
+              return Row(
+                children: [
+                  /// Status Icon
+                  Container(
+                    width: size * 4,
+                    height: size * 4,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isIn ? Icons.arrow_downward : Icons.arrow_upward,
+                      color: color,
+                      size: size *2,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  /// Product Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.time,
+                          style: TextStyle(
+                            fontSize: size *1.3,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  /// Qty & Status
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        "${isIn ? '+' : '-'}${item.qty}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: item.status == "Completed"
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.status,
+                          style: TextStyle(
+                            fontSize: size * 1.2,
+                            color: item.status == "Completed"
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        }),
+      ],
+    );
+  }
   // ===================== FOOTER =====================
 
   Widget _buildFooter(double size) {
@@ -279,8 +419,7 @@ class HomeView extends GetView<HomeController> {
               TextSpan(
                 text: 'Inventory Mastercool',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic),
+                    fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
               ),
             ],
           ),
@@ -297,7 +436,11 @@ class HomeView extends GetView<HomeController> {
       child: Container(
         height: size * 10,
         width: Get.width,
-        decoration:BoxDecoration(gradient: LinearGradient( begin: Alignment.bottomLeft, end: Alignment.topRight,colors: [hex1, hex5])),
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.bottomLeft,
+                end: Alignment.topRight,
+                colors: [hex1, hex5])),
         child: Align(
           alignment: Alignment.topCenter,
           child: Container(
@@ -307,7 +450,8 @@ class HomeView extends GetView<HomeController> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(size),
             ),
-            child: Image.asset("assets/images/inventory_logo.png",fit: BoxFit.contain),
+            child: Image.asset("assets/images/inventory_logo.png",
+                fit: BoxFit.contain),
           ),
         ),
       ),
@@ -345,18 +489,85 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
-
   Widget _buildGradient() {
     return Container(
       decoration: BoxDecoration(
-        gradient:
-            LinearGradient(begin: Alignment.bottomLeft, end: Alignment.topRight,
-                colors: [hex1, hex5]),
+        gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [hex1, hex5]),
+      ),
+    );
+  }
+
+  Widget _pieChartItem(double size) {
+    return Card(
+      color: const Color.fromARGB(230, 248, 248, 248),
+      child: AspectRatio(
+        aspectRatio: 2,
+        child: Column(
+          children: [
+            SizedBox(height: size),
+            Text("Serial Number Type",style: TextStyle(fontSize: size *1.5,color: const Color.fromARGB(255, 139, 111, 19), fontWeight: FontWeight.w400)),
+            Expanded(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Obx(() => PieChart(
+                      PieChartData(
+                        pieTouchData: PieTouchData(
+                          touchCallback: (event, pieTouchResponse) {
+                            if (!event.isInterestedForInteractions ||
+                                pieTouchResponse == null ||
+                                pieTouchResponse.touchedSection == null) {
+                              controller.resetTouch();
+                              return;
+                            }
+                            controller.onTouch(pieTouchResponse
+                                .touchedSection!.touchedSectionIndex);
+                          },
+                        ),
+                        borderData: FlBorderData(show: false),
+                        sectionsSpace: 0,
+                        centerSpaceRadius: size * 2,
+                        sections: controller.showingSections(size),
+                      ),
+                    )),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Indicator(
+                        color: Colors.blue,
+                        text: 'Unique',
+                        isSquare: true,
+                        size: size * 1.5,
+                        fontSize: size * 1.2,
+                      ),
+                      const SizedBox(height: 5),
+                      Indicator(
+                        color: Colors.yellow,
+                        text: 'Other',
+                        isSquare: true,
+                        size: size * 1.5,
+                        fontSize: size * 1.2,
+                      ),
+                      SizedBox(height: size * 5),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
 
 class _MenuConfig {
   final String title;
@@ -377,4 +588,3 @@ class _MenuConfig {
     required this.onTap,
   });
 }
-

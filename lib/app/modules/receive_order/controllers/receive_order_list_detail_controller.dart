@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/receive_order_detail_model.dart';
-import 'package:getx_project/app/models/receive_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
+import '../../../global/alert.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/receive_order_detail_model.dart';
+import '../../../data/models/receive_order_model.dart';
+import '../../../data/providers/receive_order_provider.dart';
 
 class ReceiveOrderListDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:getx_project/app/global/widget/animated_counter.dart';
+import '../../../global/widget/animated_counter.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class MenuGrid extends StatelessWidget {

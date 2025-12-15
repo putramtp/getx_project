@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/models/serial_number_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_detail_controller.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/functions_widget.dart';
+import '../../../data/models/serial_number_model.dart';
+import '../../../modules/receive_order/controllers/receive_order_list_detail_controller.dart';
+import '../../../routes/app_pages.dart';
 
 class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailController> {
   const ReceiveOrderListDetailView({super.key});
@@ -25,23 +25,23 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(
+                return  Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 12),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 12),
                       Text("Loading items...",
-                          style: TextStyle(fontSize: 16, color: Colors.black54))
+                          style: TextStyle(fontSize: size * 1.2, color: Colors.black54))
                     ],
                   ),
                 );
               }
 
               if (controller.receiveOrderDetail.value == null) {
-                return const Center(
+                return  Center(
                     child: Text("No items found.",
-                        style: TextStyle(fontSize: 16, color: Colors.black54)));
+                        style: TextStyle(fontSize: size * 1.2, color: Colors.black54)));
               }
 
               final lines =

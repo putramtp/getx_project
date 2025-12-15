@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/product_summary_model.dart';
-import 'package:getx_project/app/modules/product/controllers/product_detail.controller.dart';
-import 'package:getx_project/app/modules/product/providers/product_provider.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+
+import '../../../global/functions.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/product_summary_model.dart';
+import '../../../routes/app_pages.dart';
+import 'product_detail.controller.dart';
+import 'product_transaction_list_controller.dart';
+import '../../../data/providers/product_provider.dart';
 
 class ProductController extends GetxController {
   Timer? _debounce;
@@ -169,7 +171,13 @@ class ProductController extends GetxController {
       Get.delete<ProductDetailController>(force: true);
     }
     Get.toNamed(AppPages.productDetailPage, arguments: product);
-   
+  }
+
+  void openTransaction(ProductSummaryModel product) {
+    if (Get.isRegistered<ProductTransactionListController>()) {
+      Get.delete<ProductTransactionListController>(force: true);
+    }
+    Get.toNamed(AppPages.productTransactionListPage, arguments: product);
   }
 
   // @override

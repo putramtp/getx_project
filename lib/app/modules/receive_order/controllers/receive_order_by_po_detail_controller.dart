@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/purchase_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_po_controller.dart';
-import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/alert.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/purchase_order_model.dart';
+import '../../../modules/receive_order/controllers/receive_order_by_po_controller.dart';
+import '../../../data/providers/receive_order_provider.dart';
+import '../../../routes/app_pages.dart';
 
 class ReceiveOrderByPoDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();

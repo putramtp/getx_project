@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/modules/product/controllers/product_detail.controller.dart';
+import '../../../global/functions.dart';
+import '../../../global/size_config.dart';
+import '../../../modules/product/controllers/product_detail.controller.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class ProductDetailView extends GetView<ProductDetailController> {

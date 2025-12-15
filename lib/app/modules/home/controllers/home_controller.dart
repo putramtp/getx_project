@@ -1,101 +1,168 @@
 import 'dart:async';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/dashboard_model.dart';
-import 'package:getx_project/app/modules/home/providers/home_provider.dart';
+import 'package:getx_project/app/data/models/dashboard_model.dart';
+import 'package:getx_project/app/data/models/stock_transaction_model.dart';
+import 'package:getx_project/app/data/providers/home_provider.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {
   final HomeProvider provider = Get.find<HomeProvider>();
-
   final AuthService _authService = Get.find<AuthService>();
   final Rx<DateTime> currentTime = DateTime.now().obs;
-  final dashboard = Rxn<DashboardModel>();
-  var isLoading = false.obs;
-  
-  // final count = 0.obs;
+  static final DashboardModel defaultDashboard = DashboardModel(product: 0,receiveOrder: 0,outflowOrder: 0,productOther: 0,productUnique: 0);
+  final Rx<DashboardModel> dashboard = defaultDashboard.obs;
+  final touchedIndex = (-1).obs;
+  final isLoading = false.obs;
+  final isLatestLoading = false.obs;
+  final lastTransactions = <StockTransactionModel>[].obs;
+
+  Timer? _timer;
+
   @override
   void onInit() {
     super.onInit();
-    loadDashboard();
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    reloadDashboard();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       currentTime.value = DateTime.now();
     });
   }
 
-  // @override
-  // void onReady() {
-  //   super.onReady();
-  // }
-
-  // @override
-  // void onClose() {
-  //   super.onClose();
-  // }
-
-  // void increment() => count.value++;
+  @override
+  void onClose() {
+    _timer?.cancel(); // ✅ PREVENT MEMORY LEAK
+    super.onClose();
+  }
 
   Future<void> loadDashboard() async {
-    final thisYear =  DateTime.now().year;
-    final res = await ApiExecutor.run(
+    final thisYear = DateTime.now().year;
+
+    final DashboardModel? data =
+        await ApiExecutor.run<DashboardModel>(
       isLoading: isLoading,
-      task: () => provider.getDashboard(year:thisYear),
+      task: () => provider.getDashboard(year: thisYear),
     );
-    if (res == null) return;
-    dashboard.value = res;
+
+    if (data == null) {
+      dashboard.value = defaultDashboard;
+      return;
+    }
+
+    dashboard.value = data; // ✅ TYPE SAFE
   }
 
-  void reloadDashboard(){
-     final defaultDashboard = DashboardModel(product: 0,receiveOrder: 0,outflowOrder: 0);
-     dashboard.value = defaultDashboard;
-     loadDashboard(); 
+  Future<void> loadLatest() async {
+    final List<StockTransactionModel>? data =
+        await ApiExecutor.run<List<StockTransactionModel>>(
+      isLoading: isLatestLoading,
+      task: () => provider.getLatestTransaction(limit: 10),
+    );
+
+    if (data == null) return;
+
+    lastTransactions.assignAll(data); // ✅ CORRECT RX UPDATE
   }
 
-
-  void goToProductPage() {
-    Get.toNamed(AppPages.productPage);
+  /// ✅ PROMISE.ALL (SAFE)
+ void  reloadDashboard()  {
+    dashboard.value = defaultDashboard;
+    loadDashboard();
+    loadLatest();
   }
 
-  void goToReceiveOrderHomePage() {
-    Get.toNamed(AppPages.receiveHomePage);
-  }
+  // ================= NAVIGATION =================
 
-  void goToOutflowOrderHomePage() {
-    Get.toNamed(AppPages.outflowHomePage);
-  }
+  void goToProductPage() => Get.toNamed(AppPages.productPage);
+  void goToReceiveOrderHomePage() => Get.toNamed(AppPages.receiveHomePage);
+  void goToOutflowOrderHomePage() => Get.toNamed(AppPages.outflowHomePage);
+  void goToReturnPage() => Get.toNamed(AppPages.returnPage);
 
-  void goToReturnPage() {
-    Get.toNamed(AppPages.returnPage);
-  }
+  // ================= USER INFO =================
 
   String getName() {
-    String? name = _authService.currentUsername;
-    return name ?? "";
+    return _authService.currentUsername ?? "";
   }
 
   String getRoles() {
-    String? name = _authService.currentUserRoles;
-    return name ?? "";
+    return _authService.currentUserRoles ?? "";
   }
 
-  /// Clears the authentication token and navigates the user to the Login page.
   void logout() {
     _authService.clearToken();
-    // Use offAllNamed to remove all previous routes from the stack
     Get.offAllNamed(Routes.LOGIN);
   }
 
+  // ================= GREETING =================
+
   String getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) {
-      return "Good Morning 🌅";
-    } else if (hour >= 12 && hour < 17) {
-      return "Good Afternoon ☀️";
-    } else if (hour >= 17 && hour < 21) {
-      return "Good Evening 🌇";
-    } else {
-      return "Good Night 🌙";
-    }
+    if (hour >= 5 && hour < 12) return "Good Morning 🌅";
+    if (hour >= 12 && hour < 17) return "Good Afternoon ☀️";
+    if (hour >= 17 && hour < 21) return "Good Evening 🌇";
+    return "Good Night 🌙";
+  }
+
+  // ================= PIE CHART =================
+
+  void onTouch(int index) {
+    touchedIndex.value = index;
+  }
+
+  void resetTouch() {
+    touchedIndex.value = -1;
+  }
+
+  int get productUnique => dashboard.value.productUnique;
+  int get productOther => dashboard.value.productOther;
+
+  List<PieChartSectionData> showingSections(double size) {
+    final int index = touchedIndex.value;
+
+    final double unique = productUnique.toDouble();
+    final double other = productOther.toDouble();
+    final double total = unique + other;
+
+    final double uniquePercent = total == 0 ? 0 : (unique / total) * 100;
+    final double otherPercent = total == 0 ? 0 : (other / total) * 100;
+
+    return List.generate(2, (i) {
+      final isTouched = i == index;
+      final fontSize = isTouched ? size * 1.5 : size * 0.9;
+      final radius = isTouched ? size * 5 : size * 3;
+
+      const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+
+      if (i == 0) {
+        return PieChartSectionData(
+          color: Colors.blue,
+          value: uniquePercent,
+          title: '${uniquePercent.toStringAsFixed(1)}%',
+          radius: radius,
+          titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: shadows,
+          ),
+        );
+      } else {
+        return PieChartSectionData(
+          color: Colors.yellow,
+          value: otherPercent,
+          title: '${otherPercent.toStringAsFixed(1)}%',
+          radius: radius,
+          titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: shadows,
+          ),
+        );
+      }
+    });
   }
 }

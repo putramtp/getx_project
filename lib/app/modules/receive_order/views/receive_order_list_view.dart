@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/search_bar.dart';
-import 'package:getx_project/app/models/receive_order_model.dart';
-import 'package:getx_project/app/modules/receive_order/controllers/receive_order_list_controller.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/search_bar.dart';
+import '../../../data/models/receive_order_model.dart';
+import '../../../modules/receive_order/controllers/receive_order_list_controller.dart';
+import '../../../routes/app_pages.dart';
+import '../../../global/widget/functions_widget.dart';
 
 class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
   const ReceiveOrderListView({Key? key}) : super(key: key);
@@ -69,13 +69,13 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                       }
 
                       if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
+                        return  Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           child: Center(
                             child: Text(
                               "No more data",
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: size * 1.2,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w500,
                               ),

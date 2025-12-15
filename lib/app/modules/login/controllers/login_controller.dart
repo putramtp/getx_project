@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/modules/login/providers/login_provider.dart';
-import 'package:getx_project/app/services/auth_service.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/alert.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/providers/login_provider.dart';
+import '../../../services/auth_service.dart';
+import '../../../routes/app_pages.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 

@@ -1,32 +1,35 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/modules/product/bindings/product_detail_binding.dart';
-import 'package:getx_project/app/modules/product/views/product_detail_view.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_detail_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_detail_binding.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_detail_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_request_detail_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_request_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_list_detail_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_home_view.dart';
-import 'package:getx_project/app/modules/outflow_order/views/outflow_order_list_view.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_detail_binding.dart';
-import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_binding.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_list_detail_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_home_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
-import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
+
+import '../modules/outflow_order/bindings/outflow_order_list_binding.dart';
+import '../modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
+import '../modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
+import '../modules/outflow_order/bindings/outflow_order_by_request_binding.dart';
+import '../modules/outflow_order/bindings/outflow_order_by_request_detail_binding.dart';
+import '../modules/outflow_order/bindings/outflow_order_list_detail_binding.dart';
+import '../modules/outflow_order/views/outflow_order_by_customer_detail_view.dart';
+import '../modules/outflow_order/views/outflow_order_by_customer_view.dart';
+import '../modules/outflow_order/views/outflow_order_by_request_detail_view.dart';
+import '../modules/outflow_order/views/outflow_order_by_request_view.dart';
+import '../modules/outflow_order/views/outflow_order_list_detail_view.dart';
+import '../modules/outflow_order/views/outflow_order_home_view.dart';
+import '../modules/outflow_order/views/outflow_order_list_view.dart';
+import '../modules/product/bindings/product_transaction_list_binding.dart';
+import '../modules/product/views/product_transaction_list_view.dart';
+import '../modules/product/bindings/product_detail_binding.dart';
+import '../modules/product/views/product_detail_view.dart';
+import '../modules/receive_order/bindings/receive_order_by_po_binding.dart';
+import '../modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
+import '../modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
+import '../modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
+import '../modules/receive_order/bindings/receive_order_list_detail_binding.dart';
+import '../modules/receive_order/bindings/receive_order_list_binding.dart';
+import '../modules/receive_order/views/receive_order_by_po_detail_view.dart';
+import '../modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
+import '../modules/receive_order/views/receive_order_by_supplier_view.dart';
+import '../modules/receive_order/views/receive_order_list_detail_view.dart';
+import '../modules/receive_order/views/receive_order_home_view.dart';
+import '../modules/receive_order/views/receive_order_by_po_view.dart';
+import '../modules/receive_order/views/receive_order_list_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/product/bindings/product_binding.dart';
@@ -47,6 +50,8 @@ class AppPages {
 
   static const productPage = Routes.PRODUCT;
   static const productDetailPage = Routes.PRODUCT_DETAIL;
+  static const productTransactionListPage = Routes.PRODUCT_TRANSACTION_LIST;
+
   static const itemPage = Routes.ITEM;
   //RECEIVE ORDER
   static const receiveHomePage = Routes.RECEIVE_ORDER_HOME;
@@ -89,6 +94,11 @@ class AppPages {
       page: () => const ProductDetailView(),
       binding: ProductDetailBinding(),
     ),
+    GetPage(
+      name: _Paths.PRODUCT_TRANSACTION_LIST,
+      page: () => const ProductTransactionListView(),
+      binding: ProductTransactionListBinding(),
+    ),
     //RECEIVE ORDER
     GetPage(
       name: _Paths.RECEIVE_ORDER_HOME,
@@ -124,7 +134,6 @@ class AppPages {
       page: () => const ReceiveOrderBySupplierDetailView(),
       binding: ReceiveOrderBySupplierDetailBinding(),
     ),
-
     // OUTFLOW ORDER
     GetPage(
       name: _Paths.OUTFLOW_ORDER_HOME,

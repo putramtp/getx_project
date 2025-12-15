@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:getx_project/app/api_providers.dart';
+import 'package:getx_project/app/data/providers/api_providers.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/services/network_service.dart';
 

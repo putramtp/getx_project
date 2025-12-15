@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/global/size_config.dart';
+import '../../../global/alert.dart';
+import '../../../global/size_config.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {

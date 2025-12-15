@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/modules/login/providers/login_provider.dart';
+import '../../../data/providers/login_provider.dart';
 import '../controllers/login_controller.dart';
 
 class LoginBinding extends Bindings {

@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/api_providers.dart';
-import 'package:getx_project/app/models/purchase_order_line_item_by_supplier_model.dart';
-import 'package:getx_project/app/models/purchase_order_line_item_model.dart';
-import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
-import 'package:getx_project/app/models/receive_order_detail_model.dart';
+import 'package:getx_project/app/data/providers/api_providers.dart';
+import 'package:getx_project/app/data/models/purchase_order_line_item_by_supplier_model.dart';
+import 'package:getx_project/app/data/models/purchase_order_line_item_model.dart';
+import 'package:getx_project/app/data/models/purchase_order_supplier_model.dart';
+import 'package:getx_project/app/data/models/receive_order_detail_model.dart';
 
 class ReceiveOrderProvider extends ApiProvider {
   // @override

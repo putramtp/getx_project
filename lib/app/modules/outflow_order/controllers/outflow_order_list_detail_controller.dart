@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/outflow_order_detail_model.dart';
-import 'package:getx_project/app/models/outflow_order_model.dart';
-import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
+import '../../../global/alert.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/outflow_order_detail_model.dart';
+import '../../../data/models/outflow_order_model.dart';
+import '../../../data/providers/outflow_order_provider.dart';
 
 class OutflowOrderListDetailController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();

@@ -2,10 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/product_detail_model.dart';
-import 'package:getx_project/app/models/product_summary_model.dart';
-import 'package:getx_project/app/modules/product/providers/product_provider.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/product_detail_model.dart';
+import '../../../data/models/product_summary_model.dart';
+import '../../../data/providers/product_provider.dart';
 
 class ProductDetailController extends GetxController with GetSingleTickerProviderStateMixin {
   final provider = Get.find<ProductProvider>();

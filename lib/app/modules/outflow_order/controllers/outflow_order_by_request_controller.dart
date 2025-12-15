@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:getx_project/app/global/alert.dart';
-import 'package:getx_project/app/global/functions.dart';
-import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/outlfow_request_model.dart';
-import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
-import 'package:getx_project/app/modules/outflow_order/providers/outflow_order_provider.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/alert.dart';
+import '../../../global/functions.dart';
+import '../../../helpers/api_excecutor.dart';
+import '../../../data/models/outlfow_request_model.dart';
+import '../../../modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
+import '../../../data/providers/outflow_order_provider.dart';
+import '../../../routes/app_pages.dart';
 import 'package:intl/intl.dart';
 
 class OutflowOrderByRequestController extends GetxController {
@@ -170,7 +170,7 @@ class OutflowOrderByRequestController extends GetxController {
     if (startDate.value == null || endDate.value == null) {
       infoAlertBottom(
           title: 'Filter Tanggal',
-          'Silakan pilih kedua tanggal terlebih dahulu');
+          'Please select both dates first.');
       return;
     }
 

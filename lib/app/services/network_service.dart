@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:getx_project/app/global/alert.dart';
+import '../../../global/alert.dart';
 
 class NetworkService extends GetxService {
   final connectivity = Connectivity();

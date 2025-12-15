@@ -9,6 +9,7 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const PRODUCT = _Paths.PRODUCT;
   static const PRODUCT_DETAIL = _Paths.PRODUCT_DETAIL;
+  static const PRODUCT_TRANSACTION_LIST = _Paths.PRODUCT_TRANSACTION_LIST;
   static const ITEM = _Paths.ITEM;
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = _Paths.RECEIVE_ORDER_LIST;
@@ -38,6 +39,7 @@ abstract class _Paths {
   static const ITEM = '/item';
   static const PRODUCT = '/product';
   static const PRODUCT_DETAIL = '/product/detail';
+  static const PRODUCT_TRANSACTION_LIST = '/product/transaction';
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = '/receive-order/list';
   static const RECEIVE_ORDER_LIST_DETAIL = '/receive-order/detail';

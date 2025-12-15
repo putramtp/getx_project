@@ -1,6 +1,6 @@
 
-import 'package:getx_project/app/api_providers.dart';
-import 'package:getx_project/app/models/product_detail_model.dart';
+import '../../../data/providers/api_providers.dart';
+import '../../../data/models/product_detail_model.dart';
 
 class ProductProvider extends ApiProvider {
   // @override
@@ -35,5 +35,19 @@ class ProductProvider extends ApiProvider {
       throw Exception( 'Failed to load getProductDetail: ${response.statusText}');
     }
   }
+
+ Future<Map<String, dynamic>> getStockTransactionByProduct({required int productId,String? cursor}) async {
+     final response = await get(
+      '/stock-transaction/product/${productId.toString()}',
+      query: cursor != null ? {'cursor': cursor} : {},
+    );
+
+    if (response.statusCode == 200 && response.body != null) {
+      return response.body;
+    } else {
+      throw Exception( 'Failed to load getStockTransactionByProduct: ${response.statusText}');
+    }
+  }
+ 
 
 }

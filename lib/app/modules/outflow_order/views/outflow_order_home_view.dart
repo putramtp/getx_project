@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/functions_widget.dart';
+import '../../../routes/app_pages.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class OutflowOrderHomeView extends GetView {

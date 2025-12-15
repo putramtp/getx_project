@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/helpers/api_excecutor.dart';
-import 'package:getx_project/app/models/purchase_order_supplier_model.dart';
+import 'package:getx_project/app/data/models/purchase_order_supplier_model.dart';
 import 'package:getx_project/app/modules/receive_order/controllers/receive_order_by_supplier_detail_controller.dart';
-import 'package:getx_project/app/modules/receive_order/providers/receive_order_provider.dart';
+import 'package:getx_project/app/data/providers/receive_order_provider.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:intl/intl.dart';
 
@@ -101,7 +101,7 @@ class ReceiveOrderBySupplierController extends GetxController {
     if (startDate.value == null || endDate.value == null) {
       infoAlertBottom(
           title: 'Filter Tanggal',
-          'Silakan pilih kedua tanggal terlebih dahulu');
+          'Please select both dates first.');
       return;
     }
 

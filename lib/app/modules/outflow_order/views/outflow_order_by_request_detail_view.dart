@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
-import 'package:getx_project/app/modules/outflow_order/views/scan_page_by_request.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/functions_widget.dart';
+import '../../../modules/outflow_order/controllers/outflow_order_by_request_detail_controller.dart';
+import '../../../modules/outflow_order/views/scan_page_by_request.dart';
+import '../../../routes/app_pages.dart';
 
 class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetailController> {
   const OutflowOrderByRequestDetailView({super.key});

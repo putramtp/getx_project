@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/widget/animated_counter.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/models/product_summary_model.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/widget/animated_counter.dart';
+import '../../../global/widget/functions_widget.dart';
+import '../../../data/models/product_summary_model.dart';
+import '../../../routes/app_pages.dart';
 
 import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
@@ -26,8 +26,9 @@ class ProductView extends GetView<ProductController> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Obx(() => _metricBox('Total Products',controller.totalProducts.value,'+8.00%',size)),
-                    Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,'+2.34%',size)),
+                    Expanded(child: Obx(() => _metricBox('Total Products',controller.totalProducts.value,'+8.00%',size))),
+                    SizedBox(width: size *2),
+                    Expanded(child: Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,'+2.34%',size))),
                   ],
                 ),
               ),
@@ -120,7 +121,7 @@ class ProductView extends GetView<ProductController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const CircleAvatar(backgroundColor: Color.fromARGB(15, 79, 206, 147),child: Icon(Icons.layers_outlined)),
+              CircleAvatar(radius: size *2.7,backgroundColor: const Color.fromARGB(15, 79, 206, 147),child: Icon(Icons.layers_outlined , size: size *3,)),
               SizedBox(width: size * 0.5),
               Expanded(child: AnimatedCounter(value: value,style: TextStyle(fontSize: size * 1.8, fontWeight: FontWeight.bold))),
             ],
@@ -139,10 +140,8 @@ class ProductView extends GetView<ProductController> {
     );
   }
 
-  Widget _productTile(ProductSummaryModel p,size) {
-    return GestureDetector(
-      onTap: () => controller.openDetail(p),
-      child: Container(
+  Widget _productTile(ProductSummaryModel p, double size) {
+      return Container(
         margin: const EdgeInsets.only(bottom: 14),
         padding: EdgeInsets.all(size * 1.5),
         decoration: BoxDecoration(
@@ -161,82 +160,156 @@ class ProductView extends GetView<ProductController> {
             CircleAvatar(
               radius: size * 2.8,
               backgroundColor: const Color.fromARGB(255, 220, 230, 221),
-              child:  Icon(Icons.stars_rounded,color: const Color.fromARGB(255, 77, 164, 175),size : size * 2.4 ),
+              child: Icon(
+                Icons.stars_rounded,
+                color: const Color.fromARGB(255, 77, 164, 175),
+                size: size * 2.4,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(p.itemName,style: TextStyle(fontSize: size * 1.6, fontWeight: FontWeight.w600),overflow: TextOverflow.ellipsis,maxLines: 1),
-                          const SizedBox(height: 2),
-                          Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: Colors.grey.shade300, width: 0.8),
-                              ),
-                              child: Text(
-                                p.itemCode,
-                                style: TextStyle(fontSize: size * 1.15,fontWeight: FontWeight.w600,color: Colors.grey.shade700,letterSpacing: 0.5),
-                              ),
-                          )
-                        ],
-                      ),
+                  Text(
+                    p.itemName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: size * 1.6,
+                      fontWeight: FontWeight.w600,
+                      color: const Color.fromARGB(255, 35, 132, 211),
                     ),
-                    if (p.lowStock)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 2),
-                        child: IntrinsicWidth(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Low Stock',
-                              style: TextStyle(
-                                color: Colors.orange.shade700,
-                                fontSize: size * 1.1,
-                                fontWeight: FontWeight.w500,
-                              ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: Colors.grey.shade300, width: 0.8),
+                          ),
+                          child: Text(
+                            p.itemCode,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: size * 1.15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
                       ),
-                  ],
-                ),
-                  const SizedBox(height: 4),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => controller.openDetail(p),
+                            child: Text(
+                              "View details",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: size * 1.1),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Divider(height: size),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.bookmark,color: Colors.blue,size: size * 1.2,semanticLabel: 'Remaining',),
-                      const SizedBox(width:2),
-                      Text(p.qtyRemaining.toString(),style: TextStyle(fontSize: size * 1.3, fontWeight: FontWeight.w400)),
-                      const Icon(Icons.arrow_drop_up, color: Colors.green,semanticLabel: 'Stock in',),
-                      Text(p.qtyIn.toString(),style: TextStyle(fontSize: size * 1.3, fontWeight: FontWeight.w400)),
-                      const Icon(Icons.arrow_drop_down, color: Colors.red,semanticLabel: 'Stock Out',),
-                      Text(p.qtyOut.toString(),style: TextStyle(fontSize: size * 1.3, fontWeight: FontWeight.w400))
+                      Flexible(
+                        child: Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            _textWithIcon(size,"${p.qtyRemaining}",Icons.archive,Colors.blue),
+                            _textWithIcon(size,"${p.qtyIn}",Icons.arrow_drop_down,Colors.green),
+                            _textWithIcon(size,"${p.qtyIn}",Icons.arrow_drop_up,Colors.red),
+                            if (p.lowStock)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: size * 0.6, vertical: size * 0.4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  "Low Stock",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.orange.shade700,
+                                    fontSize: size * 1.1,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      // VIEW TRANSACTION BUTTON
+                      Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => controller.openTransaction(p),
+                            child: Text(
+                              "View Transactions",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: size * 1.1),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right,size: size *2)
           ],
         ),
+      );
+    }
+
+
+  
+  Widget _textWithIcon(double size, String text, IconData icon,Color iconColor) {
+    return RichText(
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(
+        children: [
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Icon(icon, color: iconColor, size: size * 2),
+          ),
+          WidgetSpan(
+            child: SizedBox(width:size * 0.5), 
+          ),
+          TextSpan(
+            text: text,
+            style: TextStyle(fontSize: size * 1.3, color: Colors.black),
+          ),
+        ],
       ),
     );
   }
-  
+
   Widget _buildTitleBar(size,context) {
     return Row(
       key: const ValueKey('title'),

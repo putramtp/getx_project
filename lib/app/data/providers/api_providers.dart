@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/services/auth_service.dart';
+import '../../../services/auth_service.dart';
 
 class ApiProvider extends GetConnect {
   final AuthService _authService = Get.find<AuthService>();
@@ -8,7 +8,7 @@ class ApiProvider extends GetConnect {
     // Set base URL for all requests from this provider
     super.onInit();
     httpClient.baseUrl = "https://allowing-toucan-ghastly.ngrok-free.app/api";
-    // httpClient.timeout = const Duration(seconds: 30);
+    httpClient.timeout = const Duration(seconds: 30);
     // You can also add interceptors here
     
     // 🔒 Automatically attach Authorization header if token exists

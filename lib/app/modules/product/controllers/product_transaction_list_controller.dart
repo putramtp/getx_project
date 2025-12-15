@@ -3,23 +3,29 @@ import 'package:flutter/material.dart';
 import '../../../global/alert.dart';
 import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
-import '../../../data/models/purchase_order_model.dart';
-import '../../../modules/receive_order/controllers/receive_order_by_po_detail_controller.dart';
-import '../../../data/providers/receive_order_provider.dart';
-import '../../../routes/app_pages.dart';
+import '../../../data/models/product_summary_model.dart';
+import '../../../data/models/stock_transaction_model.dart';
+import '../../../data/providers/product_provider.dart';
 import 'package:intl/intl.dart';
 
-class ReceiveOrderByPoController extends GetxController {
-  final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
+class ProductTransactionListController extends GetxController {
+  final ProductProvider provider = Get.find<ProductProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
-  var orders = <PurchaseOrderModel>[].obs;
-  var filteredOrders = <PurchaseOrderModel>[].obs;
-  var isLoading = false.obs;
+
+  // Data
+  var transactions = <StockTransactionModel>[].obs;
+  var filteredTransactions = <StockTransactionModel>[].obs;
+
+  // State
+  var isLoading = false.obs;  
   var isLoadingMore = false.obs;
-  var hasMore = true.obs; 
+  var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+
+  late ProductSummaryModel currentProduct;
+  // Cursors
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
@@ -28,16 +34,17 @@ class ReceiveOrderByPoController extends GetxController {
   var endDate = Rxn<DateTime>();
 
   // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel:"ReceiveOrderByPoController");
+  final ScrollController scrollController = ScrollController(debugLabel:'StockTransactionByProductController' );
 
   @override
   void onInit() {
     super.onInit();
+    currentProduct = Get.arguments;
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
     scrollController.addListener(_scrollListener);
-    loadPurchaseOrders();
+    loadProductTrans();
   }
 
   // Auto loading
@@ -54,14 +61,18 @@ class ReceiveOrderByPoController extends GetxController {
     super.onClose();
   }
 
-  void toggleSort() {
-    isAscending.value = !isAscending.value;
-    filteredOrders.sort((a, b) => isAscending.value
-        ? a.poNumber.compareTo(b.poNumber)
-        : b.poNumber.compareTo(a.poNumber));
-    filteredOrders.refresh();
-  }
+void toggleSort() {
+  isAscending.value = !isAscending.value;
+  filteredTransactions.sort((a, b) {
+    final codeA = a.order?.code ?? ''; 
+    final codeB = b.order?.code ?? '';
+    return isAscending.value
+        ? codeA.compareTo(codeB)
+        : codeB.compareTo(codeA);
+  });
 
+  filteredTransactions.refresh();
+}
   void clearSearch() {
     searchController.clear();
     searchFocus.unfocus();
@@ -72,10 +83,10 @@ class ReceiveOrderByPoController extends GetxController {
   }
 
   // FIRST LOAD
-  Future<void> loadPurchaseOrders() async {
+  Future<void> loadProductTrans() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getPurchaseOrders(cursor: null),
+      task: () => provider.getStockTransactionByProduct(productId: 1 ,cursor: null),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -84,8 +95,8 @@ class ReceiveOrderByPoController extends GetxController {
     hasMore.value = true;
 
     if (res['data'] == null) {
-      orders.clear();
-      filteredOrders.clear();
+      transactions.clear();
+      filteredTransactions.clear();
       cursorNext.value = null;
       cursorPrev.value = null;
       hasMore.value = false;
@@ -101,9 +112,10 @@ class ReceiveOrderByPoController extends GetxController {
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
 
-    final mapped = rawList.map((e) => PurchaseOrderModel.fromJson(e)).toList();
-    orders.assignAll(mapped);
-    filteredOrders.assignAll(mapped);
+    final mapped = rawList.map((e) => StockTransactionModel.fromJson(e)).toList();
+
+    transactions.assignAll(mapped);
+    filteredTransactions.assignAll(mapped);
   }
 
   // LOAD NEXT PAGE
@@ -114,13 +126,13 @@ class ReceiveOrderByPoController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getPurchaseOrders(cursor: cursorNext.value),
+      task: () => provider.getStockTransactionByProduct(productId: 1 ,cursor: null),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
 
     final List rawList = res['data'] ?? [];
-    final newOrders = rawList.map((e) => PurchaseOrderModel.fromJson(e)).toList();
+    final newOrders = rawList.map((e) => StockTransactionModel.fromJson(e)).toList();
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
@@ -131,18 +143,26 @@ class ReceiveOrderByPoController extends GetxController {
       hasMore.value = false;
     }
 
-    orders.addAll(newOrders);
-    filteredOrders.assignAll(orders);
+    transactions.addAll(newOrders);
+    filteredTransactions.assignAll(transactions);
+  }
+
+  String formatYmd(DateTime date) {
+    return DateFormat('yyyy-MM-dd').format(date).toString();
   }
 
   /// 🔍 Filter list by PO number
   void filterList(String query) {
     if (query.isEmpty) {
-      filteredOrders.assignAll(orders);
+      filteredTransactions.assignAll(transactions);
     } else {
-      filteredOrders.assignAll(
-        orders.where((order) =>
-            order.poNumber.toLowerCase().contains(query.toLowerCase())),
+      final lowerQuery = query.toLowerCase();
+
+      filteredTransactions.assignAll(
+        transactions.where((trans) {
+          final codeTrans = trans.order?.code ?? ''; 
+          return codeTrans.contains(lowerQuery) ;
+        }).toList(),
       );
     }
   }
@@ -158,28 +178,40 @@ class ReceiveOrderByPoController extends GetxController {
     if (picked != null) endDate.value = picked;
   }
 
-  // 📆 Apply date range filter
   void applyDateFilter() {
-    if (startDate.value == null || endDate.value == null) {
+    final start = startDate.value;
+    final end = endDate.value;
+
+    if (start == null || end == null) {
       infoAlertBottom(
-          title: "Filter Tanggal",
-          'Please select both dates first.');
+        title: 'Filter Tanggal',
+        'Please select both dates first.',
+      );
       return;
     }
 
-    filteredOrders.assignAll(orders.where((order) {
-      final date = order.date;
-      return date.isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
-          date.isBefore(endDate.value!.add(const Duration(days: 1)));
-    }).toList());
+    // Normalized to midnight (00:00) and end of day (23:59)
+    final startOfDay = DateTime(start.year, start.month, start.day);
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    filteredTransactions.assignAll(
+      transactions.where((trans) {
+        final orderDate = trans.order?.date;
+        if (orderDate == null) return false; // skip if null
+
+        return orderDate.isAtSameMomentAs(startOfDay) ||
+           orderDate.isAtSameMomentAs(endOfDay) ||
+           (orderDate.isAfter(startOfDay) && orderDate.isBefore(endOfDay));
+        }).toList(),
+    );
+
   }
-  
 
   /// ♻️ Clear date filter
   void clearDateFilter() {
     startDate.value = null;
     endDate.value = null;
-    filteredOrders.assignAll(orders);
+    filteredTransactions.assignAll(transactions);
     infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
@@ -187,10 +219,4 @@ class ReceiveOrderByPoController extends GetxController {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(PurchaseOrderModel order) {
-    if (Get.isRegistered<ReceiveOrderByPoDetailController>()) {
-      Get.delete<ReceiveOrderByPoDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.receiveOrderByPoDetailPage, arguments: order);
-  }
 }

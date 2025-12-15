@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:getx_project/app/api_providers.dart';
+import '../../../data/providers/api_providers.dart';
 class LoginProvider extends ApiProvider {
   // @override
   // void onInit() {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/search_bar.dart';
-import 'package:getx_project/app/models/outlfow_request_model.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import '../../../global/size_config.dart';
+import '../../../global/widget/search_bar.dart';
+import '../../../data/models/outlfow_request_model.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/outflow_order_by_request_controller.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
+import '../../../global/widget/functions_widget.dart';
 
 class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController> {
   const OutflowOrderByRequestView({Key? key}) : super(key: key);
