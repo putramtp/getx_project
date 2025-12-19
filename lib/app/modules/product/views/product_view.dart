@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+// ============ INTERNAL IMPORTS ============
+import 'package:getx_project/app/global/widget/product_tile.dart';
 import '../../../global/widget/animated_counter.dart';
 import '../../../global/widget/functions_widget.dart';
-import '../../../data/models/product_summary_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
@@ -77,7 +77,12 @@ class ProductView extends GetView<ProductController> {
                   (context, index) {
                     if (index < products.length) {
                       final productSummary = products[index];
-                      return _productTile(productSummary,size);
+                       return ProductTile(
+                          product: productSummary,
+                          size: size,
+                          onViewDetail: () => controller.openDetail(productSummary),
+                          onViewTransaction: () => controller.openTransaction(productSummary),
+                        );
                     }
                     if (controller.cursorNext.value != null ) {
                       return  Padding(
@@ -90,9 +95,7 @@ class ProductView extends GetView<ProductController> {
                     if (controller.cursorNext.value == null && products.isNotEmpty) {
                       return  Padding(
                         padding:  EdgeInsets.symmetric(vertical: size * 3),
-                        child: Center(
-                            child: Text("No more data.",style: TextStyle(fontSize: size *1.4,color: Colors.grey,fontWeight: FontWeight.w500),
-                          ),
+                        child: Center(child: Text("No more data.",style: TextStyle(fontSize: size *1.4,color: Colors.grey,fontWeight: FontWeight.w500)),
                         ),
                       );
                     }
@@ -116,12 +119,12 @@ class ProductView extends GetView<ProductController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,style: TextStyle(fontSize: size * 1.5,fontWeight: FontWeight.w400,color: Colors.black54)),
+          Text(title,style: TextStyle(fontSize: size * 1.5,fontWeight: FontWeight.w400,color: Colors.black87)),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              CircleAvatar(radius: size *2.7,backgroundColor: const Color.fromARGB(15, 79, 206, 147),child: Icon(Icons.layers_outlined , size: size *3,)),
+              CircleAvatar(radius: size *2.7,backgroundColor: Colors.green.shade50,child: Icon(Icons.layers_outlined , size: size *3,color: Colors.green,)),
               SizedBox(width: size * 0.5),
               Expanded(child: AnimatedCounter(value: value,style: TextStyle(fontSize: size * 1.8, fontWeight: FontWeight.bold))),
             ],
@@ -135,176 +138,6 @@ class ProductView extends GetView<ProductController> {
           //   ),
           //   child: Text(percent,style: const TextStyle(color: Color.fromARGB(255, 2, 138, 7))),
           // ),
-        ],
-      ),
-    );
-  }
-
-  Widget _productTile(ProductSummaryModel p, double size) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        padding: EdgeInsets.all(size * 1.5),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: size * 2.8,
-              backgroundColor: const Color.fromARGB(255, 220, 230, 221),
-              child: Icon(
-                Icons.stars_rounded,
-                color: const Color.fromARGB(255, 77, 164, 175),
-                size: size * 2.4,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    p.itemName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: size * 1.6,
-                      fontWeight: FontWeight.w600,
-                      color: const Color.fromARGB(255, 35, 132, 211),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: Colors.grey.shade300, width: 0.8),
-                          ),
-                          child: Text(
-                            p.itemCode,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: size * 1.15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () => controller.openDetail(p),
-                            child: Text(
-                              "View details",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: size * 1.1),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(height: size),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            _textWithIcon(size,"${p.qtyRemaining}",Icons.archive,Colors.blue),
-                            _textWithIcon(size,"${p.qtyIn}",Icons.arrow_drop_down,Colors.green),
-                            _textWithIcon(size,"${p.qtyIn}",Icons.arrow_drop_up,Colors.red),
-                            if (p.lowStock)
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: size * 0.6, vertical: size * 0.4),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade100,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  "Low Stock",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.orange.shade700,
-                                    fontSize: size * 1.1,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      // VIEW TRANSACTION BUTTON
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () => controller.openTransaction(p),
-                            child: Text(
-                              "View Transactions",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: size * 1.1),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-
-  
-  Widget _textWithIcon(double size, String text, IconData icon,Color iconColor) {
-    return RichText(
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(
-        children: [
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: Icon(icon, color: iconColor, size: size * 2),
-          ),
-          WidgetSpan(
-            child: SizedBox(width:size * 0.5), 
-          ),
-          TextSpan(
-            text: text,
-            style: TextStyle(fontSize: size * 1.3, color: Colors.black),
-          ),
         ],
       ),
     );

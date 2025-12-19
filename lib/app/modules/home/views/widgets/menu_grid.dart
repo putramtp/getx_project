@@ -6,23 +6,20 @@ class MenuGrid extends StatelessWidget {
   final double size;
   final String hex1;
   final String hex2;
-  final String status;
-  final String? statusLabel;
   final String title;
   final IconData iconData;
   final VoidCallback onTap;
+  final String status;
   
   const MenuGrid({
     super.key,
     required this.size,
     required this.hex1,
     required this.hex2,
-    required this.status,
-    this.statusLabel,
     required this.title,
     required this.iconData,
     required this.onTap,
-
+    this.status = '',
   });
 
 
@@ -61,29 +58,21 @@ class MenuGrid extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  (status != "") ?
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
+                      
                       AnimatedCounter(
                         value : int.tryParse(status) ?? 0,
                         style: TextStyle(
                             fontSize: size * 1.2,
                             fontWeight: FontWeight.bold,
                             color: Colors.white),
-                      ),
-                      // const SizedBox(width: 3),
-                      // statusLabel == null
-                      //   ? const SizedBox.shrink()
-                      //   : Text(
-                      //       statusLabel ?? "",
-                      //       style: TextStyle(
-                      //         fontSize: size * 1,
-                      //         fontWeight: FontWeight.bold,
-                      //         color: Colors.white70,
-                      //       ),
-                      //   )
+                      )  ,
                     ],
-                  ),
+                  )
+                  :const  SizedBox(height: 20),
                   Text(
                     title,
                     style: TextStyle(

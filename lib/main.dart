@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/services/network_service.dart';
@@ -8,11 +9,12 @@ import 'package:getx_project/app/services/network_service.dart';
 import 'app/global/size_config.dart';
 import 'app/routes/app_pages.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Get.put(AuthService());
-  Get.put(ApiProvider());
-  Get.put(NetworkService());
+  await GetStorage.init(); // ✅ REQUIRED
+  Get.put(AuthService(), permanent: true);
+  Get.put(ApiProvider(), permanent: true);
+  Get.put(NetworkService(), permanent: true);
   runApp(const MyApp());
 }
 

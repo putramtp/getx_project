@@ -11,7 +11,7 @@ class ReceiveOrderListDetailController extends GetxController {
 
   final receiveOrderDetail = Rxn<ReceiveOrderDetailModel>();
   var isLoading = false.obs;
-  late final ReceiveOrderModel curretReceiveOrder;
+  late final ReceiveOrderModel currentReceiveOrder;
 
   @override
   void onInit() {
@@ -19,7 +19,7 @@ class ReceiveOrderListDetailController extends GetxController {
 
     final args = Get.arguments;
     if (args != null && args is ReceiveOrderModel) {
-      curretReceiveOrder = args;
+      currentReceiveOrder = args;
       loadReceiveOrderDetail();
     } else {
       errorAlert("⚠️ Invalid or missing arguments in receiveOrder: $args");
@@ -28,7 +28,7 @@ class ReceiveOrderListDetailController extends GetxController {
 
   /// 🔹 Fetch items for this order
   Future<void> loadReceiveOrderDetail() async {
-    final orderId = curretReceiveOrder.id;
+    final orderId = currentReceiveOrder.id;
     final data = await ApiExecutor.run<ReceiveOrderDetailModel>(
       isLoading: isLoading,
       task: () => provider.getReceiveOrderDetail(orderId),

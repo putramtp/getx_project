@@ -161,7 +161,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
   }
 
   Widget _buildHeaderGradient(double size) {
-    final ro = controller.curretReceiveOrder;
+    final ro = controller.currentReceiveOrder;
     final roCode = ro.code;
     return Container(
       width: double.infinity,

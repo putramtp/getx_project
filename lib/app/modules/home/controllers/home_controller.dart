@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/dashboard_model.dart';
@@ -27,7 +28,6 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     reloadDashboard();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       currentTime.value = DateTime.now();
     });
@@ -60,7 +60,7 @@ class HomeController extends GetxController {
     final List<StockTransactionModel>? data =
         await ApiExecutor.run<List<StockTransactionModel>>(
       isLoading: isLatestLoading,
-      task: () => provider.getLatestTransaction(limit: 10),
+      task: () => provider.getLatestTransaction(limit: 5),
     );
 
     if (data == null) return;
@@ -76,13 +76,13 @@ class HomeController extends GetxController {
   }
 
   // ================= NAVIGATION =================
-
   void goToProductPage() => Get.toNamed(AppPages.productPage);
   void goToReceiveOrderHomePage() => Get.toNamed(AppPages.receiveHomePage);
   void goToOutflowOrderHomePage() => Get.toNamed(AppPages.outflowHomePage);
   void goToReturnPage() => Get.toNamed(AppPages.returnPage);
-
-  // ================= USER INFO =================
+  void goToCategoryPage() => Get.toNamed(AppPages.productCategory);
+  void goToBrandPage() => Get.toNamed(AppPages.productBrand);
+  // ================= USER INFO =================   
 
   String getName() {
     return _authService.currentUsername ?? "";
@@ -166,4 +166,43 @@ class HomeController extends GetxController {
       }
     });
   }
+
+  void showAccountSheet(String userName) {
+      Get.bottomSheet(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.info, color: Color(0xff2D6187)),
+                title: const Text("Account Info"),
+                onTap: () {
+                  Get.back();
+                  Get.defaultDialog(
+                    title: "Account Detail",
+                    middleText: "Your logged in as:\n$userName",
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text("Logout"),
+                onTap: () {
+                  Get.back();
+                  logout();
+                  infoAlertBottom(
+                    title: "Logout",
+                    "You have been logged out",
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 }

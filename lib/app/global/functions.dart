@@ -101,3 +101,29 @@ String formatPrice(dynamic value) {
   final number = num.tryParse(value.toString()) ?? 0;
   return NumberFormat.decimalPattern('id_ID').format(number);
 }
+
+
+Color getAccentColor(String code) {
+  const  colors = [
+    Color(0xFF124076), // Navy
+    Color(0xFF7F9F80), // Olive
+    Color(0xFF4CAF50), // Green
+    Color(0xFF2196F3), // Blue
+    Color(0xFF9C27B0), // Purple
+    Color(0xFFFF9800), // Orange
+    Color(0xFF009688), // Teal
+    Color(0xFFE91E63), // Pink
+    Color(0xFF3F51B5), // Indigo
+    Color(0xFF795548), // Brown
+    Color(0xFF607D8B), // Blue Grey
+    Color(0xFF8BC34A), // Light Green
+  ];
+
+  return colors[code.hashCode.abs() % colors.length];
+}
+
+Color getReadableTextColor(Color bg) {
+  return bg.computeLuminance() > 0.5
+      ? Colors.black
+      : Colors.white;
+}

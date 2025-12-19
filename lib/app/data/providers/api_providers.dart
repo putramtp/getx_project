@@ -21,6 +21,6 @@ class ApiProvider extends GetConnect {
     });
   }
 
-  Future<Response> getUser(int id) => get('users/$id');
-  Future<Response> postUser(Map data) => post('users', data);
+  // Future<Response> getUser(int id) => get('users/$id');
+  // Future<Response> postUser(Map data) => post('users', data);
 }

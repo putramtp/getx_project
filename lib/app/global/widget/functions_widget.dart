@@ -291,3 +291,25 @@ Widget buildSyncButton({required VoidCallback onPressed,required double size,Col
       ),
     );
 }
+
+ Widget textWithIcon(double size, String text, IconData icon,Color iconColor) {
+    return RichText(
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(
+        children: [
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Icon(icon, color: iconColor, size: size * 2),
+          ),
+          WidgetSpan(
+            child: SizedBox(width:size * 0.5), 
+          ),
+          TextSpan(
+            text: text,
+            style: TextStyle(fontSize: size * 1.3, color: Colors.black),
+          ),
+        ],
+      ),
+    );
+  }

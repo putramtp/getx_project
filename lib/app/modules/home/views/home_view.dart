@@ -1,17 +1,16 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import '../../../global/alert.dart';
-import '../../../modules/home/views/widgets/indicator.dart';
+import 'package:getx_project/app/modules/home/views/widgets/menu_card.dart';
 import 'package:hexcolor/hexcolor.dart';
 
+import '../controllers/home_controller.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
-import '../controllers/home_controller.dart';
 import 'clip/wave_clip.dart';
+import 'widgets/indicator.dart';
 import 'widgets/menu_grid.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -45,7 +44,7 @@ class HomeView extends GetView<HomeController> {
             child: IconButton(
               icon: const Icon(Icons.account_circle_rounded,
                   color: Color(0xff2D6187)),
-              onPressed: () => _showAccountSheet(userName),
+              onPressed: () => controller.showAccountSheet(userName),
             ),
           ),
         )
@@ -54,44 +53,6 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  void _showAccountSheet(String userName) {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.info, color: Color(0xff2D6187)),
-              title: const Text("Account Info"),
-              onTap: () {
-                Get.back();
-                Get.defaultDialog(
-                  title: "Account Detail",
-                  middleText: "Your logged in as:\n$userName",
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout"),
-              onTap: () {
-                Get.back();
-                controller.logout();
-                infoAlertBottom(
-                  title: "Logout",
-                  "You have been logged out",
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ===================== BODY =====================
 
@@ -118,6 +79,21 @@ class HomeView extends GetView<HomeController> {
                       SizedBox(height: size * 2),
                       _buildDashboardGrid(size),
                       SizedBox(height: size * 4),
+                      _buildCircleMenu(size),
+                      SizedBox(height: size * 2),
+                      Row(
+                        children: [
+                          Text(
+                            'Lastest Transactions',
+                            style: TextStyle(
+                                fontSize: size *1.6, fontWeight: FontWeight.w500,
+                                fontStyle: FontStyle.italic
+                                
+                                ),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
                       _lastTransactions(size),
                       const Divider(),
                       SizedBox(height: size * 2),
@@ -151,7 +127,7 @@ class HomeView extends GetView<HomeController> {
         Text(
           title,
           style: TextStyle(
-              fontSize: SizeConfig.fontSize(2.1), fontWeight: FontWeight.bold),
+              fontSize: size *2, fontWeight: FontWeight.bold),
         ),
         (isIconText == true)
             ? Row(
@@ -204,18 +180,11 @@ class HomeView extends GetView<HomeController> {
               ],
             ),
           ),
-          Image.asset("assets/images/logo_short.png",
-              height: size * 5, width: size * 5),
+          Image.asset("assets/images/logo_short.png",height: size * 5, width: size * 5),
           SizedBox(height: size),
-          Text(controller.getGreeting(),
-              style:
-                  theme.textTheme.titleLarge?.copyWith(color: Colors.white70)),
-          Text(userName,
-              style:
-                  theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
-          Text("Role : $userRoles",
-              style:
-                  theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
+          Text(controller.getGreeting(),style:theme.textTheme.titleLarge?.copyWith(color: Colors.white70)),
+          Text(userName,style:theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
+          Text("Role : $userRoles",style:theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
         ],
       ),
     );
@@ -239,7 +208,6 @@ class HomeView extends GetView<HomeController> {
         _MenuConfig(
           title: 'RECEIVE ORDER',
           icon: CupertinoIcons.bag_badge_plus,
-          statusLabel: 'this year',
           status: stat(dashboard.receiveOrder),
           hex1: '#4A70A9',
           hex2: '#8FABD4',
@@ -249,7 +217,6 @@ class HomeView extends GetView<HomeController> {
           title: 'OUTFLOW ORDER',
           icon: CupertinoIcons.bag_badge_minus,
           status: stat(dashboard.outflowOrder),
-          statusLabel: "this year",
           hex1: '#FF6F3C',
           hex2: '#e68d40',
           onTap: controller.goToOutflowOrderHomePage,
@@ -277,7 +244,6 @@ class HomeView extends GetView<HomeController> {
                   hex2: e.hex2,
                   iconData: e.icon,
                   status: e.status,
-                  statusLabel: e.statusLabel,
                   title: e.title,
                   onTap: e.onTap,
                 ))
@@ -286,12 +252,49 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
+  Widget _buildCircleMenu(double size) {
+      final menus = [
+        _CircleMenuItem(
+          title: 'Item Category',
+          icon: Icons.category,
+          iconColor: Colors.blue,
+          onTap: controller.goToCategoryPage,
+        ),
+        _CircleMenuItem(
+          title: 'Brand',
+          icon: Icons.label_outline,
+          iconColor: Colors.indigo,
+          onTap: controller.goToBrandPage,
+        ),
+        _CircleMenuItem(
+          title: 'Retrun',
+          icon: Icons.arrow_back,
+          iconColor: Colors.indigo,
+          onTap: controller.goToReturnPage,
+        ),
+      ];
+
+      return GridView.extent(
+        maxCrossAxisExtent: size * 7,
+        crossAxisSpacing: size * 1.2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: menus
+            .map((e) => CircleMenuItem(
+                  size: size,
+                  icon: e.icon,
+                  title: e.title,
+                  iconColor: e.iconColor,
+                  onTap: e.onTap,
+                ))
+            .toList(),
+      );
+  }
+
   // =================Latest Transaction  =====================
   Widget _lastTransactions(double size) {
     return Column(
       children: [
-        _buildHeader(size, 'Lastest Transactions', isIconText: false),
-        const Divider(),
         Obx(() {
            if (controller.isLatestLoading.value) {
             return  Center(
@@ -573,18 +576,34 @@ class _MenuConfig {
   final String title;
   final IconData icon;
   final String status;
-  final String? statusLabel;
   final String hex1;
   final String hex2;
   final VoidCallback onTap;
 
-  _MenuConfig({
+  const _MenuConfig({
     required this.title,
     required this.icon,
-    required this.status,
-    this.statusLabel,
+    this.status = '', 
     required this.hex1,
     required this.hex2,
     required this.onTap,
   });
+
+  
 }
+
+class _CircleMenuItem  {
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+   const _CircleMenuItem({
+    required this.title,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+}
+

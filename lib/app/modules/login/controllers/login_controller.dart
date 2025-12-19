@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:flutter/material.dart';
 
 import '../../../global/alert.dart';
@@ -12,6 +12,7 @@ import '../../../routes/app_pages.dart';
 class LoginController extends GetxController {
   final LoginProvider _apiLogin = Get.find<LoginProvider>();
   final AuthService _authService = Get.find<AuthService>();
+  final GetStorage _box = GetStorage();
 
   // Reactive states
   final RxString emailValue = ''.obs;
@@ -32,11 +33,10 @@ class LoginController extends GetxController {
 
   /// ✅ Load saved login if "remember me" was checked
   Future<void> loadSavedLogin() async {
-    final prefs = await SharedPreferences.getInstance();
 
-    final savedRemember = prefs.getBool('remember_me') ?? false;
-    final savedEmail = prefs.getString('saved_email') ?? '';
-    final savedPassword = prefs.getString('saved_password') ?? '';
+    final savedRemember = _box.read('remember_me') ?? false;
+    final savedEmail = _box.read('saved_email') ?? '';
+    final savedPassword = _box.read('saved_password') ?? '';
 
     rememberMe.value = savedRemember;
 
@@ -53,16 +53,14 @@ class LoginController extends GetxController {
 
   /// ✅ Save or clear login based on rememberMe checkbox
   Future<void> saveLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-
     if (rememberMe.value) {
-      await prefs.setString('saved_email', emailValue.value);
-      await prefs.setString('saved_password', passwordValue.value);
-      await prefs.setBool('remember_me', true);
+      _box.write('saved_email', emailValue.value);
+      _box.write('saved_password', passwordValue.value);
+      _box.write('remember_me', true);
     } else {
-      await prefs.remove('saved_email');
-      await prefs.remove('saved_password');
-      await prefs.setBool('remember_me', false);
+      _box.remove('saved_email');
+      _box.remove('saved_password');
+      _box.write('remember_me',false);
     }
   }
 
@@ -112,8 +110,7 @@ class LoginController extends GetxController {
           errorAlert("Login successful, but token is missing.");
         }
       } else {
-        final msg = response.body?['message'] ??
-            "Login failed. Please check your credentials.";
+        final msg = response.body?['message'] ?? "Login failed. Please check your credentials.";
         errorAlert(msg);
       }
     } catch (e) {

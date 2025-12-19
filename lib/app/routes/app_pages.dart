@@ -1,44 +1,52 @@
 import 'package:get/get.dart';
 
-import '../modules/outflow_order/bindings/outflow_order_list_binding.dart';
-import '../modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
-import '../modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
-import '../modules/outflow_order/bindings/outflow_order_by_request_binding.dart';
-import '../modules/outflow_order/bindings/outflow_order_by_request_detail_binding.dart';
-import '../modules/outflow_order/bindings/outflow_order_list_detail_binding.dart';
-import '../modules/outflow_order/views/outflow_order_by_customer_detail_view.dart';
-import '../modules/outflow_order/views/outflow_order_by_customer_view.dart';
-import '../modules/outflow_order/views/outflow_order_by_request_detail_view.dart';
-import '../modules/outflow_order/views/outflow_order_by_request_view.dart';
-import '../modules/outflow_order/views/outflow_order_list_detail_view.dart';
-import '../modules/outflow_order/views/outflow_order_home_view.dart';
-import '../modules/outflow_order/views/outflow_order_list_view.dart';
-import '../modules/product/bindings/product_transaction_list_binding.dart';
-import '../modules/product/views/product_transaction_list_view.dart';
-import '../modules/product/bindings/product_detail_binding.dart';
-import '../modules/product/views/product_detail_view.dart';
-import '../modules/receive_order/bindings/receive_order_by_po_binding.dart';
-import '../modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
-import '../modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
-import '../modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
-import '../modules/receive_order/bindings/receive_order_list_detail_binding.dart';
-import '../modules/receive_order/bindings/receive_order_list_binding.dart';
-import '../modules/receive_order/views/receive_order_by_po_detail_view.dart';
-import '../modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
-import '../modules/receive_order/views/receive_order_by_supplier_view.dart';
-import '../modules/receive_order/views/receive_order_list_detail_view.dart';
-import '../modules/receive_order/views/receive_order_home_view.dart';
-import '../modules/receive_order/views/receive_order_by_po_view.dart';
-import '../modules/receive_order/views/receive_order_list_view.dart';
-import '../modules/home/bindings/home_binding.dart';
-import '../modules/home/views/home_view.dart';
-import '../modules/product/bindings/product_binding.dart';
-import '../modules/product/views/product_view.dart';
-import '../modules/login/bindings/login_binding.dart';
-import '../modules/login/views/login_view.dart';
-import '../modules/return/bindings/return_binding.dart';
-import '../modules/return/views/return_view.dart';
-import '../middleware/auth_middleware.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_detail_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_request_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_request_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_list_detail_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_home_view.dart';
+import 'package:getx_project/app/modules/outflow_order/views/outflow_order_list_view.dart';
+import 'package:getx_project/app/modules/product-brand/bindings/product_brand_binding.dart';
+import 'package:getx_project/app/modules/product-brand/bindings/product_by_brand_binding.dart';
+import 'package:getx_project/app/modules/product-brand/views/product_brand_view.dart';
+import 'package:getx_project/app/modules/product-brand/views/product_by_brand_view.dart';
+import 'package:getx_project/app/modules/product-category/bindings/product_by_category_binding.dart';
+import 'package:getx_project/app/modules/product-category/bindings/product_category_binding.dart';
+import 'package:getx_project/app/modules/product-category/views/product_by_category_view.dart';
+import 'package:getx_project/app/modules/product-category/views/product_category_view.dart';
+import 'package:getx_project/app/modules/product/bindings/product_transaction_list_binding.dart';
+import 'package:getx_project/app/modules/product/views/product_transaction_list_view.dart';
+import 'package:getx_project/app/modules/product/bindings/product_detail_binding.dart';
+import 'package:getx_project/app/modules/product/views/product_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_binding.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_list_detail_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_home_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
+import 'package:getx_project/app/modules/home/bindings/home_binding.dart';
+import 'package:getx_project/app/modules/home/views/home_view.dart';
+import 'package:getx_project/app/modules/product/bindings/product_binding.dart';
+import 'package:getx_project/app/modules/product/views/product_view.dart';
+import 'package:getx_project/app/modules/login/bindings/login_binding.dart';
+import 'package:getx_project/app/modules/login/views/login_view.dart';
+import 'package:getx_project/app/modules/return/bindings/return_binding.dart';
+import 'package:getx_project/app/modules/return/views/return_view.dart';
+import 'package:getx_project/app/middleware/auth_middleware.dart';
 
 part 'app_routes.dart';
 
@@ -49,6 +57,10 @@ class AppPages {
   static const loginPage = Routes.LOGIN;
 
   static const productPage = Routes.PRODUCT;
+  static const productCategory = Routes.PRODUCT_CATEGORY;
+  static const productByCategory = Routes.PRODUCT_BY_CATEGORY;
+  static const productBrand = Routes.PRODUCT_BRAND;
+  static const productByBrand = Routes.PRODUCT_BY_BRAND;
   static const productDetailPage = Routes.PRODUCT_DETAIL;
   static const productTransactionListPage = Routes.PRODUCT_TRANSACTION_LIST;
 
@@ -88,11 +100,32 @@ class AppPages {
       name: _Paths.PRODUCT,
       page: () => const ProductView(),
       binding: ProductBinding(),
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: _Paths.PRODUCT_DETAIL,
       page: () => const ProductDetailView(),
       binding: ProductDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_CATEGORY,
+      page: () => const ProductCategoryView(),
+      binding: ProductCategoryBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_BY_CATEGORY,
+      page: () => const ProductByCategoryView(),
+      binding: ProductByCategoryBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_BRAND,
+      page: () => const ProductBrandView(),
+      binding: ProductBrandBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_BY_BRAND,
+      page: () => const ProductByBrandView(),
+      binding: ProductByBrandBinding(),
     ),
     GetPage(
       name: _Paths.PRODUCT_TRANSACTION_LIST,
