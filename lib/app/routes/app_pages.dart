@@ -21,6 +21,8 @@ import 'package:getx_project/app/modules/product-category/bindings/product_by_ca
 import 'package:getx_project/app/modules/product-category/bindings/product_category_binding.dart';
 import 'package:getx_project/app/modules/product-category/views/product_by_category_view.dart';
 import 'package:getx_project/app/modules/product-category/views/product_category_view.dart';
+import 'package:getx_project/app/modules/product-unit/bindings/product_unit_binding.dart';
+import 'package:getx_project/app/modules/product-unit/views/product_unit_view.dart';
 import 'package:getx_project/app/modules/product/bindings/product_transaction_list_binding.dart';
 import 'package:getx_project/app/modules/product/views/product_transaction_list_view.dart';
 import 'package:getx_project/app/modules/product/bindings/product_detail_binding.dart';
@@ -47,6 +49,8 @@ import 'package:getx_project/app/modules/login/views/login_view.dart';
 import 'package:getx_project/app/modules/return/bindings/return_binding.dart';
 import 'package:getx_project/app/modules/return/views/return_view.dart';
 import 'package:getx_project/app/middleware/auth_middleware.dart';
+import 'package:getx_project/app/modules/transaction/bindings/stock_transaction_binding.dart';
+import 'package:getx_project/app/modules/transaction/views/stock_transaction_view.dart';
 
 part 'app_routes.dart';
 
@@ -57,12 +61,15 @@ class AppPages {
   static const loginPage = Routes.LOGIN;
 
   static const productPage = Routes.PRODUCT;
+  static const productDetailPage = Routes.PRODUCT_DETAIL;
   static const productCategory = Routes.PRODUCT_CATEGORY;
   static const productByCategory = Routes.PRODUCT_BY_CATEGORY;
   static const productBrand = Routes.PRODUCT_BRAND;
   static const productByBrand = Routes.PRODUCT_BY_BRAND;
-  static const productDetailPage = Routes.PRODUCT_DETAIL;
+  static const productUnit = Routes.PRODUCT_UNIT;
   static const productTransactionListPage = Routes.PRODUCT_TRANSACTION_LIST;
+
+  static const stockTransactionPage = Routes.STOCK_TRANSACTION;
 
   static const itemPage = Routes.ITEM;
   //RECEIVE ORDER
@@ -123,6 +130,11 @@ class AppPages {
       binding: ProductBrandBinding(),
     ),
     GetPage(
+      name: _Paths.PRODUCT_UNIT,
+      page: () => const ProductUnitView(),
+      binding: ProductUnitBinding(),
+    ),
+    GetPage(
       name: _Paths.PRODUCT_BY_BRAND,
       page: () => const ProductByBrandView(),
       binding: ProductByBrandBinding(),
@@ -131,6 +143,11 @@ class AppPages {
       name: _Paths.PRODUCT_TRANSACTION_LIST,
       page: () => const ProductTransactionListView(),
       binding: ProductTransactionListBinding(),
+    ),
+    GetPage(
+      name: _Paths.STOCK_TRANSACTION,
+      page: () => const StockTransactionView(),
+      binding: StockTransactionBinding(),
     ),
     //RECEIVE ORDER
     GetPage(

@@ -17,7 +17,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: appBarOrder("Receive order detail",routeBackName: AppPages.receiveOrderListPage),
+      appBar: appBarOrder("Receive order detail",size,routeBackName: AppPages.receiveOrderListPage),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

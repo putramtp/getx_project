@@ -17,7 +17,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Receive Order List",
+      appBar: appBarOrder("Receive Order List",size,
           icon: Icons.list_alt_sharp,
           routeBackName: AppPages.receiveHomePage),
       body: SafeArea(

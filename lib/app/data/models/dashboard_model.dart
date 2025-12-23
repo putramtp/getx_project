@@ -22,4 +22,14 @@ class DashboardModel {
       productOther: json['product-other'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product': product,
+      'receive-order': receiveOrder,
+      'outflow-order': outflowOrder,
+      'product-unique': productUnique,
+      'product-other': productOther,
+    };
+  }
 }

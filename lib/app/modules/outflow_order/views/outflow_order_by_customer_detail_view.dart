@@ -18,7 +18,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: appBarOrder("Item Summary",routeBackName: AppPages.outflowOrderByCustomerPage,hex1:"778873",hex2:'A1BC98'),
+      appBar: appBarOrder("Item Summary",size,routeBackName: AppPages.outflowOrderByCustomerPage,hex1:"778873",hex2:'A1BC98'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

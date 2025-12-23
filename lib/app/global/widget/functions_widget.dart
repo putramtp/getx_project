@@ -33,7 +33,7 @@ Widget testContainer(double size) {
   return Container(height: size, width: size, color: Colors.brown);
 }
 
-PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2, String? routeBackName,bool showIcon = true, String? hex1,String? hex2}) {
+PreferredSizeWidget appBarOrder(String title,double size,{IconData? icon = Icons.inventory_2, String? routeBackName,bool showIcon = true, String? hex1,String? hex2}) {
   return PreferredSize(
     preferredSize: const Size.fromHeight(65),
     child: AppBar(
@@ -50,7 +50,7 @@ PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2
       title: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon:  Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white,size: size *2),
             onPressed: () =>
                 (routeBackName != null) ? Get.toNamed(routeBackName) : Get.back(),
           ),
@@ -58,7 +58,7 @@ PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2
               ? Row(
                 children: [
                   const SizedBox(width: 8),
-                  Icon(icon, color: Colors.white, size: 26),
+                  Icon(icon, color: Colors.white, size: size *2),
                 ],
               )
               : const SizedBox.shrink(),
@@ -66,10 +66,10 @@ PreferredSizeWidget appBarOrder(String title,{IconData? icon = Icons.inventory_2
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: size * 2.2,
                 letterSpacing: 0.3,
               ),
             ),

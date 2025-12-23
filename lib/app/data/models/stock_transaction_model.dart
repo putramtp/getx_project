@@ -4,7 +4,6 @@ class StockTransactionModel {
   final String flowType; // IN / OUT
   final int qty;
   final String time; // "2 Days Ago"
-  final String status; // Completed / Pending / Failed
   final OrderInfo? order;
 
   StockTransactionModel({
@@ -13,7 +12,6 @@ class StockTransactionModel {
     required this.qty,
     required this.flowType,
     required this.time,
-    required this.status,
     this.order,
   });
 
@@ -24,7 +22,6 @@ class StockTransactionModel {
       flowType: json['flow_type'],
       qty: json['qty'],
       time: json['human_time'],
-      status: json['status'] ?? "Completed",
        order: json['order'] != null ? OrderInfo.fromJson(json['order']) : null,
     );
   }

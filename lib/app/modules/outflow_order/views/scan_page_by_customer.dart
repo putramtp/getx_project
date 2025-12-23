@@ -16,7 +16,7 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarOrder("Scan Item",showIcon: false,hex1:"778873",hex2:'A1BC98'),
+      appBar: appBarOrder("Scan Item",size,showIcon: false,hex1:"778873",hex2:'A1BC98'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

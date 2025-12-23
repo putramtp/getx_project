@@ -21,7 +21,7 @@ class OutflowOrderHomeView extends GetView {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Outflow Order Menu",icon: Icons.grid_view_outlined,routeBackName: AppPages.homePage,hex1: "#FF6F3C",hex2: "#e68d40"),
+      appBar: appBarOrder("Outflow Order Menu",size,icon: Icons.grid_view_outlined,routeBackName: AppPages.homePage,hex1: "#FF6F3C",hex2: "#e68d40"),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

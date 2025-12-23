@@ -16,7 +16,7 @@ class ProductByBrandView extends GetView<ProductByBrandController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
         backgroundColor: Colors.white,
-        appBar: appBarOrder("Product",icon: Icons.shopping_bag_outlined,routeBackName: AppPages.productCategory,hex1: '#124076',hex2: '#7F9F80'),
+        appBar: appBarOrder("Product",size,icon: Icons.shopping_bag_outlined,routeBackName: AppPages.productCategory,hex1: '#124076',hex2: '#7F9F80'),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0 , vertical: 8.0),

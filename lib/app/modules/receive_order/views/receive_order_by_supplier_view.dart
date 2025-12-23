@@ -17,7 +17,7 @@ class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierControlle
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Supplier List",icon: Icons.group_rounded, routeBackName: AppPages.receiveHomePage,hex1:"75a340",hex2:"B1C29E"),
+      appBar: appBarOrder("Supplier List",size,icon: Icons.group_rounded, routeBackName: AppPages.receiveHomePage,hex1:"75a340",hex2:"B1C29E"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -122,6 +122,19 @@ Color getAccentColor(String code) {
   return colors[code.hashCode.abs() % colors.length];
 }
 
+
+Color getAccentColor2(String code) {
+  final hash = code.hashCode;
+  final hue = (hash % 360).toDouble(); // 0–360
+  return HSLColor.fromAHSL(
+    1.0,
+    hue,
+    0.55, // saturation
+    0.45, // lightness
+  ).toColor();
+}
+
+
 Color getReadableTextColor(Color bg) {
   return bg.computeLuminance() > 0.5
       ? Colors.black

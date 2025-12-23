@@ -2,16 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
-import 'package:getx_project/app/data/models/product_category_model.dart';
+import 'package:getx_project/app/data/models/product_unit_model.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/global/widget/search_bar.dart';
-import 'package:getx_project/app/modules/product-category/controllers/product_category_controller.dart';
+import 'package:getx_project/app/modules/product-unit/controllers/product_unit_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-class ProductCategoryView extends GetView<ProductCategoryController> {
-  const ProductCategoryView({Key? key}) : super(key: key);
+class ProductUnitView extends GetView<ProductUnitController> {
+  const ProductUnitView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Category",size,icon: Icons.category_outlined, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
+      appBar: appBarOrder("Unit",size,icon: Icons.thermostat_auto, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -58,7 +58,7 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
                     ),
                     itemBuilder: (context, index) {
                       if (index < orders.length) {
-                        return _categoryGridCard(orders[index], size);
+                        return _gridCard(orders[index], size);
                       }
 
                       if (controller.cursorNext.value != null) {
@@ -103,11 +103,11 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
     );
   }
 
-  Widget _categoryGridCard(ProductCategoryModel category, double size) {
-    final accent = getAccentColor(category.initialCode);
+  Widget _gridCard(ProductUnitModel unit, double size) {
+    final accent = getAccentColor2(unit.name);
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => controller.openDetail(category),
+      onTap: () => controller.openDetail(unit),
       child: Ink(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -137,7 +137,7 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
                   borderRadius: BorderRadius.circular(size),
                 ),
                 child: Text(
-                  category.initialCode,
+                  unit.name,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: accent,
@@ -145,31 +145,15 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
                   ),
                 ),
               ),
-
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      category.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: size * 1.6,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      "Tap to view",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: size * 1.2,
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  unit.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: size * 1.6,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

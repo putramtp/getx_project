@@ -23,7 +23,7 @@ class ReceiveOrderHomeView extends GetView {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder(
-        "Receive Order Menu",
+        "Receive Order Menu",size,
         icon: Icons.grid_view_outlined,
         routeBackName: AppPages.homePage,
       ),

@@ -18,7 +18,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderByPoPage),
+      appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderByPoPage),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

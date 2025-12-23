@@ -17,7 +17,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Purchase Order List",
+      appBar: appBarOrder("Purchase Order List",size,
           icon: Icons.list_alt_sharp, routeBackName: AppPages.receiveHomePage),
       body: SafeArea(
         child: Padding(

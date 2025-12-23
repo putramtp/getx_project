@@ -16,7 +16,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: appBarOrder("Item Summary",routeBackName: AppPages.outflowOrderByRequestPage,hex1:'5170FD',hex2:"60ABFB"),
+      appBar: appBarOrder("Item Summary",size,routeBackName: AppPages.outflowOrderByRequestPage,hex1:'5170FD',hex2:"60ABFB"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

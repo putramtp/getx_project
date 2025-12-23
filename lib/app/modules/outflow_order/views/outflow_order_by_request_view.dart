@@ -15,7 +15,7 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Outflow Request List",icon: Icons.list_alt_sharp,routeBackName: AppPages.outflowHomePage,hex1:'5170FD',hex2:"60ABFB"),
+      appBar: appBarOrder("Outflow Request List",size,icon: Icons.list_alt_sharp,routeBackName: AppPages.outflowHomePage,hex1:'5170FD',hex2:"60ABFB"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),

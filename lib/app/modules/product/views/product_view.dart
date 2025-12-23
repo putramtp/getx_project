@@ -16,7 +16,7 @@ class ProductView extends GetView<ProductController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
         backgroundColor: Colors.white,
-        appBar: appBarOrder("Product",icon: Icons.shopping_bag_outlined,routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
+        appBar: appBarOrder("Product",size,icon: Icons.shopping_bag_outlined,routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
         body: CustomScrollView(
           controller: controller.scrollController,
           slivers: [

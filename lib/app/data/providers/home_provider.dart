@@ -28,21 +28,10 @@ class HomeProvider extends ApiProvider {
       required int limit,
     }) async {
       try {
-        final response = await get(
-          '/stock-transaction/latest',
-          query: {
-            'limit': limit.toString(),
-          },
-        ).timeout(const Duration(seconds: 15)); // ✅ FORCE COMPLETION
-
+        final response = await get('/stock-transaction/latest',query: {'limit': limit.toString()});
         final resBody = response.body;
-
-        if (response.statusCode == 200 &&
-            resBody != null &&
-            resBody['success'] == true &&
-            resBody['data'] is List) {
+        if (response.statusCode == 200 && resBody != null && resBody['success'] == true) {
           final List data = resBody['data'];
-
           return data.map((e) => StockTransactionModel.fromJson(e)).toList();
         }
 

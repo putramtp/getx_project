@@ -18,7 +18,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: appBarOrder("Item Summary",routeBackName:AppPages.receiveOrderBySupplierPage,hex1:"75a340",hex2:"B1C29E"),
+      appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderBySupplierPage,hex1:"75a340",hex2:"B1C29E"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

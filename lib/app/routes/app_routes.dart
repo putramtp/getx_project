@@ -11,10 +11,12 @@ abstract class Routes {
   static const PRODUCT_DETAIL = _Paths.PRODUCT_DETAIL;
   static const PRODUCT_CATEGORY = _Paths.PRODUCT_CATEGORY;
   static const PRODUCT_BRAND    = _Paths.PRODUCT_BRAND;
+  static const PRODUCT_UNIT    = _Paths.PRODUCT_UNIT;
   static const PRODUCT_BY_BRAND   = _Paths.PRODUCT_BY_BRAND;
   static const PRODUCT_BY_CATEGORY = _Paths.PRODUCT_BY_CATEGORY;
   static const PRODUCT_TRANSACTION_LIST = _Paths.PRODUCT_TRANSACTION_LIST;
   static const ITEM = _Paths.ITEM;
+  static const STOCK_TRANSACTION = _Paths.STOCK_TRANSACTION;
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = _Paths.RECEIVE_ORDER_LIST;
   static const RECEIVE_ORDER_LIST_DETAIL = _Paths.RECEIVE_ORDER_LIST_DETAIL;
@@ -48,6 +50,9 @@ abstract class _Paths {
   static const PRODUCT_BY_CATEGORY = '/product/by-category';
   static const PRODUCT_BRAND = '/product/brand';
   static const PRODUCT_BY_BRAND = '/product/by-brand';
+  static const PRODUCT_UNIT = '/product/unit';
+
+  static const STOCK_TRANSACTION = '/stock-transaction';
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = '/receive-order/list';
   static const RECEIVE_ORDER_LIST_DETAIL = '/receive-order/detail';

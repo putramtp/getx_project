@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:getx_project/app/global/alert.dart';
 
 import '../../../helpers/api_excecutor.dart';
@@ -24,6 +25,9 @@ class HomeController extends GetxController {
 
   Timer? _timer;
 
+  final GetStorage _box = GetStorage();
+  static const String _dashboardKey = 'dashboard_cache';
+
   @override
   void onInit() {
     super.onInit();
@@ -38,6 +42,8 @@ class HomeController extends GetxController {
     _timer?.cancel(); // ✅ PREVENT MEMORY LEAK
     super.onClose();
   }
+
+
 
   Future<void> loadDashboard() async {
     final thisYear = DateTime.now().year;
@@ -54,7 +60,19 @@ class HomeController extends GetxController {
     }
 
     dashboard.value = data; // ✅ TYPE SAFE
+    _box.write(_dashboardKey, data.toJson());// ✅ SAVE TO STORAGE
   }
+
+  void _loadDataFromStorage() {
+    final cached = _box.read(_dashboardKey);
+
+    if (cached != null && cached is Map<String, dynamic>) {
+      dashboard.value = DashboardModel.fromJson(cached);
+    } else {
+      dashboard.value = defaultDashboard;
+    }
+  }
+
 
   Future<void> loadLatest() async {
     final List<StockTransactionModel>? data =
@@ -68,9 +86,8 @@ class HomeController extends GetxController {
     lastTransactions.assignAll(data); // ✅ CORRECT RX UPDATE
   }
 
-  /// ✅ PROMISE.ALL (SAFE)
  void  reloadDashboard()  {
-    dashboard.value = defaultDashboard;
+    _loadDataFromStorage();
     loadDashboard();
     loadLatest();
   }
@@ -79,9 +96,11 @@ class HomeController extends GetxController {
   void goToProductPage() => Get.toNamed(AppPages.productPage);
   void goToReceiveOrderHomePage() => Get.toNamed(AppPages.receiveHomePage);
   void goToOutflowOrderHomePage() => Get.toNamed(AppPages.outflowHomePage);
-  void goToReturnPage() => Get.toNamed(AppPages.returnPage);
+  void goToTransactionPage() => Get.toNamed(AppPages.stockTransactionPage);
   void goToCategoryPage() => Get.toNamed(AppPages.productCategory);
   void goToBrandPage() => Get.toNamed(AppPages.productBrand);
+  void goToUnitPage() => Get.toNamed(AppPages.productUnit);
+  void goToReturnPage() => Get.toNamed(AppPages.returnPage);
   // ================= USER INFO =================   
 
   String getName() {

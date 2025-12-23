@@ -168,7 +168,7 @@ class HomeView extends GetView<HomeController> {
             padding: EdgeInsets.all(size * 2),
             child: Row(
               children: [
-                const Icon(Icons.access_time, color: Colors.white),
+                 Icon(Icons.access_time, color: Colors.white,size: size *2,),
                 SizedBox(width: size),
                 Obx(() => Text(
                       formatTime(controller.currentTime.value),
@@ -221,14 +221,6 @@ class HomeView extends GetView<HomeController> {
           hex2: '#e68d40',
           onTap: controller.goToOutflowOrderHomePage,
         ),
-        // _MenuConfig(
-        //   title: 'TEST RETURN',
-        //   icon: CupertinoIcons.backward_end,
-        //   status: '33',
-        //   hex1: '#1679AB',
-        //   hex2: '#5DEBD7',
-        //   onTap: controller.goToReturnPage,
-        // ),
       ];
 
       return GridView.extent(
@@ -255,28 +247,40 @@ class HomeView extends GetView<HomeController> {
   Widget _buildCircleMenu(double size) {
       final menus = [
         _CircleMenuItem(
-          title: 'Item Category',
+          title: 'Transaction',
+          icon: Icons.currency_exchange,
+          iconColor: Colors.indigo,
+          onTap: controller.goToTransactionPage,
+        ),
+        _CircleMenuItem(
+          title: 'Category',
           icon: Icons.category,
-          iconColor: Colors.blue,
+          iconColor: const Color.fromARGB(255, 34, 103, 63),
           onTap: controller.goToCategoryPage,
         ),
         _CircleMenuItem(
           title: 'Brand',
-          icon: Icons.label_outline,
-          iconColor: Colors.indigo,
+          icon: Icons.abc,
+          iconColor: const Color.fromARGB(213, 235, 23, 40),
           onTap: controller.goToBrandPage,
         ),
         _CircleMenuItem(
-          title: 'Retrun',
-          icon: Icons.arrow_back,
-          iconColor: Colors.indigo,
-          onTap: controller.goToReturnPage,
+          title: 'Unit',
+          icon: Icons.thermostat_auto,
+          iconColor: const Color.fromARGB(255, 163, 129, 29),
+          onTap: controller.goToUnitPage,
         ),
+        // _CircleMenuItem(
+        //   title: 'Return',
+        //   icon: Icons.arrow_back,
+        //   iconColor: Colors.indigo,
+        //   onTap: controller.goToReturnPage,
+        // ),
       ];
 
       return GridView.extent(
-        maxCrossAxisExtent: size * 7,
-        crossAxisSpacing: size * 1.2,
+        maxCrossAxisExtent: size * 7.7,
+        crossAxisSpacing: size * 1.5,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: menus
@@ -315,9 +319,9 @@ class HomeView extends GetView<HomeController> {
             itemCount: controller.lastTransactions.length,
             separatorBuilder: (_, __) => const Divider(),
             itemBuilder: (context, index) {
-              final item = controller.lastTransactions[index];
+              final st = controller.lastTransactions[index];
 
-              final isIn = item.flowType == "IN";
+              final isIn = st.flowType == "IN";
               final color = isIn ? Colors.green : Colors.red;
 
               return Row(
@@ -333,7 +337,7 @@ class HomeView extends GetView<HomeController> {
                     child: Icon(
                       isIn ? Icons.arrow_downward : Icons.arrow_upward,
                       color: color,
-                      size: size *2,
+                      size: size * 2,
                     ),
                   ),
 
@@ -345,7 +349,7 @@ class HomeView extends GetView<HomeController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.productName,
+                          st.productName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -353,11 +357,23 @@ class HomeView extends GetView<HomeController> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          item.time,
-                          style: TextStyle(
-                            fontSize: size *1.3,
-                            color: Colors.grey.shade600,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isIn
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            st.order!.code,
+                            style: TextStyle(
+                              fontSize: size * 1.2,
+                              color: isIn ? Colors.green : Colors.orange,
+                            ),
                           ),
                         ),
                       ],
@@ -369,32 +385,18 @@ class HomeView extends GetView<HomeController> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        "${isIn ? '+' : '-'}${item.qty}",
+                        "${isIn ? '+' : '-'}${st.qty}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: color,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: item.status == "Completed"
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.status,
-                          style: TextStyle(
-                            fontSize: size * 1.2,
-                            color: item.status == "Completed"
-                                ? Colors.green
-                                : Colors.orange,
-                          ),
+                      Text(
+                        st.time,
+                        style: TextStyle(
+                          fontSize: size * 1.3,
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ],

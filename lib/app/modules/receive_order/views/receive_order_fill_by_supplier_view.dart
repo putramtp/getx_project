@@ -15,7 +15,7 @@ class ReceiveOrderFillBySupplierView extends GetView<ReceiveOrderBySupplierDetai
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Fill Item", icon: Icons.edit_rounded,hex1:"75a340",hex2:"B1C29E"),
+      appBar: appBarOrder("Fill Item",size, icon: Icons.edit_rounded,hex1:"75a340",hex2:"B1C29E"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

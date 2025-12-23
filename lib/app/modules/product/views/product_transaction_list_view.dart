@@ -17,7 +17,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Transaction",icon: Icons.list_alt_sharp,routeBackName: AppPages.productPage,hex1: '#124076',hex2: '#7F9F80'),
+      appBar: appBarOrder("Transaction",size,icon: Icons.list_alt_sharp,routeBackName: AppPages.productPage,hex1: '#124076',hex2: '#7F9F80'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),

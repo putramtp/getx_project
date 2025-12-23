@@ -19,7 +19,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: appBarOrder("Customer List",icon: Icons.group_rounded, routeBackName: AppPages.outflowHomePage,hex1:"778873",hex2:'A1BC98'),
+        child: appBarOrder("Customer List",size,icon: Icons.group_rounded, routeBackName: AppPages.outflowHomePage,hex1:"778873",hex2:'A1BC98'),
       ),
       body: SafeArea(
         child: Padding(

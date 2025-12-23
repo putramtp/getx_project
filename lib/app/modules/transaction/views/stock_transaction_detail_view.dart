@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hexcolor/hexcolor.dart';
+import 'package:getx_project/app/modules/transaction/controllers/stock_transaction_detail_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../data/models/serial_number_model.dart';
-import '../controllers/outflow_order_list_detail_controller.dart';
 import '../../../routes/app_pages.dart';
 
-class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
-  const OutflowOrderDetailView({super.key});
+class StockTransactionDetailView extends GetView<StockTransactionDetailController> {
+  const StockTransactionDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +16,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: appBarOrder("Outflow order detail",size,routeBackName: AppPages.outflowOrderListPage,hex1:"#EF7722",hex2:"#FAA533"),
+      appBar: appBarOrder("Receive order detail",size,routeBackName: AppPages.receiveOrderListPage),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -26,27 +25,27 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(
+                return  Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 12),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 12),
                       Text("Loading items...",
-                          style: TextStyle(fontSize: 16, color: Colors.black54))
+                          style: TextStyle(fontSize: size * 1.2, color: Colors.black54))
                     ],
                   ),
                 );
               }
 
-              if (controller.outflowOrderDetail.value == null) {
-                return const Center(
+              if (controller.receiveOrderDetail.value == null) {
+                return  Center(
                     child: Text("No items found.",
-                        style: TextStyle(fontSize: 16, color: Colors.black54)));
+                        style: TextStyle(fontSize: size * 1.2, color: Colors.black54)));
               }
 
               final lines =
-                  controller.outflowOrderDetail.value?.outflowOrderLines ?? [];
+                  controller.receiveOrderDetail.value?.receiveOrderLines ?? [];
               final linesCount = lines.length;
 
               return ListView.separated(
@@ -67,14 +66,12 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                           style: theme.textTheme.bodyMedium
                               ?.copyWith(color: Colors.grey[700])),
                       leading: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.orange.withOpacity(0.15),
-                        child: const Icon(Icons.handyman_rounded,
-                            color: Colors.orange, size: 26),
+                        radius: size *1.6,
+                        backgroundColor: Colors.indigo.withOpacity(0.15),
+                        child:  Icon(Icons.handyman_rounded,color: Colors.indigo, size: size *1.6),
                       ),
                       trailing:serialNumbers.isEmpty ? const SizedBox.shrink() : IconButton(
-                        iconSize:  size * 2,
-                        icon: const  Icon(Icons.visibility_rounded,color: Colors.orange),
+                        icon:  Icon(Icons.visibility_rounded,size:size *2, color: Colors.indigo),
                         onPressed: () {
                           // 🔹 Show serial numbers in dialog
                           Get.dialog(
@@ -84,7 +81,8 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                               ),
                               title: Text(
                                 "Serial Numbers - ${line.itemName}",
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
                               ),
                               content: SizedBox(
                                 width: double.maxFinite,
@@ -161,36 +159,36 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
     );
   }
 
- Widget _buildHeaderGradient(double size) {
-    final ro = controller.curretOutflowOrder;
+  Widget _buildHeaderGradient(double size) {
+    final ro = controller.currentReceiveOrder;
     final roCode = ro.code;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        gradient:  LinearGradient(
-          colors: [HexColor("#EF7722"),HexColor("#FAA533")],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF528FF3), Color(0xFF2163F0), Color(0xFF1B3B94)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(Icons.inventory_rounded, color: Colors.white, size: size * 3),
+          Icon(Icons.inventory_rounded, color: Colors.white, size: size *3),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Outflow Order",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("#$roCode",
-                  style:  TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: size * 1.8)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Receive Order",style: TextStyle(color: Colors.white70, fontSize: size * 1.3)),
+                Text("#$roCode",
+                    style:  TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: size *1.8)),
+              ],
+            ),
           ),
         ],
       ),

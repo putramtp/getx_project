@@ -19,7 +19,7 @@ class ProductBrandView extends GetView<ProductBrandController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Brand",icon: Icons.label_outline, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
+      appBar: appBarOrder("Brand",size,icon: Icons.label_outline, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
