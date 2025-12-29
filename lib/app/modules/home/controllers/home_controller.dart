@@ -86,10 +86,10 @@ class HomeController extends GetxController {
     lastTransactions.assignAll(data); // ✅ CORRECT RX UPDATE
   }
 
- void  reloadDashboard()  {
+ Future <void>  reloadDashboard() async {
     _loadDataFromStorage();
-    loadDashboard();
-    loadLatest();
+    await loadDashboard();
+    await loadLatest();
   }
 
   // ================= NAVIGATION =================

@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/modules/home/views/widgets/menu_card.dart';
 import 'package:hexcolor/hexcolor.dart';
 
@@ -18,7 +20,6 @@ class HomeView extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final userName = controller.getName();
     final userRoles = controller.getRoles();
 
@@ -27,7 +28,7 @@ class HomeView extends GetView<HomeController> {
 
     return Scaffold(
       appBar: _buildAppBar(size, userName),
-      body: _buildBody(theme, size, userName, userRoles),
+      body: _buildBody(size, userName, userRoles),
     );
   }
 
@@ -57,63 +58,52 @@ class HomeView extends GetView<HomeController> {
   // ===================== BODY =====================
 
   Widget _buildBody(
-    ThemeData theme,
     double size,
     String userName,
     String userRoles,
   ) {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: size * 2),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      SizedBox(height: size * 12),
-                      _buildHeader(size, 'Dashboard', icon: Icons.home),
-                      SizedBox(height: size * 2),
-                      _buildGreetingCard(theme, size, userName, userRoles),
-                      SizedBox(height: size * 2),
-                      _buildDashboardGrid(size),
-                      SizedBox(height: size * 4),
-                      _buildCircleMenu(size),
-                      SizedBox(height: size * 2),
-                      Row(
-                        children: [
-                          Text(
-                            'Lastest Transactions',
-                            style: TextStyle(
-                                fontSize: size *1.6, fontWeight: FontWeight.w500,
-                                fontStyle: FontStyle.italic
-                                
-                                ),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      _lastTransactions(size),
-                      const Divider(),
-                      SizedBox(height: size * 2),
-                      _buildHeader(size, 'Statisic', icon: Icons.pie_chart),
-                      _pieChartItem(size),
-                      SizedBox(height: size * 2),
-                    ],
+    return RefreshIndicator(
+      onRefresh: controller.reloadDashboard,
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: size * 2),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        SizedBox(height: size * 12),
+                        _buildHeader(size, 'Dashboard', icon: Icons.home),
+                        SizedBox(height: size * 2),
+                        _buildGreetingCard(size, userName, userRoles),
+                        SizedBox(height: size * 2),
+                        _buildDashboardGrid(size),
+                        SizedBox(height: size * 4),
+                        _buildCircleMenu(size),
+                        SizedBox(height: size * 2),
+                        Row(
+                          children: [Text('Lastest Transactions',style: AppTextStyle.h5(size))],
+                        ),
+                        const Divider(),
+                        _lastTransactions(size),
+                        const Divider(),
+                        SizedBox(height: size * 2),
+                        _buildHeader(size, 'Statistic', icon: Icons.pie_chart),
+                        _pieChartItem(size),
+                        SizedBox(height: size * 2),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            _buildFooter(size),
-          ],
-        ),
-        _buildTopWave(size),
-        Positioned(
-            right: size * 1,
-            bottom: size * 5, // ✅ lifted higher from bottom
-            child: _buildBottomRefresh(size)),
-      ],
+              _buildFooter(size),
+            ],
+          ),
+          _buildTopWave(size),
+        ],
+      ),
     );
   }
 
@@ -126,16 +116,14 @@ class HomeView extends GetView<HomeController> {
       children: [
         Text(
           title,
-          style: TextStyle(
-              fontSize: size *2, fontWeight: FontWeight.bold),
-        ),
+          style: AppTextStyle.h2(size),
+          ),
         (isIconText == true)
             ? Row(
                 children: [
-                  Icon(icon, size: size * 1.7),
+                  Icon(icon, size: size * 2),
                   SizedBox(width: size),
-                  Text("/ $title",
-                      style: TextStyle(fontSize: SizeConfig.fontSize(1.7))),
+                  Text("/ $title",style: AppTextStyle.h4(size)),
                 ],
               )
             : const SizedBox.shrink(),
@@ -146,7 +134,6 @@ class HomeView extends GetView<HomeController> {
   // ===================== GREETING CARD =====================
 
   Widget _buildGreetingCard(
-    ThemeData theme,
     double size,
     String userName,
     String userRoles,
@@ -168,23 +155,20 @@ class HomeView extends GetView<HomeController> {
             padding: EdgeInsets.all(size * 2),
             child: Row(
               children: [
-                 Icon(Icons.access_time, color: Colors.white,size: size *2,),
+                Icon(Icons.access_time, color: Colors.white,size: size *2,),
                 SizedBox(width: size),
                 Obx(() => Text(
                       formatTime(controller.currentTime.value),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyle.infoBold(size,color: Colors.white),
                     )),
               ],
             ),
           ),
           Image.asset("assets/images/logo_short.png",height: size * 5, width: size * 5),
           SizedBox(height: size),
-          Text(controller.getGreeting(),style:theme.textTheme.titleLarge?.copyWith(color: Colors.white70)),
-          Text(userName,style:theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
-          Text("Role : $userRoles",style:theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
+          Text(controller.getGreeting(),style:AppTextStyle.h2(size,color: Colors.white)),
+          Text(userName,style:AppTextStyle.h4(size,color: Colors.white70)),
+          Text("Role : $userRoles",style:AppTextStyle.h4(size,color: Colors.white70)),
         ],
       ),
     );
@@ -301,16 +285,11 @@ class HomeView extends GetView<HomeController> {
       children: [
         Obx(() {
            if (controller.isLatestLoading.value) {
-            return  Center(
-              child:  Text("Loading items...",style: TextStyle(fontSize: size * 1.2, color: Colors.black54))
-            );
+            return  textLoading(size,message: "Loading transactions...");
           }
 
           if (controller.lastTransactions.isEmpty) {
-            return Center(
-                child: Text("No data.",
-                    style: TextStyle(
-                        fontSize: size * 1.2, color: Colors.black54)));
+            return textNoData(size);
           }
 
           return ListView.separated(
@@ -352,9 +331,7 @@ class HomeView extends GetView<HomeController> {
                           st.productName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:  AppTextStyle.bodyBold(size),
                         ),
                         const SizedBox(height: 4),
                         Container(
@@ -370,8 +347,8 @@ class HomeView extends GetView<HomeController> {
                           ),
                           child: Text(
                             st.order!.code,
-                            style: TextStyle(
-                              fontSize: size * 1.2,
+                            style: AppTextStyle.body(
+                              size,
                               color: isIn ? Colors.green : Colors.orange,
                             ),
                           ),
@@ -386,16 +363,13 @@ class HomeView extends GetView<HomeController> {
                     children: [
                       Text(
                         "${isIn ? '+' : '-'}${st.qty}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
+                        style: AppTextStyle.bodyBold(size,color: color),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         st.time,
-                        style: TextStyle(
-                          fontSize: size * 1.3,
+                        style: AppTextStyle.info(
+                          size,
                           color: Colors.grey.shade600,
                         ),
                       ),
@@ -417,14 +391,13 @@ class HomeView extends GetView<HomeController> {
       decoration: BoxDecoration(gradient: LinearGradient(colors: [hex1, hex5])),
       child: Center(
         child: RichText(
-          text: const TextSpan(
+          text:  TextSpan(
             text: 'Selamat Datang di ',
-            style: TextStyle(color: Colors.black87),
+            style: AppTextStyle.info(size,color: Colors.black87),
             children: [
               TextSpan(
                 text: 'Inventory Mastercool',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+                style: AppTextStyle.infoBold(size).copyWith(fontStyle: FontStyle.italic),
               ),
             ],
           ),
@@ -461,37 +434,6 @@ class HomeView extends GetView<HomeController> {
         ),
       ),
     );
-  }
-
-  // ===================== FAB =====================
-  Widget _buildBottomRefresh(double size) {
-    return Obx(() {
-      final isLoading = controller.isLoading.value;
-      return SizedBox(
-        width: size * 4,
-        height: size * 4,
-        child: FloatingActionButton(
-          tooltip: 'Refresh Dashboard',
-          backgroundColor: const Color.fromARGB(255, 93, 164, 231),
-          shape: const CircleBorder(),
-          onPressed: isLoading ? null : controller.reloadDashboard,
-          child: isLoading
-              ? SizedBox(
-                  width: size * 2,
-                  height: size * 2,
-                  child: const CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : Icon(
-                  Icons.refresh_rounded,
-                  size: size * 3,
-                  color: Colors.white,
-                ),
-        ),
-      );
-    });
   }
 
   Widget _buildGradient() {

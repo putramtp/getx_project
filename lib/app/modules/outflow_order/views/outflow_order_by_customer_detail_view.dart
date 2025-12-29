@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 import '../../../global/size_config.dart';
@@ -13,11 +14,9 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: appBarOrder("Item Summary",size,routeBackName: AppPages.outflowOrderByCustomerPage,hex1:"778873",hex2:'A1BC98'),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -90,12 +89,10 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      title: Text(item['name'] ?? "Unnamed",style: AppTextStyle.h5(size)),
                       subtitle: Text(
                           "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
-                          style: TextStyle(color: Colors.grey[700],fontSize: size *1.2)),
+                          style: AppTextStyle.body(size,color:Colors.grey)),
                       leading: CircleAvatar(
                         radius: size * 2.2,
                         backgroundColor: bgColor.withOpacity(0.15),

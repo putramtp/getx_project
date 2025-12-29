@@ -17,78 +17,80 @@ class StockTransactionView extends GetView<StockTransactionController> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Stock Transactions",size,icon: Icons.currency_exchange, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Obx(() => SearchBarWidget(
-                    isFocused: controller.isSearchFocused.value,
-                    isAscending: controller.isAscending.value,
-                    searchController: controller.searchController,
-                    focusNode: controller.searchFocus,
-                    onSearchChanged: controller.onSearchChanged,
-                    onToggleSort: controller.toggleSort,
-                    onOpenFilter: () => _openTopFilterSheet(context ,size),
-                  )),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final trans = controller.filteredTrans;
-                  if (trans.isEmpty) {
-                    return const Center(
-                        child: Text('No stock transaction data.'));
-                  }
-
-                  return ListView.builder(
-                    controller: controller.scrollController,
-                    itemCount: trans.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < trans.length) {
-                        return _buildOrderCard(trans[index], size);
-                      }
-
-                      if (controller.cursorNext.value != null) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: SizedBox(
-                              width: 26,
-                              height: 26,
-                              child: CircularProgressIndicator(strokeWidth: 3),
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (controller.cursorNext.value == null && trans.isNotEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: Text(
-                              "No more data",
-                              style: TextStyle(
-                                fontSize: size * 1.2,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+      body: RefreshIndicator(
+        onRefresh:  controller.loadstockTransactions,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Obx(() => SearchBarWidget(
+                      isFocused: controller.isSearchFocused.value,
+                      isAscending: controller.isAscending.value,
+                      searchController: controller.searchController,
+                      focusNode: controller.searchFocus,
+                      onSearchChanged: controller.onSearchChanged,
+                      onToggleSort: controller.toggleSort,
+                      onOpenFilter: () => _openTopFilterSheet(context ,size),
+                    )),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return textLoading(size);
+                    }
+      
+                    final trans = controller.filteredTrans;
+                    if (trans.isEmpty) {
+                      return textNoData(size,message: "No stock transaction data.");
+                    }
+      
+                    return ListView.builder(
+                      controller: controller.scrollController,
+                      itemCount: trans.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < trans.length) {
+                          return _buildOrderCard(trans[index], size);
+                        }
+      
+                        if (controller.cursorNext.value != null) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child: CircularProgressIndicator(strokeWidth: 3),
                               ),
                             ),
-                          ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  );
-                }),
-              ),
-              buildSyncButton(name: 'Sync',size: size,onPressed: controller.loadstockTransactions,color: const Color.fromARGB(255, 25, 105, 116))
-            ],
+                          );
+                        }
+      
+                        if (controller.cursorNext.value == null && trans.isNotEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: size * 1.2,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+      
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  }),
+                ),
+                // buildSyncButton(name: 'Sync',size: size,onPressed: controller.loadstockTransactions,color: const Color.fromARGB(255, 25, 105, 116))
+              ],
+            ),
           ),
         ),
       ),

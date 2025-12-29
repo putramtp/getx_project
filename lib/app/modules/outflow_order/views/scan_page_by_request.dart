@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/size_config.dart';
@@ -11,7 +12,6 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
 
@@ -23,7 +23,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return const Center(child: CircularProgressIndicator());
+              return textLoading(size);
             }
 
             final item = controller.items[index];
@@ -63,15 +63,14 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderCard(theme, item),
+                  _buildHeaderCard(size,item),
                   const SizedBox(height: 12),
-                  _buildQtyCard(theme, expected, received, scannedQty, remaining,size),
+                  _buildQtyCard(expected, received, scannedQty, remaining,size),
                   const SizedBox(height: 20),
                   Text("Scanned Results",
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                      style: AppTextStyle.h5(size)),
                   const SizedBox(height: 8),
-                  Expanded(child: _buildScannedList(theme, scanned, context)),
+                  Expanded(child: _buildScannedList(size,scanned,context)),
                 ],
               ),
             );
@@ -121,7 +120,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
           },
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(theme),
+      bottomNavigationBar: _buildBottomBar(),
     );
   }
 
@@ -194,9 +193,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
 
   // ===== UI helpers =====
 
-  Widget _buildBottomBar(ThemeData theme) {
-    final controller = Get.find<OutflowOrderByRequestDetailController>();
-
+  Widget _buildBottomBar() {
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;
@@ -219,7 +216,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         height: 60,
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant,
+          color: const Color.fromARGB(139, 252, 228, 236),
           borderRadius: BorderRadius.circular(40),
           boxShadow: [
             BoxShadow(
@@ -274,9 +271,9 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     });
   }
 
-  Widget _buildHeaderCard(ThemeData theme, Map<String, dynamic> item) {
+  Widget _buildHeaderCard(double size,Map<String, dynamic> item) {
     return Card(
-      color: Colors.brown[50],
+      color: Colors.blue[50],
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -284,15 +281,12 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         child: Row(
           children: [
             Icon(Icons.inventory_2_rounded,
-                color: theme.colorScheme.primary, size: 32),
+                color: Colors.blue[600], size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 item["name"].toString(),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+                style:AppTextStyle.h5(size),
               ),
             ),
           ],
@@ -302,7 +296,6 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
   }
 
   Widget _buildQtyCard(
-    ThemeData theme,
     int expected,
     int received,
     int scannedQty,
@@ -337,7 +330,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
   }
 
   Widget _buildScannedList(
-    ThemeData theme,
+    double size,
     List<Map<String, dynamic>> scanned,
     BuildContext context,
   ) {
@@ -349,9 +342,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
             Icon(Icons.qr_code_2_rounded,
                 size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 12),
-            Text("No codes scanned yet",
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: Colors.grey.shade600)),
+            Text("No codes scanned yet",style:AppTextStyle.body(size,color: Colors.grey.shade600) ),
           ],
         ),
       );
@@ -377,9 +368,9 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primaryContainer,
+                    backgroundColor: Colors.pink[50],
                     child:
-                        Icon(Icons.qr_code, color: theme.colorScheme.primary),
+                        const Icon(Icons.qr_code, color: Colors.blue),
                   ),
                   // show qty only for batch items
                   title: Text(

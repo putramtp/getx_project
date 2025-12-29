@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_by_supplier_detail_controller.dart';
 import '../views/receive_order_fill_by_supplier_view.dart';
@@ -13,11 +14,9 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderBySupplierPage,hex1:"75a340",hex2:"B1C29E"),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -92,12 +91,10 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                         borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
                       title: Text(item['name'] ?? "Unnamed",
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                          style: AppTextStyle.h5(size)),
                       subtitle: Text(
                           "Expected: $expected | Received: $received | receiving: $filledCount",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700])),
+                          style: AppTextStyle.body(size,color:Colors.grey)),
                       leading: CircleAvatar(
                         radius: size * 2.2,
                         backgroundColor: bgColor.withOpacity(0.15),
@@ -126,14 +123,14 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
               );
             })),
             const SizedBox(height: 16),
-            _buildContinueButton(theme),
+            _buildContinueButton(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContinueButton(ThemeData theme) {
+  Widget _buildContinueButton() {
     return SizedBox(
       width: double.infinity,
       child: Obx(() {

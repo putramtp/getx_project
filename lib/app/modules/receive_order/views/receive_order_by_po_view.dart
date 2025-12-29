@@ -19,83 +19,86 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Purchase Order List",size,
           icon: Icons.list_alt_sharp, routeBackName: AppPages.receiveHomePage),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-
-              /// 🔍 Animated Search, Sort & Filter Row
-              Obx(() => SearchBarWidget(
-                  isFocused: controller.isSearchFocused.value,
-                  isAscending: controller.isAscending.value,
-                  searchController: controller.searchController,
-                  focusNode: controller.searchFocus,
-                  onSearchChanged: controller.onSearchChanged,
-                  onToggleSort: controller.toggleSort,
-                  onOpenFilter: () => _openTopFilterSheet(context),
-                  hintText: 'Search Purchase Orders...', // custom hint
-              )),
-
-
-              const SizedBox(height: 12),
-
-              /// 📋 List of Purchase Orders
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final orders = controller.filteredOrders;
-                  if (orders.isEmpty) {
-                    return const Center(child: Text('No purchase order data.'));
-                  }
-                  return ListView.builder(
-                    controller: controller.scrollController,
-                    itemCount: orders.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < orders.length) {
-                        return _buildOrderCard(orders[index], size);
-                      }
-
-                      if (controller.cursorNext.value != null) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: SizedBox(
-                              width: 26,
-                              height: 26,
-                              child: CircularProgressIndicator(strokeWidth: 3),
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (controller.cursorNext.value == null && orders.isNotEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: Text(
-                              "No more data",
-                              style: TextStyle(
-                                fontSize: size * 1.2,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+      body: RefreshIndicator(
+        onRefresh: controller.loadPurchaseOrders,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+      
+                /// 🔍 Animated Search, Sort & Filter Row
+                Obx(() => SearchBarWidget(
+                    isFocused: controller.isSearchFocused.value,
+                    isAscending: controller.isAscending.value,
+                    searchController: controller.searchController,
+                    focusNode: controller.searchFocus,
+                    onSearchChanged: controller.onSearchChanged,
+                    onToggleSort: controller.toggleSort,
+                    onOpenFilter: () => _openTopFilterSheet(context),
+                    hintText: 'Search Purchase Orders...', // custom hint
+                )),
+      
+      
+                const SizedBox(height: 12),
+      
+                /// 📋 List of Purchase Orders
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return textLoading(size);
+                    }
+      
+                    final orders = controller.filteredOrders;
+                    if (orders.isEmpty) {
+                      return textNoData(size,message: "No purchase order data.");
+                    }
+                    return ListView.builder(
+                      controller: controller.scrollController,
+                      itemCount: orders.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < orders.length) {
+                          return _buildOrderCard(orders[index], size);
+                        }
+      
+                        if (controller.cursorNext.value != null) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child: CircularProgressIndicator(strokeWidth: 3),
                               ),
                             ),
-                          ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  );
-                }),
-              ),
-              buildSyncButton(name: 'PO Synchronization',size: size,onPressed:controller.loadPurchaseOrders,color: const Color(0xFF4A70A9))
-            ],
+                          );
+                        }
+      
+                        if (controller.cursorNext.value == null && orders.isNotEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: size * 1.2,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+      
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  }),
+                ),
+                // buildSyncButton(name: 'PO Synchronization',size: size,onPressed:controller.loadPurchaseOrders,color: const Color(0xFF4A70A9))
+              ],
+            ),
           ),
         ),
       ),

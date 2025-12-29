@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:hexcolor/hexcolor.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
@@ -61,7 +62,7 @@ class OutflowOrderHomeView extends GetView {
                       ),
                       child:  Icon(
                         Icons.receipt_long_rounded,
-                        size: size * 4.5,
+                        size: size * 4,
                         color: Colors.white,
                       ),
                     ),
@@ -72,24 +73,15 @@ class OutflowOrderHomeView extends GetView {
                         children: [
                           Text(
                             "Outflow Order",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                            style: AppTextStyle.h1(size,color: Colors.white)
+                                .copyWith(
                                   letterSpacing: 0.5,
                                 ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             "View all outflow orders",
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Colors.white.withOpacity(.9),
-                                ),
+                            style:AppTextStyle.h4(size,color: Colors.white70),
                           ),
                         ],
                       ),

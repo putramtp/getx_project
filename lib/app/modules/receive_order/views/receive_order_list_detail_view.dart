@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_list_detail_controller.dart';
 import '../../../global/size_config.dart';
@@ -12,11 +13,9 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: appBarOrder("Receive order detail",size,routeBackName: AppPages.receiveOrderListPage),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -61,11 +60,9 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
                         borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
                       title: Text(line.itemName,
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                          style: AppTextStyle.h5(size)),
                       subtitle: Text("Quantity:${line.qty}",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700])),
+                          style: AppTextStyle.body(size,color: Colors.grey)),
                       leading: CircleAvatar(
                         radius: size *1.6,
                         backgroundColor: Colors.indigo.withOpacity(0.15),

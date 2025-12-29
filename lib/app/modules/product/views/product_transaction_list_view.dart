@@ -37,7 +37,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
+                    return textLoading(size);
                   }
 
                   final transactions = controller.filteredTransactions;

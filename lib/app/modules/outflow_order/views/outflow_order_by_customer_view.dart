@@ -21,47 +21,50 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
         preferredSize: const Size.fromHeight(70),
         child: appBarOrder("Customer List",size,icon: Icons.group_rounded, routeBackName: AppPages.outflowHomePage,hex1:"778873",hex2:'A1BC98'),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-
-              Obx(() => SearchBarWidget(
-                isFocused: controller.isSearchFocused.value,
-                isAscending: controller.isAscending.value,
-                searchController: controller.searchController,
-                focusNode: controller.searchFocus,
-                onSearchChanged: controller.onSearchChanged,
-                onToggleSort: controller.toggleSort,
-                hintText: 'Search Customer...',
-              )),
-              const SizedBox(height: 12),
-
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final orders = controller.filteredCustomers;
-                  if (orders.isEmpty) {
-                    return const Center(child: Text('No customer data.'));
-                  }
-                  return ListView.builder(
-                    itemCount: orders.length,
-                    itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return _buildOrderCard(order,size);
-                    },
-                  );
-                }),
-              ),
-
-              buildSyncButton(name: 'Customer Synchronization',size: size,onPressed:controller.loadCustomers,color: const Color(0xff778873))
-              
-            ],
+      body: RefreshIndicator(
+        onRefresh: controller.loadCustomers,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+      
+                Obx(() => SearchBarWidget(
+                  isFocused: controller.isSearchFocused.value,
+                  isAscending: controller.isAscending.value,
+                  searchController: controller.searchController,
+                  focusNode: controller.searchFocus,
+                  onSearchChanged: controller.onSearchChanged,
+                  onToggleSort: controller.toggleSort,
+                  hintText: 'Search Customer...',
+                )),
+                const SizedBox(height: 12),
+      
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return textLoading(size);
+                    }
+      
+                    final orders = controller.filteredCustomers;
+                    if (orders.isEmpty) {
+                      return textNoData(size,message: 'No Costumer data.');
+                    }
+                    return ListView.builder(
+                      itemCount: orders.length,
+                      itemBuilder: (context, index) {
+                        final order = orders[index];
+                        return _buildOrderCard(order,size);
+                      },
+                    );
+                  }),
+                ),
+      
+                // buildSyncButton(name: 'Customer Synchronization',size: size,onPressed:controller.loadCustomers,color: const Color(0xff778873))
+                
+              ],
+            ),
           ),
         ),
       ),

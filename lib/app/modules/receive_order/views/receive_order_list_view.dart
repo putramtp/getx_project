@@ -39,12 +39,12 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
+                    return textLoading(size);
                   }
 
                   final orders = controller.filteredOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('No receive order data.'));
+                    return textNoData(size,message: "No receive order data.");
                   }
 
                   return ListView.builder(

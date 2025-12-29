@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_by_po_detail_controller.dart';
 import '../../../global/alert.dart';
@@ -11,7 +12,6 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
      return Scaffold(
@@ -22,7 +22,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return const Center(child: CircularProgressIndicator());
+              return textLoading(size);
             }
 
             final item = controller.items[index];
@@ -63,15 +63,14 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderCard(theme, item),
+                  _buildHeaderCard(size,item),
                   const SizedBox(height: 12),
-                  _buildQtyCard( theme, expected, received, filledQty, remaining,size),
+                  _buildQtyCard(expected, received, filledQty, remaining,size),
                   const SizedBox(height: 20),
                   Text("Filled Results",
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                      style: AppTextStyle.h5(size)),
                   const SizedBox(height: 8),
-                  Expanded(child: _buildFilledList(theme, filled, context)),
+                  Expanded(child: _buildFilledList(size,filled, context)),
                 ],
               ),
             );
@@ -105,7 +104,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
           },
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(theme,size),
+      bottomNavigationBar: _buildBottomBar(size),
     );
   }
 
@@ -219,7 +218,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
 
   // ===== UI helpers =====
 
-  Widget _buildBottomBar(ThemeData theme,double size) {
+  Widget _buildBottomBar(double size) {
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;
@@ -244,7 +243,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
         height: size * 4,
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant,
+          color: Colors.white24,
           borderRadius: BorderRadius.circular(40),
           boxShadow: [
             BoxShadow(
@@ -300,9 +299,9 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     });
   }
 
-  Widget _buildHeaderCard(ThemeData theme, Map<String, dynamic> item) {
+  Widget _buildHeaderCard(double size, Map<String, dynamic> item) {
     return Card(
-      color: Colors.brown[50],
+      color: Colors.green[50],
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -315,10 +314,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
             Expanded(
               child: Text(
                 item["name"].toString(),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+                style:AppTextStyle.h5(size),
               ),
             ),
           ],
@@ -328,7 +324,6 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
   }
 
  Widget _buildQtyCard(
-    ThemeData theme,
     int expected,
     int received,
     int filledQty,
@@ -365,7 +360,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
 
   /// ✅ Modern filled list
   Widget _buildFilledList(
-    ThemeData theme,
+    double size,
     List<Map<String, dynamic>> filled,
     BuildContext context,
   ) {
@@ -377,8 +372,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
             Icon(Icons.cancel_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 12),
             Text("No items have been filled yet",
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: Colors.grey.shade600)),
+                style:  AppTextStyle.body(size,color:Colors.grey)),
           ],
         ),
       );
@@ -400,9 +394,9 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primaryContainer,
+                    backgroundColor: Colors.white24,
                     child: Icon(Icons.assignment_turned_in_outlined,
-                        color: theme.colorScheme.primary),
+                        color:Colors.blue[800]),
                   ),
                   // show qty only for batch items
                   title: Row(

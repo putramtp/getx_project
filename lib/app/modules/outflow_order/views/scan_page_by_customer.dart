@@ -1,35 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../controllers/outflow_order_by_customer_detail_controller.dart';
 
-class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController> {
+class ScanPageByCustomer
+    extends GetView<OutflowOrderByCustomerDetailController> {
   const ScanPageByCustomer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarOrder("Scan Item",size,showIcon: false,hex1:"778873",hex2:'A1BC98'),
+      appBar: appBarOrder("Scan Item", size,
+          showIcon: false, hex1: "778873", hex2: 'A1BC98'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return const Center(child: CircularProgressIndicator());
+              return textLoading(size);
             }
 
             final item = controller.items[index];
             final int expected = (item["expected"] ?? 0) as int;
             final int received = (item["received"] ?? 0) as int;
-            final List<Map<String, dynamic>> scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
+            final List<Map<String, dynamic>> scanned =
+                List<Map<String, dynamic>>.from(item["scanned"] ?? []);
 
             final int scannedQty = scanned.fold<int>(
               0,
@@ -63,15 +66,14 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderCard(theme, item),
+                  _buildHeaderCard(size, item),
                   const SizedBox(height: 12),
-                  _buildQtyCard(theme, expected, received, scannedQty, remaining,size),
+                  _buildQtyCard(
+                      expected, received, scannedQty, remaining, size),
                   const SizedBox(height: 20),
-                  Text("Scanned Results",
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  Text("Scanned Results", style: AppTextStyle.h5(size)),
                   const SizedBox(height: 8),
-                  Expanded(child: _buildScannedList(theme, scanned, context)),
+                  Expanded(child: _buildScannedList(size, scanned, context)),
                 ],
               ),
             );
@@ -121,7 +123,7 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
           },
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(theme),
+      bottomNavigationBar: _buildBottomBar(),
     );
   }
 
@@ -194,7 +196,7 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
 
   // ===== UI helpers =====
 
-  Widget _buildBottomBar(ThemeData theme) {
+   Widget _buildBottomBar() {
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;
@@ -210,8 +212,6 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
           : [];
 
       final bool hasScannedCurrent = scanned.isNotEmpty;
-
-      // ✅ count all scanned qty from unified data
       final totalScanned = controller.totalScanned;
       final bool hasAnyScanned = totalScanned > 0;
 
@@ -219,7 +219,7 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
         height: 60,
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant,
+          color: const Color.fromARGB(139, 252, 228, 236),
           borderRadius: BorderRadius.circular(40),
           boxShadow: [
             BoxShadow(
@@ -274,25 +274,21 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
     });
   }
 
-  Widget _buildHeaderCard(ThemeData theme, Map<String, dynamic> item) {
+  Widget _buildHeaderCard(double size, Map<String, dynamic> item) {
     return Card(
-      color: Colors.brown[50],
+      color:  Colors.blue[50],
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.inventory_2_rounded,
-                color: theme.colorScheme.primary, size: 32),
+            Icon(Icons.inventory_2_rounded, color: Colors.blue[600], size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 item["name"].toString(),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+                style: AppTextStyle.h5(size),
               ),
             ),
           ],
@@ -302,13 +298,7 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
   }
 
   Widget _buildQtyCard(
-    ThemeData theme,
-    int expected,
-    int received,
-    int scannedQty,
-    int remaining,
-    double size
-  ) {
+      int expected, int received, int scannedQty, int remaining, double size) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -317,27 +307,37 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildQtyInfo("Expected", expected.toString(), Colors.grey.shade700,size),
-            _buildQtyInfo("Received", received.toString(), Colors.blue,size),
-            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green,size),
-            _buildQtyInfo("Remaining",remaining.toString(),remaining <= 0 ? Colors.grey : Colors.red,size),
+            _buildQtyInfo("Expected", expected.toString(), Colors.grey.shade700, size),
+            _buildQtyInfo("Received", received.toString(), Colors.blue, size),
+            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green, size),
+            _buildQtyInfo("Remaining", remaining.toString(),
+                remaining <= 0 ? Colors.grey : Colors.red, size),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQtyInfo(String label, String value, Color color,double size) {
+  Widget _buildQtyInfo(String label, String value, Color color, double size) {
     return Column(
       children: [
-        Text(value,style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: size *2,overflow: TextOverflow.ellipsis)),
-        Text(label,style: TextStyle(fontSize: size *1.3, color: Colors.grey.shade600,overflow: TextOverflow.ellipsis)),
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: size * 2,
+                overflow: TextOverflow.ellipsis)),
+        Text(label,
+            style: TextStyle(
+                fontSize: size * 1.3,
+                color: Colors.grey.shade600,
+                overflow: TextOverflow.ellipsis)),
       ],
     );
   }
 
   Widget _buildScannedList(
-    ThemeData theme,
+    double size,
     List<Map<String, dynamic>> scanned,
     BuildContext context,
   ) {
@@ -350,8 +350,7 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
                 size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 12),
             Text("No codes scanned yet",
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: Colors.grey.shade600)),
+                style: AppTextStyle.body(size, color: Colors.grey.shade600)),
           ],
         ),
       );
@@ -377,9 +376,8 @@ class ScanPageByCustomer extends GetView<OutflowOrderByCustomerDetailController>
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child:
-                        Icon(Icons.qr_code, color: theme.colorScheme.primary),
+                    backgroundColor: Colors.pink[50],
+                    child: const Icon(Icons.qr_code, color: Colors.blue),
                   ),
                   // show qty only for batch items
                   title: Text(

@@ -16,81 +16,84 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Outflow Request List",size,icon: Icons.list_alt_sharp,routeBackName: AppPages.outflowHomePage,hex1:'5170FD',hex2:"60ABFB"),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Obx(() => SearchBarWidget(
-                    isFocused: controller.isSearchFocused.value,
-                    isAscending: controller.isAscending.value,
-                    searchController: controller.searchController,
-                    focusNode: controller.searchFocus,
-                    onSearchChanged: controller.onSearchChanged,
-                    onToggleSort: controller.toggleSort,
-                    onOpenFilter: () => _openTopFilterSheet(context),
-                  )),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final orders = controller.filteredOrders;
-                  if (orders.isEmpty) {
-                    return const Center(child: Text('No order data.'));
-                  }
-
-                  return ListView.builder(
-                    controller: controller.scrollController,
-                    itemCount: orders.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < orders.length) {
-                        return _buildOrderCard(orders[index],size);
-                      }
-
-                      if (controller.cursorNext.value != null) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: SizedBox(
-                              width: 26,
-                              height: 26,
-                              child: CircularProgressIndicator(strokeWidth: 3),
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (controller.cursorNext.value == null && orders.isNotEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: Text(
-                              "No more data",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+      body: RefreshIndicator(
+        onRefresh: controller.loadRequestOrders,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Obx(() => SearchBarWidget(
+                      isFocused: controller.isSearchFocused.value,
+                      isAscending: controller.isAscending.value,
+                      searchController: controller.searchController,
+                      focusNode: controller.searchFocus,
+                      onSearchChanged: controller.onSearchChanged,
+                      onToggleSort: controller.toggleSort,
+                      onOpenFilter: () => _openTopFilterSheet(context),
+                    )),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return textLoading(size);
+                    }
+      
+                    final orders = controller.filteredOrders;
+                    if (orders.isEmpty) {
+                      return textNoData(size);
+                    }
+      
+                    return ListView.builder(
+                      controller: controller.scrollController,
+                      itemCount: orders.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < orders.length) {
+                          return _buildOrderCard(orders[index],size);
+                        }
+      
+                        if (controller.cursorNext.value != null) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child: CircularProgressIndicator(strokeWidth: 3),
                               ),
                             ),
-                          ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  );
-                }),
-              ),
-              buildSyncButton(
-                  name: 'Synchronization',
-                  size: size,
-                  onPressed: controller.loadRequestOrders,
-                  color: const Color(0xff5170FD))
-            ],
+                          );
+                        }
+      
+                        if (controller.cursorNext.value == null && orders.isNotEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+      
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  }),
+                ),
+                // buildSyncButton(
+                //     name: 'Synchronization',
+                //     size: size,
+                //     onPressed: controller.loadRequestOrders,
+                //     color: const Color(0xff5170FD))
+              ],
+            ),
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 import '../../../global/size_config.dart';
@@ -76,24 +77,15 @@ class ReceiveOrderHomeView extends GetView {
                         children: [
                           Text(
                             "Receive Order",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                            style:AppTextStyle.h1(size,color: Colors.white)
+                                .copyWith(
                                   letterSpacing: 0.5,
                                 ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             "View all receive orders",
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Colors.white.withOpacity(.9),
-                                ),
+                            style:AppTextStyle.h4(size,color: Colors.white70),
                           ),
                         ],
                       ),

@@ -314,37 +314,37 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // ACTION BUTTONS
   // --------------------------------------------------------------------------
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.edit_outlined, color: Colors.white),
-            label: const Text("Edit Product",style: TextStyle(color: Colors.white),),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade600,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.inventory_2_outlined),
-            label: const Text("Stock Adjust"),
-            style: OutlinedButton.styleFrom( 
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: BorderSide(color: Colors.blue.shade600),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
-          ),
-        )
-      ],
-    );
-  }
+  // Widget _buildActionButtons() {
+  //   return Row(
+  //     children: [
+  //       Expanded(
+  //         child: ElevatedButton.icon(
+  //           onPressed: () {},
+  //           icon: const Icon(Icons.edit_outlined, color: Colors.white),
+  //           label: const Text("Edit Product",style: TextStyle(color: Colors.white),),
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Colors.blue.shade600,
+  //             padding: const EdgeInsets.symmetric(vertical: 16),
+  //             shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(14)),
+  //           ),
+  //         ),
+  //       ),
+  //       const SizedBox(width: 12),
+  //       Expanded(
+  //         child: OutlinedButton.icon(
+  //           onPressed: () {},
+  //           icon: const Icon(Icons.inventory_2_outlined),
+  //           label: const Text("Stock Adjust"),
+  //           style: OutlinedButton.styleFrom( 
+  //             padding: const EdgeInsets.symmetric(vertical: 16),
+  //             side: BorderSide(color: Colors.blue.shade600),
+  //             shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(14)),
+  //           ),
+  //         ),
+  //       )
+  //     ],
+  //   );
+  // }
 }

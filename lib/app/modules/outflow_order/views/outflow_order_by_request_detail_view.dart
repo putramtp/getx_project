@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'scan_page_by_request.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
@@ -11,11 +12,9 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: appBarOrder("Item Summary",size,routeBackName: AppPages.outflowOrderByRequestPage,hex1:'5170FD',hex2:"60ABFB"),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -87,9 +86,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      title: Text(item['name'] ?? "Unnamed",style: AppTextStyle.h5(size)),
                       subtitle: Text("Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
                           style: TextStyle(color: Colors.grey[700],fontSize: size *1.2)),
                       leading: CircleAvatar(

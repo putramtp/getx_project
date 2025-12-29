@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 AppBar costumAppbar(String title) {
   return AppBar(
@@ -292,24 +293,32 @@ Widget buildSyncButton({required VoidCallback onPressed,required double size,Col
     );
 }
 
- Widget textWithIcon(double size, String text, IconData icon,Color iconColor) {
-    return RichText(
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(
-        children: [
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: Icon(icon, color: iconColor, size: size * 2),
-          ),
-          WidgetSpan(
-            child: SizedBox(width:size * 0.5), 
-          ),
-          TextSpan(
-            text: text,
-            style: TextStyle(fontSize: size * 1.3, color: Colors.black),
-          ),
-        ],
-      ),
-    );
-  }
+Widget textWithIcon(double size, String text, IconData icon,Color iconColor) {
+  return RichText(
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    text: TextSpan(
+      children: [
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Icon(icon, color: iconColor, size: size * 2),
+        ),
+        WidgetSpan(
+          child: SizedBox(width:size * 0.5), 
+        ),
+        TextSpan(
+          text: text,
+          style: TextStyle(fontSize: size * 1.3, color: Colors.black),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget textLoading(double size,{color = Colors.black54,message = "Loading..."}) {
+  return Center(child: Text(message,style: AppTextStyle.infoBold(size,color: color)));
+}
+
+Widget textNoData(double size,{color = Colors.black54,message = "No data."})   {
+  return Center(child: Text(message,style: AppTextStyle.infoBold(size,color: color)));
+}

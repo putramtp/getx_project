@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:hexcolor/hexcolor.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
@@ -12,11 +13,9 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: appBarOrder("Outflow order detail",size,routeBackName: AppPages.outflowOrderListPage,hex1:"#EF7722",hex2:"#FAA533"),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -56,16 +55,14 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                   final line = lines[index];
                   final List<SerialNumberModel> serialNumbers = line.serialNumbers;
                   return Card(
-                    elevation: 2,
+                    elevation: 2,  
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
                       title: Text(line.itemName,
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                          style: AppTextStyle.h5(size)),
                       subtitle: Text("Quantity:${line.qty}",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700])),
+                          style:AppTextStyle.h5(size,color:Colors.grey)),
                       leading: CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.orange.withOpacity(0.15),

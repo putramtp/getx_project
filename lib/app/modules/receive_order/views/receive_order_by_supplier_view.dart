@@ -18,44 +18,47 @@ class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierControlle
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Supplier List",size,icon: Icons.group_rounded, routeBackName: AppPages.receiveHomePage,hex1:"75a340",hex2:"B1C29E"),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Obx(() => SearchBarWidget(
-                  isFocused: controller.isSearchFocused.value,
-                  isAscending: controller.isAscending.value,
-                  searchController: controller.searchController,
-                  focusNode: controller.searchFocus,
-                  onSearchChanged: controller.onSearchChanged,
-                  onToggleSort: controller.toggleSort,
-                  hintText: 'Search Supplier', // custom hint
-              )),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final orders = controller.filteredSuppliers;
-                  if (orders.isEmpty) {
-                    return const Center(child: Text('No supplier data.'));
-                  }
-
-                  return ListView.builder(
-                    itemCount: orders.length,
-                    itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return _buildOrderCard(order,size);
-                    },
-                  );
-                }),
-              ),
-              buildSyncButton(name: 'Supplier Synchronization',size: size,onPressed:controller.loadSuppliers,color: const Color.fromARGB(255, 122, 150, 89)),
-            ],
+      body: RefreshIndicator(
+        onRefresh: controller.loadSuppliers,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Obx(() => SearchBarWidget(
+                    isFocused: controller.isSearchFocused.value,
+                    isAscending: controller.isAscending.value,
+                    searchController: controller.searchController,
+                    focusNode: controller.searchFocus,
+                    onSearchChanged: controller.onSearchChanged,
+                    onToggleSort: controller.toggleSort,
+                    hintText: 'Search Supplier', // custom hint
+                )),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return textLoading(size);
+                    }
+      
+                    final orders = controller.filteredSuppliers;
+                    if (orders.isEmpty) {
+                      return textNoData(size,message: "No supplier data.");
+                    }
+      
+                    return ListView.builder(
+                      itemCount: orders.length,
+                      itemBuilder: (context, index) {
+                        final order = orders[index];
+                        return _buildOrderCard(order,size);
+                      },
+                    );
+                  }),
+                ),
+                // buildSyncButton(name: 'Supplier Synchronization',size: size,onPressed:controller.loadSuppliers,color: const Color.fromARGB(255, 122, 150, 89)),
+              ],
+            ),
           ),
         ),
       ),

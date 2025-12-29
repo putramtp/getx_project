@@ -40,7 +40,7 @@ class ProductController extends GetxController {
 
   @override
   void onInit() {
-    loadCategories();
+    loadProducts();
     scrollController.addListener(_scrollListener);
     super.onInit();
   }
@@ -76,7 +76,7 @@ class ProductController extends GetxController {
     filterList("");
   }
 
-  Future<void> loadCategories() async {
+  Future<void> loadProducts() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       task: () => provider.getProductSummaries(),
