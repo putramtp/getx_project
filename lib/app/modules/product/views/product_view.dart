@@ -20,94 +20,102 @@ class ProductView extends GetView<ProductController> {
         appBar: appBarOrder("Product",size,icon: Icons.shopping_bag_outlined,routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
         body: RefreshIndicator(
           onRefresh: controller.loadProducts,
-          child: CustomScrollView(
-            controller: controller.scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Expanded(child: Obx(() => _metricBox('Total Products',controller.totalProducts.value,'+8.00%',size))),
-                      SizedBox(width: size *2),
-                      Expanded(child: Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,'+2.34%',size))),
-                    ],
+          child: NotificationListener(
+            onNotification: (ScrollNotification notification) {
+              if (notification.metrics.pixels >=
+                  notification.metrics.maxScrollExtent - 250) {
+                controller.loadMore();
+              }
+              return false;
+            },
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Expanded(child: Obx(() => _metricBox('Total Products',controller.totalProducts.value,'+8.00%',size))),
+                        SizedBox(width: size *2),
+                        Expanded(child: Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,'+2.34%',size))),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-        
-              // --- Sticky: Products List Title ---
-             SliverPersistentHeader(
-                pinned: true,
-                delegate: _StickyHeaderDelegate(
-                  child: Container(
-                    height: 60,
-                    color: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Obx(() => AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (child, animation) => SlideTransition(position: Tween<Offset>(  begin: const Offset(0.3, 0),  end: Offset.zero,).animate(animation),child: child),
-                          child: controller.isSearching.value
-                              ? _buildSearchField(size,context) // ← Searching mode
-                              : _buildTitleBar(size,context), // ← Normal mode
-                        )),
+                  
+                // --- Sticky: Products List Title ---
+               SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyHeaderDelegate(
+                    child: Container(
+                      height: 60,
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Obx(() => AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, animation) => SlideTransition(position: Tween<Offset>(  begin: const Offset(0.3, 0),  end: Offset.zero,).animate(animation),child: child),
+                            child: controller.isSearching.value
+                                ? _buildSearchField(size,context) // ← Searching mode
+                                : _buildTitleBar(size,context), // ← Normal mode
+                          )),
+                    ),
                   ),
                 ),
-              ),
-        
-              const SliverToBoxAdapter(child: SizedBox(height: 10)),
-              // --- Products / Categories List ---
-              Obx(() {
-                if (controller.isLoading.value) {
-                  return  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: textLoading(size),
-                  );
-                }
-        
-                if (controller.filteredProductSummaries.isEmpty) {
-                  return  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: textNoData(size),
-                  );
-                }
-        
-                var products = controller.filteredProductSummaries;
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    childCount: products.length + 1,
-                    (context, index) {
-                      if (index < products.length) {
-                        final productSummary = products[index];
-                         return ProductTile(
-                            product: productSummary,
-                            size: size,
-                            onViewDetail: () => controller.openDetail(productSummary),
-                            onViewTransaction: () => controller.openTransaction(productSummary),
+                  
+                const SliverToBoxAdapter(child: SizedBox(height: 10)),
+                // --- Products / Categories List ---
+                Obx(() {
+                  if (controller.isLoading.value) {
+                    return  SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: textLoading(size),
+                    );
+                  }
+                  
+                  if (controller.filteredProductSummaries.isEmpty) {
+                    return  SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: textNoData(size),
+                    );
+                  }
+                  
+                  var products = controller.filteredProductSummaries;
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      childCount: products.length + 1,
+                      (context, index) {
+                        if (index < products.length) {
+                          final productSummary = products[index];
+                           return ProductTile(
+                              product: productSummary,
+                              size: size,
+                              onViewDetail: () => controller.openDetail(productSummary),
+                              onViewTransaction: () => controller.openTransaction(productSummary),
+                            );
+                        }
+                        if (controller.cursorNext.value != null ) {
+                          return  Padding(
+                            padding:  EdgeInsets.symmetric(vertical: size * 3),
+                            child: const Center(
+                              child: SizedBox(width: 26,height: 26,child: CircularProgressIndicator(strokeWidth: 3)),
+                            ),
                           );
-                      }
-                      if (controller.cursorNext.value != null ) {
-                        return  Padding(
-                          padding:  EdgeInsets.symmetric(vertical: size * 3),
-                          child: const Center(
-                            child: SizedBox(width: 26,height: 26,child: CircularProgressIndicator(strokeWidth: 3)),
-                          ),
-                        );
-                      }
-                      if (controller.cursorNext.value == null && products.isNotEmpty) {
-                        return  Padding(
-                          padding:  EdgeInsets.symmetric(vertical: size * 3),
-                          child: Center(child: Text("No more data.",style: TextStyle(fontSize: size *1.4,color: Colors.grey,fontWeight: FontWeight.w500)),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                );
-              }),
-            ],
+                        }
+                        if (controller.cursorNext.value == null && products.isNotEmpty) {
+                          return  Padding(
+                            padding:  EdgeInsets.symmetric(vertical: size * 3),
+                            child: Center(child: Text("No more data.",style: TextStyle(fontSize: size *1.4,color: Colors.grey,fontWeight: FontWeight.w500)),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         ));
   }

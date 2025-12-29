@@ -47,46 +47,54 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                     return textNoData(size,message: "No receive order data.");
                   }
 
-                  return ListView.builder(
-                    controller: controller.scrollController,
-                    itemCount: orders.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < orders.length) {
-                        return _buildOrderCard(orders[index],size);
+                  return NotificationListener(
+                    onNotification: (ScrollNotification notification) {
+                      if (notification.metrics.pixels >=
+                          notification.metrics.maxScrollExtent - 250) {
+                        controller.loadMore();
                       }
-
-                      if (controller.cursorNext.value != null) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: SizedBox(
-                              width: 26,
-                              height: 26,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 3),
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
-                        return  Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          child: Center(
-                            child: Text(
-                              "No more data",
-                              style: TextStyle(
-                                fontSize: size * 1.2,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+                      return false;
+                    },
+                    child: ListView.builder(
+                      itemCount: orders.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < orders.length) {
+                          return _buildOrderCard(orders[index],size);
+                        }
+                  
+                        if (controller.cursorNext.value != null) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: SizedBox(
+                                width: 26,
+                                height: 26,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 3),
                               ),
                             ),
-                          ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
+                          );
+                        }
+                  
+                        if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
+                          return  Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                "No more data",
+                                style: TextStyle(
+                                  fontSize: size * 1.2,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                  
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   );
                 }),
               ),

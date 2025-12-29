@@ -26,23 +26,11 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 12),
-                      Text("Loading items...",
-                          style: TextStyle(fontSize: 16, color: Colors.black54))
-                    ],
-                  ),
-                );
+                return textLoading(size,message: "loading items..");
               }
 
               if (controller.items.isEmpty) {
-                return const Center(
-                    child: Text("No items found.",
-                        style: TextStyle(fontSize: 16, color: Colors.black54)));
+                return textNoData(size,message: "No items found.");
               }
 
               return ListView.separated(

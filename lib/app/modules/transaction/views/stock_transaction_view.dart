@@ -46,45 +46,53 @@ class StockTransactionView extends GetView<StockTransactionController> {
                       return textNoData(size,message: "No stock transaction data.");
                     }
       
-                    return ListView.builder(
-                      controller: controller.scrollController,
-                      itemCount: trans.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index < trans.length) {
-                          return _buildOrderCard(trans[index], size);
+                    return NotificationListener(
+                      onNotification: (ScrollNotification notification) {
+                        if (notification.metrics.pixels >=
+                            notification.metrics.maxScrollExtent - 250) {
+                          controller.loadMore();
                         }
-      
-                        if (controller.cursorNext.value != null) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: SizedBox(
-                                width: 26,
-                                height: 26,
-                                child: CircularProgressIndicator(strokeWidth: 3),
-                              ),
-                            ),
-                          );
-                        }
-      
-                        if (controller.cursorNext.value == null && trans.isNotEmpty) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: Text(
-                                "No more data",
-                                style: TextStyle(
-                                  fontSize: size * 1.2,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
+                        return false;
+                      },
+                      child: ListView.builder(
+                        itemCount: trans.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index < trans.length) {
+                            return _buildOrderCard(trans[index], size);
+                          }
+                          
+                          if (controller.cursorNext.value != null) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 18),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 26,
+                                  height: 26,
+                                  child: CircularProgressIndicator(strokeWidth: 3),
                                 ),
                               ),
-                            ),
-                          );
-                        }
-      
-                        return const SizedBox.shrink();
-                      },
+                            );
+                          }
+                          
+                          if (controller.cursorNext.value == null && trans.isNotEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              child: Center(
+                                child: Text(
+                                  "No more data",
+                                  style: TextStyle(
+                                    fontSize: size * 1.2,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     );
                   }),
                 ),

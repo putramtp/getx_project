@@ -35,13 +35,9 @@ class ProductByCategoryController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
-  // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel: 'ProductByCategoryController');
-
   @override
   void onInit() {
     super.onInit();
-    scrollController.addListener(_scrollListener);
     final args = Get.arguments;
     if (args != null && args is ProductCategoryModel){
         currentCategory = args;
@@ -53,16 +49,9 @@ class ProductByCategoryController extends GetxController {
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
-  }
-
-    // Auto loading
-  void _scrollListener() {
-    if(!scrollController.hasClients) return;
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   void startSearch() {

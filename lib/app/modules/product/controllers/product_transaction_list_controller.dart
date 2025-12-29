@@ -34,8 +34,6 @@ class ProductTransactionListController extends GetxController {
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
 
-  // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel:'StockTransactionByProductController' );
 
   @override
   void onInit() {
@@ -44,19 +42,11 @@ class ProductTransactionListController extends GetxController {
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    scrollController.addListener(_scrollListener);
     loadProductTrans();
-  }
-
-  // Auto loading
-  void _scrollListener() {
-    if(!scrollController.hasClients) return;
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();

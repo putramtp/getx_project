@@ -32,8 +32,7 @@ class OutflowOrderListController extends GetxController {
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
 
-  // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel:'OutflowOrderListController');
+
  
   @override
   void onInit() {
@@ -41,19 +40,12 @@ class OutflowOrderListController extends GetxController {
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    scrollController.addListener(_scrollListener);
-    loadOutflowOrders();
-  }
 
-  // Auto loading
-  void _scrollListener() {
-    if(!scrollController.hasClients) return;
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
+    loadOutflowOrders();
   }
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();

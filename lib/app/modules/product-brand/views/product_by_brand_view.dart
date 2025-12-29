@@ -48,48 +48,56 @@ class ProductByBrandView extends GetView<ProductByBrandController> {
                             fontSize: size * 1.4, fontWeight: FontWeight.w400),
                       ));
                     }
-                    return ListView.builder(
-                      controller: controller.scrollController,
-                      itemCount: products.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index < products.length) {
-                          final productSummary = products[index];
-                          return ProductTile(
-                            product: productSummary,
-                            size: size,
-                            onViewDetail: () => controller.openDetail(productSummary),
-                            onViewTransaction: () => controller.openTransaction(productSummary),
-                          );
+                    return NotificationListener(
+                      onNotification: (ScrollNotification notification) {
+                        if (notification.metrics.pixels >=
+                            notification.metrics.maxScrollExtent - 250) {
+                          controller.loadMore();
                         }
-                        if (controller.cursorNext.value != null) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(vertical: size * 3),
-                            child: const Center(
-                              child: SizedBox(
-                                  width: 26,
-                                  height: 26,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 3)),
-                            ),
-                          );
-                        }
-                        if (controller.cursorNext.value == null &&
-                            products.isNotEmpty) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(vertical: size * 3),
-                            child: Center(
-                              child: Text(
-                                "No more data.",
-                                style: TextStyle(
-                                    fontSize: size * 1.4,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
+                        return false;
                       },
+                      child: ListView.builder(
+                        itemCount: products.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index < products.length) {
+                            final productSummary = products[index];
+                            return ProductTile(
+                              product: productSummary,
+                              size: size,
+                              onViewDetail: () => controller.openDetail(productSummary),
+                              onViewTransaction: () => controller.openTransaction(productSummary),
+                            );
+                          }
+                          if (controller.cursorNext.value != null) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(vertical: size * 3),
+                              child: const Center(
+                                child: SizedBox(
+                                    width: 26,
+                                    height: 26,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 3)),
+                              ),
+                            );
+                          }
+                          if (controller.cursorNext.value == null &&
+                              products.isNotEmpty) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(vertical: size * 3),
+                              child: Center(
+                                child: Text(
+                                  "No more data.",
+                                  style: TextStyle(
+                                      fontSize: size * 1.4,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     );
                   }),
                 ),

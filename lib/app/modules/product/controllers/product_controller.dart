@@ -35,28 +35,17 @@ class ProductController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
-  // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel: 'ProductController');
-
   @override
   void onInit() {
     loadProducts();
-    scrollController.addListener(_scrollListener);
     super.onInit();
   }
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
-  }
-
-    // Auto loading
-  void _scrollListener() {
-    if(!scrollController.hasClients) return;
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   void startSearch() {

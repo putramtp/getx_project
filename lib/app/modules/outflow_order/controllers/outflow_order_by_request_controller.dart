@@ -25,8 +25,7 @@ class OutflowOrderByRequestController extends GetxController {
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
-  // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel: "OutflowOrderByRequestController");
+
 
   // Cursors
   final RxnString cursorNext = RxnString();
@@ -42,19 +41,12 @@ class OutflowOrderByRequestController extends GetxController {
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    scrollController.addListener(_scrollListener);
-    loadRequestOrders();
-  }
 
-  // Auto loading
-  void _scrollListener() {
-    if(!scrollController.hasClients) return;
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
+    loadRequestOrders();
   }
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();

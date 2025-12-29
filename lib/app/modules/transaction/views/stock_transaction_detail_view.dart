@@ -27,25 +27,11 @@ class StockTransactionDetailView
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 12),
-                      Text("Loading items...",
-                          style: TextStyle(
-                              fontSize: size * 1.2, color: Colors.black54))
-                    ],
-                  ),
-                );
+                return textLoading(size,message: "loading items..");
               }
 
               if (controller.receiveOrderDetail.value == null) {
-                return Center(
-                    child: Text("No items found.",
-                        style: TextStyle(
-                            fontSize: size * 1.2, color: Colors.black54)));
+                return textNoData(size,message: "No items found.");
               }
 
               final lines =

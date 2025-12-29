@@ -25,29 +25,17 @@ class ProductUnitController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
-
-  // Scroll listener
-  final ScrollController scrollController = ScrollController(debugLabel:'ProductUnitController' );
-
   @override
   void onInit() {
     super.onInit();
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    scrollController.addListener(_scrollListener);
     loadCategories();
-  }
-
-  // Auto loading
-  void _scrollListener() {
-    if(!scrollController.hasClients) return;
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 250) loadMore();
   }
 
   @override
   void onClose() {
-    scrollController.removeListener(_scrollListener);
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();

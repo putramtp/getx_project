@@ -48,52 +48,60 @@ class ProductBrandView extends GetView<ProductBrandController> {
                       return textNoData(size);
                     }
     
-                    return GridView.builder(
-                      controller: controller.scrollController,
-                      padding: const EdgeInsets.only(bottom: 12),
-                      itemCount: orders.length + 1,
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: size * 17,
-                        mainAxisSpacing: size *2,
-                        crossAxisSpacing: size * 2,
-                        childAspectRatio: Get.width < 360 ? (size * 0.13) : (size * 0.06),
-                      ),
-                      itemBuilder: (context, index) {
-                        if (index < orders.length) {
-                          return _brandGridCard(orders[index], size);
+                    return NotificationListener(
+                      onNotification: (ScrollNotification notification) {
+                        if (notification.metrics.pixels >=
+                            notification.metrics.maxScrollExtent - 250) {
+                          controller.loadMore();
                         }
-    
-                        if (controller.cursorNext.value != null) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: SizedBox(
-                                width: 26,
-                                height: 26,
-                                child: CircularProgressIndicator(strokeWidth: 3),
-                              ),
-                            ),
-                          );
-                        }
-    
-                        if (controller.cursorNext.value == null && orders.isNotEmpty) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: Text(
-                                "No more data",
-                                style: TextStyle(
-                                  fontSize: size * 1.2,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
+                        return false;
+                      },
+                      child: GridView.builder(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        itemCount: orders.length + 1,
+                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: size * 17,
+                          mainAxisSpacing: size *2,
+                          crossAxisSpacing: size * 2,
+                          childAspectRatio: Get.width < 360 ? (size * 0.13) : (size * 0.06),
+                        ),
+                        itemBuilder: (context, index) {
+                          if (index < orders.length) {
+                            return _brandGridCard(orders[index], size);
+                          }
+                        
+                          if (controller.cursorNext.value != null) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 18),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 26,
+                                  height: 26,
+                                  child: CircularProgressIndicator(strokeWidth: 3),
                                 ),
                               ),
-                            ),
-                          );
-                        }
-    
-                        return const SizedBox.shrink();
-                      },
+                            );
+                          }
+                        
+                          if (controller.cursorNext.value == null && orders.isNotEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              child: Center(
+                                child: Text(
+                                  "No more data",
+                                  style: TextStyle(
+                                    fontSize: size * 1.2,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     );
                   }),
                 ),
