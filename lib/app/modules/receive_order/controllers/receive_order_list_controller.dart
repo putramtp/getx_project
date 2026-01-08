@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import '../controllers/receive_order_list_detail_controller.dart';
 import '../../../global/alert.dart';
 import '../../../global/functions.dart';
@@ -10,7 +11,7 @@ import '../../../data/models/receive_order_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class ReceiveOrderListController extends GetxController {
+class ReceiveOrderListController extends GetxController  implements TopFilterController  {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -19,20 +20,32 @@ class ReceiveOrderListController extends GetxController {
   var orders = <ReceiveOrderModel>[].obs;
   var filteredOrders = <ReceiveOrderModel>[].obs;
 
+
   // State
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  final RxnString filterStatus = RxnString();
 
   // Cursors
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
-  var startDate = Rxn<DateTime>();
-  var endDate = Rxn<DateTime>();
+  @override
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
+  @override
+  final Rx<DateTime?> endDate = Rx<DateTime?>(null);
+  @override
+  RxInt limit = 20.obs;
+  @override
+  RxDouble minPrice = 0.0.obs;
+  @override
+  RxDouble maxPrice = 1000000.0.obs;
+  @override
+  final enablePriceRange = false.obs;
 
   @override
   void onInit() {
@@ -71,7 +84,7 @@ class ReceiveOrderListController extends GetxController {
   Future<void> loadReceiveOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getReceiveOrders(cursor: null),
+      task: () => provider.getReceiveOrders(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -111,7 +124,7 @@ class ReceiveOrderListController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getReceiveOrders(cursor: cursorNext.value),
+      task: () => provider.getReceiveOrders(cursor: cursorNext.value, params:buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -152,50 +165,47 @@ class ReceiveOrderListController extends GetxController {
   }
 
   // 📅 Pick start date
+  @override
   Future<void> pickStartDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
   }
-
+  @override
   Future<void> pickEndDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: endDate.value);
     if (picked != null) endDate.value = picked;
   }
 
-  void applyDateFilter() {
-    final start = startDate.value;
-    final end = endDate.value;
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (startDate.value != null)
+        'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)
+        'end_date': getDateString(endDate.value!), 
+      // if (enablePriceRange.value) ...{
+      //   'min_price': minPrice.value.toString(),
+      //   'max_price': maxPrice.value.toString(),
+      // },
+    };
+  }
 
-    if (start == null || end == null) {
-      infoAlertBottom(
-        title: 'Filter Tanggal',
-        'Please select both dates first.',
-      );
-      return;
-    }
-
-    // Normalized to midnight (00:00) and end of day (23:59)
-    final startOfDay = DateTime(start.year, start.month, start.day);
-    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    filteredOrders.assignAll(
-      orders.where((order) {
-        final date = order.date;
-        return date.isAtSameMomentAs(startOfDay) ||
-            date.isAtSameMomentAs(endOfDay) ||
-            (date.isAfter(startOfDay) && date.isBefore(endOfDay));
-      }).toList(),
-    );
+  @override
+  void applyFilter() {
+    loadReceiveOrders();
   }
 
   /// ♻️ Clear date filter
-  void clearDateFilter() {
+  @override
+  void clearFilter () {
+    limit.value = 20;
     startDate.value = null;
     endDate.value = null;
-    filteredOrders.assignAll(orders);
-    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
+    loadReceiveOrders();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
 
+  @override
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy').format(date);
   }
@@ -206,4 +216,5 @@ class ReceiveOrderListController extends GetxController {
     }
     Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
   }
+
 }

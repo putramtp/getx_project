@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/data/models/stock_transaction_model.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:getx_project/app/modules/transaction/controllers/stock_transaction_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
@@ -30,9 +31,9 @@ class StockTransactionView extends GetView<StockTransactionController> {
                       isAscending: controller.isAscending.value,
                       searchController: controller.searchController,
                       focusNode: controller.searchFocus,
-                      onSearchChanged: controller.onSearchChanged,
+                      onSearchChanged: controller.filterList,
                       onToggleSort: controller.toggleSort,
-                      onOpenFilter: () => _openTopFilterSheet(context ,size),
+                      onOpenFilter: () => _openTopFilterSheet(context),
                     )),
                 const SizedBox(height: 12),
                 Expanded(
@@ -61,7 +62,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                             return _buildOrderCard(trans[index], size);
                           }
                           
-                          if (controller.cursorNext.value != null) {
+                          if (controller.cursorNext.value != null && !controller.isSearchFocused.value) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 18),
                               child: Center(
@@ -106,210 +107,28 @@ class StockTransactionView extends GetView<StockTransactionController> {
   }
 
   /// 🧾 Modern Top Filter Sheet
-  void _openTopFilterSheet(BuildContext context ,double size) {
+  void _openTopFilterSheet(BuildContext context) {
     showGeneralDialog(
       context: context,
       barrierLabel: "Filter",
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) {
-        final maxHeight = MediaQuery.of(context).size.height * 0.75;
-        return LayoutBuilder(
-            builder: (context, constraints) {
-            final bool isSmall = constraints.maxWidth < 300;
-            return Align(
-              alignment: Alignment.topCenter,
-              child: Material(
-                color: Colors.transparent,
-                child: SafeArea(
-                  child: Container(
-                    margin: const EdgeInsets.all(16),
-                    constraints: BoxConstraints(maxHeight: maxHeight),
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Obx(() {
-                      return SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[400],
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              "Filter Options",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            if (isSmall) 
-                             Column(
-                              children: [
-                                _buildFilterDateField(
-                                  context,
-                                  label: "Start Date",
-                                  value: controller.startDate.value != null
-                                      ? controller.formatDate(controller.startDate.value!)
-                                      : 'Start date',
-                                  onTap: () => controller.pickStartDate(context),
-                                ),
-                                const SizedBox(height: 12),
-                                _buildFilterDateField(
-                                  context,
-                                  label: "End Date",
-                                  value: controller.endDate.value != null
-                                      ? controller.formatDate(controller.endDate.value!)
-                                      : "End date",
-                                  onTap: () => controller.pickEndDate(context),
-                                ),
-                              ],
-                            ),
-                            if (!isSmall) 
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildFilterDateField(
-                                    context,
-                                    label: "Start Date",
-                                    value: controller.startDate.value != null
-                                        ? controller.formatDate(
-                                            controller.startDate.value!)
-                                        : 'Start date',
-                                    onTap: () =>
-                                        controller.pickStartDate(context),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildFilterDateField(
-                                    context,
-                                    label: "End Date",
-                                    value: controller.endDate.value != null
-                                        ? controller.formatDate(
-                                            controller.endDate.value!)
-                                        : "End date",
-                                    onTap: () =>
-                                        controller.pickEndDate(context),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-
-                                    onPressed: () {
-                                      controller.clearDateFilter();
-                                      Navigator.pop(context);
-                                    },
-                                    icon:  Icon(Icons.clear,size: size * 1.4,),
-                                    label:  Text("Clear",overflow: TextOverflow.ellipsis, maxLines: 2, style: TextStyle(fontSize: size * 1.4),),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
-                                    ),
-                                    onPressed: () {
-                                      controller.applyDateFilter();
-                                      Navigator.pop(context);
-                                    },
-                                    icon:  Icon(Icons.check,color: Colors.white,size: size * 1.4,),
-                                    label:  Text(
-                                      "Apply",
-                                      style: TextStyle(color: Colors.white,fontSize: size * 1.4,),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-            );
-          }
-        );
+      pageBuilder: (_, __, ___) {
+        return TopDateFilterPopup(controller: controller);
       },
       transitionBuilder: (context, anim1, anim2, child) {
         return SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, -1),
+            begin: const Offset(0, -1), // 👈 slide from top
             end: Offset.zero,
-          ).animate(
-            CurvedAnimation(parent: anim1, curve: Curves.easeOut),
+          ).animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
+          child: FadeTransition(
+            opacity: anim1,
+            child: child,
           ),
-          child: FadeTransition(opacity: anim1, child: child),
         );
       },
-    );
-  }
-
-
-  Widget _buildFilterDateField(
-    BuildContext context, {
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const SizedBox(width: 8),
-            const Icon(Icons.date_range, color: Colors.grey),
-          ],
-        ),
-      ),
     );
   }
 

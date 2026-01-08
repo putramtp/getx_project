@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 
 import '../controllers/receive_order_list_controller.dart';
 import '../../../global/size_config.dart';
@@ -20,86 +21,89 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
       appBar: appBarOrder("Receive Order List",size,
           icon: Icons.list_alt_sharp,
           routeBackName: AppPages.receiveHomePage),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Obx(() => SearchBarWidget(
-                  isFocused: controller.isSearchFocused.value,
-                  isAscending: controller.isAscending.value,
-                  searchController: controller.searchController,
-                  focusNode: controller.searchFocus,
-                  onSearchChanged: controller.onSearchChanged,
-                  onToggleSort: controller.toggleSort,
-                  onOpenFilter: () => _openTopFilterSheet(context),
-              )),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return textLoading(size);
-                  }
-
-                  final orders = controller.filteredOrders;
-                  if (orders.isEmpty) {
-                    return textNoData(size,message: "No receive order data.");
-                  }
-
-                  return NotificationListener(
-                    onNotification: (ScrollNotification notification) {
-                      if (notification.metrics.pixels >=
-                          notification.metrics.maxScrollExtent - 250) {
-                        controller.loadMore();
-                      }
-                      return false;
-                    },
-                    child: ListView.builder(
-                      itemCount: orders.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index < orders.length) {
-                          return _buildOrderCard(orders[index],size);
+      body: RefreshIndicator(
+        onRefresh: controller.loadReceiveOrders,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Obx(() => SearchBarWidget(
+                    isFocused: controller.isSearchFocused.value,
+                    isAscending: controller.isAscending.value,
+                    searchController: controller.searchController,
+                    focusNode: controller.searchFocus,
+                    onSearchChanged: controller.onSearchChanged,
+                    onToggleSort: controller.toggleSort,
+                    onOpenFilter: () => _openTopFilterSheet(context),
+                )),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return textLoading(size);
+                    }
+      
+                    final orders = controller.filteredOrders;
+                    if (orders.isEmpty) {
+                      return textNoData(size,message: "No receive order data.");
+                    }
+      
+                    return NotificationListener(
+                      onNotification: (ScrollNotification notification) {
+                        if (notification.metrics.pixels >=
+                            notification.metrics.maxScrollExtent - 250) {
+                          controller.loadMore();
                         }
-                  
-                        if (controller.cursorNext.value != null) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: SizedBox(
-                                width: 26,
-                                height: 26,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 3),
-                              ),
-                            ),
-                          );
-                        }
-                  
-                        if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
-                          return  Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: Text(
-                                "No more data",
-                                style: TextStyle(
-                                  fontSize: size * 1.2,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
+                        return false;
+                      },
+                      child: ListView.builder(
+                        itemCount: orders.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index < orders.length) {
+                            return _buildOrderCard(orders[index],size);
+                          }
+                    
+                          if (controller.cursorNext.value != null && !controller.isSearchFocused.value) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 18),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 26,
+                                  height: 26,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 3),
                                 ),
                               ),
-                            ),
-                          );
-                        }
-                  
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  );
-                }),
-              ),
-              buildSyncButton(name: 'Sync',size: size,onPressed:controller.loadReceiveOrders,color: const Color(0xff4A70A9))
-            ],
+                            );
+                          }
+                    
+                          if (controller.cursorNext.value == null &&  orders.isNotEmpty) {
+                            return  Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              child: Center(
+                                child: Text(
+                                  "No more data",
+                                  style: TextStyle(
+                                    fontSize: size * 1.2,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                    
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    );
+                  }),
+                ),
+                // buildSyncButton(name: 'Sync',size: size,onPressed:controller.loadReceiveOrders,color: const Color(0xff4A70A9))
+              ],
+            ),
           ),
         ),
       ),
@@ -114,127 +118,8 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) {
-        return Align(
-          alignment: Alignment.topCenter,
-          child: Material(
-            color: Colors.transparent,
-            child: SafeArea(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Obx(() {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[400],
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        "Filter Options",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFilterDateField(
-                              context,
-                              label: "Start Date",
-                              value: controller.startDate.value != null
-                                  ? controller
-                                      .formatDate(controller.startDate.value!)
-                                  : 'Start date',
-                              onTap: () => controller.pickStartDate(context),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildFilterDateField(
-                              context,
-                              label: "End Date",
-                              value: controller.endDate.value != null
-                                  ? controller
-                                      .formatDate(controller.endDate.value!)
-                                  : "End date",
-                              onTap: () => controller.pickEndDate(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                controller.clearDateFilter();
-                                Navigator.pop(context);
-                              },
-                              icon: const Icon(Icons.clear),
-                              label: const Text("Clear"),
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                controller.applyDateFilter();
-                                Navigator.pop(context);
-                              },
-                              icon:
-                                  const Icon(Icons.check, color: Colors.white),
-                              label: const Text(
-                                "Apply",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                }),
-              ),
-            ),
-          ),
-        );
+      pageBuilder: (_, __, ___) {
+        return TopDateFilterPopup(controller: controller);
       },
       transitionBuilder: (context, anim1, anim2, child) {
         return SlideTransition(
@@ -248,31 +133,6 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildFilterDateField(BuildContext context,
-      {required String label,
-      required String value,
-      required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(value, style: const TextStyle(fontSize: 15)),
-            const Icon(Icons.date_range, color: Colors.grey),
-          ],
-        ),
-      ),
     );
   }
 

@@ -7,10 +7,13 @@ class ProductProvider extends ApiProvider {
   //   httpClient.baseUrl = '';
   // }
 
-  Future<Map<String, dynamic>> getProductSummaries({String? cursor}) async {
+  Future<Map<String, dynamic>> getProductSummaries({String? cursor,Map<String, String>? params}) async {
      final response = await get(
       '/stock-transaction/summary/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
     final resBody =  response.body;
     if (response.statusCode == 200 &&resBody != null && resBody['success'] == true) {

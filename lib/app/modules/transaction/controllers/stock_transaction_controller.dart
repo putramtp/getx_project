@@ -1,4 +1,5 @@
 import 'package:getx_project/app/data/providers/stock_transaction_provider.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import '../../../global/alert.dart';
 import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 
-class StockTransactionController extends GetxController {
+class StockTransactionController extends GetxController implements TopFilterController {
   final StockTransactionProvider provider = Get.find<StockTransactionProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -28,9 +29,19 @@ class StockTransactionController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
-  // 🗓️ Date filter fields
-  var startDate = Rxn<DateTime>();
-  var endDate = Rxn<DateTime>();
+   // 🗓️ Date filter fields
+  @override
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
+  @override
+  final Rx<DateTime?> endDate = Rx<DateTime?>(null);
+  @override
+  RxInt limit = 20.obs;
+  @override
+  RxDouble minPrice = 0.0.obs;
+  @override
+  RxDouble maxPrice = 1000000.0.obs;
+  @override
+  final enablePriceRange = false.obs;
 
   @override
   void onInit() {
@@ -61,15 +72,12 @@ class StockTransactionController extends GetxController {
     searchFocus.unfocus();
   }
 
-  void onSearchChanged(String value) {
-    filterList(value);
-  }
 
   // FIRST LOAD
   Future<void> loadstockTransactions() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getStockTransactions(cursor: null),
+      task: () => provider.getStockTransactions(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -109,7 +117,7 @@ class StockTransactionController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getStockTransactions(cursor: cursorNext.value),
+      task: () => provider.getStockTransactions(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -150,50 +158,47 @@ class StockTransactionController extends GetxController {
   }
 
   // 📅 Pick start date
+  @override
   Future<void> pickStartDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
   }
-
+  @override
   Future<void> pickEndDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: endDate.value);
     if (picked != null) endDate.value = picked;
   }
 
-  void applyDateFilter() {
-    final start = startDate.value;
-    final end = endDate.value;
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (startDate.value != null)
+        'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)
+        'end_date': getDateString(endDate.value!), 
+      // if (enablePriceRange.value) ...{
+      //   'min_price': minPrice.value.toString(),
+      //   'max_price': maxPrice.value.toString(),
+      // },
+    };
+  }
 
-    if (start == null || end == null) {
-      infoAlertBottom(
-        title: 'Filter Tanggal',
-        'Please select both dates first.',
-      );
-      return;
-    }
-
-    // Normalized to midnight (00:00) and end of day (23:59)
-    final startOfDay = DateTime(start.year, start.month, start.day);
-    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    filteredTrans.assignAll(
-      trans.where((order) {
-        final date = order.order!.date;
-        return date.isAtSameMomentAs(startOfDay) ||
-            date.isAtSameMomentAs(endOfDay) ||
-            (date.isAfter(startOfDay) && date.isBefore(endOfDay));
-      }).toList(),
-    );
+  @override
+  void applyFilter() {
+    loadstockTransactions();
   }
 
   /// ♻️ Clear date filter
-  void clearDateFilter() {
+  @override
+  void clearFilter () {
+    limit.value = 20;
     startDate.value = null;
     endDate.value = null;
-    filteredTrans.assignAll(trans);
-    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
+    loadstockTransactions();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
 
+  @override
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy').format(date);
   }

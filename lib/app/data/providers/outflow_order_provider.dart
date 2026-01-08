@@ -9,10 +9,13 @@ class OutflowOrderProvider extends ApiProvider {
   //   httpClient.baseUrl = '';
   // }
 
-  Future<Map<String, dynamic>> getOutflowOrders({String? cursor}) async {
+  Future<Map<String, dynamic>> getOutflowOrders({String? cursor, Map<String, String>? params}) async {
     final response = await get(
       '/outflow-order/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
 
     if (response.statusCode == 200 && response.body != null) {
@@ -38,10 +41,13 @@ class OutflowOrderProvider extends ApiProvider {
     }
   }
   
-  Future<Map<String, dynamic>> getOutflowRequests({String? cursor}) async {
+  Future<Map<String, dynamic>> getOutflowRequests({String? cursor,Map<String, String>? params}) async {
     final response = await get(
       '/outflow-request/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
 
     if (response.statusCode == 200 && response.body != null) {

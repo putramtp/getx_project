@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/global/widget/product_tile.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import '../../../global/widget/animated_counter.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../routes/app_pages.dart';
@@ -94,7 +96,7 @@ class ProductView extends GetView<ProductController> {
                               onViewTransaction: () => controller.openTransaction(productSummary),
                             );
                         }
-                        if (controller.cursorNext.value != null ) {
+                        if (controller.cursorNext.value != null && !controller.isSearchFocused.value) {
                           return  Padding(
                             padding:  EdgeInsets.symmetric(vertical: size * 3),
                             child: const Center(
@@ -180,6 +182,13 @@ class ProductView extends GetView<ProductController> {
                 onPressed: controller.startSearch,   // ← Tap to search
                 icon: Icon(Icons.search, size: size * 2),
               ),
+              IconButton(
+                tooltip: 'Filter',
+                padding: EdgeInsets.symmetric(horizontal: size *1),
+                constraints: const BoxConstraints(),
+                onPressed:  () => _openTopFilterSheet(context),   // ← Tap to search
+                icon: Icon(Icons.tune_rounded, size: size * 2),
+              ),
             ],
           ),
         ),
@@ -187,6 +196,72 @@ class ProductView extends GetView<ProductController> {
     );
   }
 
+  /// 🧾 Modern Top Filter Sheet
+  void _openTopFilterSheet(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierLabel: "Filter",
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.3),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (_, __, ___) {
+        return TopDateFilterPopup(
+          controller: controller,
+          showPrice: true,
+          showDateRange:false,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Qty remaining less than",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Obx(() => TextFormField(
+                        initialValue: controller.qtyRemainingLessThan.value?.toString(),
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters:  [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          hintText: "",
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          final number = int.tryParse(value);
+                          controller.qtyRemainingLessThan.value =
+                              (number != null && number > 0) ? number : null;
+                        },
+                      )),
+                ),
+              ],
+              
+            ),
+            const SizedBox(height: 10)
+          ],
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, -1), // 👈 slide from top
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
+          child: FadeTransition(
+            opacity: anim1,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
   Widget _buildSearchField(size,context) {
     return Row(
       key: const ValueKey('search'),

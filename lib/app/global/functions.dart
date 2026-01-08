@@ -73,6 +73,10 @@ String formatTime(DateTime dateTime) {
   return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
 }
 
+String getDateString(date) {
+  return DateFormat('yyyy-MM-dd').format(date);
+}
+
 Future<DateTime?> pickDate(
   BuildContext context, {
   DateTime? initialDate,
@@ -82,7 +86,7 @@ Future<DateTime?> pickDate(
   return await showDatePicker(
     context: context,
     initialDate: initialDate ?? DateTime.now(),
-    firstDate: firstDate ?? DateTime(2020),
+    firstDate: firstDate ?? DateTime(2010),
     lastDate: lastDate ?? DateTime.now(),
   );
 }

@@ -9,10 +9,13 @@ class StockTransactionProvider extends ApiProvider {
   // }
 
 
-  Future<Map<String, dynamic>> getStockTransactions({String? cursor}) async {
+  Future<Map<String, dynamic>> getStockTransactions({String? cursor, Map<String, String>? params}) async {
      final response = await get(
       '/stock-transaction/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
     final resBody =  response.body;
     if (response.statusCode == 200 && resBody != null && resBody['success'] == true) {

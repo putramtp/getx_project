@@ -12,10 +12,13 @@ class ReceiveOrderProvider extends ApiProvider {
   //   httpClient.baseUrl = '';
   // }
 
-  Future<Map<String, dynamic>> getReceiveOrders({String? cursor}) async {
+  Future<Map<String, dynamic>> getReceiveOrders({String? cursor, Map<String, String>? params}) async {
     final response = await get(
       '/receive-order/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
 
     if (response.statusCode == 200 && response.body != null) {
@@ -40,12 +43,15 @@ class ReceiveOrderProvider extends ApiProvider {
     }
   }
 
-  Future<Map<String, dynamic>> getPurchaseOrders({String? cursor}) async {
+  Future<Map<String, dynamic>> getPurchaseOrders({String? cursor, Map<String, String>? params}) async {
     final response = await get(
       '/purchase-order/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
-
+    
     if (response.statusCode == 200 && response.body != null) {
     return response.body; // return full data including cursor
     } else {

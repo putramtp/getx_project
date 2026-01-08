@@ -1,6 +1,7 @@
-import 'package:intl/intl.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../controllers/receive_order_by_po_detail_controller.dart';
 import '../../../global/alert.dart';
@@ -10,7 +11,7 @@ import '../../../data/models/purchase_order_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class ReceiveOrderByPoController extends GetxController {
+class ReceiveOrderByPoController extends GetxController  implements TopFilterController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -25,8 +26,18 @@ class ReceiveOrderByPoController extends GetxController {
   final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
-  var startDate = Rxn<DateTime>();
-  var endDate = Rxn<DateTime>();
+  @override
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
+  @override
+  final Rx<DateTime?> endDate = Rx<DateTime?>(null);
+  @override
+  RxInt limit = 20.obs;
+  @override
+  RxDouble minPrice = 0.0.obs;
+  @override
+  RxDouble maxPrice = 1000000.0.obs;
+  @override
+  final enablePriceRange = false.obs;
 
   @override
   void onInit() {
@@ -66,7 +77,7 @@ class ReceiveOrderByPoController extends GetxController {
   Future<void> loadPurchaseOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getPurchaseOrders(cursor: null),
+      task: () => provider.getPurchaseOrders(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -105,7 +116,7 @@ class ReceiveOrderByPoController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getPurchaseOrders(cursor: cursorNext.value),
+      task: () => provider.getPurchaseOrders(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -138,42 +149,48 @@ class ReceiveOrderByPoController extends GetxController {
     }
   }
 
-  // 📅 Pick start date
+// 📅 Pick start date
+  @override
   Future<void> pickStartDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
   }
-
+  @override
   Future<void> pickEndDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: endDate.value);
     if (picked != null) endDate.value = picked;
   }
 
-  // 📆 Apply date range filter
-  void applyDateFilter() {
-    if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(
-          title: "Filter Tanggal",
-          'Please select both dates first.');
-      return;
-    }
-
-    filteredOrders.assignAll(orders.where((order) {
-      final date = order.date;
-      return date.isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
-          date.isBefore(endDate.value!.add(const Duration(days: 1)));
-    }).toList());
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (startDate.value != null)
+        'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)
+        'end_date': getDateString(endDate.value!), 
+      // if (enablePriceRange.value) ...{
+      //   'min_price': minPrice.value.toString(),
+      //   'max_price': maxPrice.value.toString(),
+      // },
+    };
   }
-  
+
+  @override
+  void applyFilter() {
+    loadPurchaseOrders();
+  }
 
   /// ♻️ Clear date filter
-  void clearDateFilter() {
+  @override
+  void clearFilter () {
+    limit.value = 20;
     startDate.value = null;
     endDate.value = null;
-    filteredOrders.assignAll(orders);
-    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
+    loadPurchaseOrders();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
 
+  @override
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy').format(date);
   }

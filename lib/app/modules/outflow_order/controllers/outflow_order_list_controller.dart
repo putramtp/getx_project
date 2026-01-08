@@ -1,3 +1,5 @@
+import 'package:getx_project/app/global/functions.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +10,7 @@ import '../../../modules/outflow_order/controllers/outflow_order_list_detail_con
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class OutflowOrderListController extends GetxController {
+class OutflowOrderListController extends GetxController  implements TopFilterController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -28,9 +30,19 @@ class OutflowOrderListController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
-  // Date filter
-  var startDate = Rxn<DateTime>();
-  var endDate = Rxn<DateTime>();
+  // 🗓️ Date filter fields
+  @override
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
+  @override
+  final Rx<DateTime?> endDate = Rx<DateTime?>(null);
+  @override
+  RxInt limit = 20.obs;
+  @override
+  RxDouble minPrice = 0.0.obs;
+  @override
+  RxDouble maxPrice = 1000000.0.obs;
+  @override
+  final enablePriceRange = false.obs;
 
 
  
@@ -55,7 +67,7 @@ class OutflowOrderListController extends GetxController {
   Future<void> loadOutflowOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getOutflowOrders(cursor: null),
+      task: () => provider.getOutflowOrders(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -95,7 +107,7 @@ class OutflowOrderListController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getOutflowOrders(cursor: cursorNext.value),
+      task: () => provider.getOutflowOrders(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -117,7 +129,7 @@ class OutflowOrderListController extends GetxController {
   }
 
   // SEARCH
-  void onSearchChanged(String query) {
+  void filterList(String query) {
     if (query.isEmpty) {
       filteredOrders.assignAll(orders);
       return;
@@ -140,50 +152,54 @@ class OutflowOrderListController extends GetxController {
     filteredOrders.refresh();
   }
 
-  // DATE FILTERS
+    // 📅 Pick start date
+  @override
   Future<void> pickStartDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: startDate.value ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
+    final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
   }
-
+  @override
   Future<void> pickEndDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: endDate.value ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
+    final picked = await pickDate(context, initialDate: endDate.value);
     if (picked != null) endDate.value = picked;
   }
 
-  void applyDateFilter() {
-    if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(title: "Filter", "Please select both dates.");
-      return;
-    }
-
-    filteredOrders.assignAll(
-      orders.where((order) {
-        return order.date
-                .isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
-            order.date.isBefore(endDate.value!.add(const Duration(days: 1)));
-      }),
-    );
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (startDate.value != null)
+        'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)
+        'end_date': getDateString(endDate.value!), 
+      // if (enablePriceRange.value) ...{
+      //   'min_price': minPrice.value.toString(),
+      //   'max_price': maxPrice.value.toString(),
+      // },
+    };
   }
 
-  void clearDateFilter() {
+  @override
+  void applyFilter() {
+    loadOutflowOrders();
+  }
+
+  /// ♻️ Clear date filter
+  @override
+  void clearFilter () {
+    limit.value = 20;
     startDate.value = null;
     endDate.value = null;
-    filteredOrders.assignAll(orders);
+    loadOutflowOrders();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
 
+  @override
+  String formatDate(DateTime date) {
+    return DateFormat('dd MMM yyyy').format(date);
+  }
+
+
   String formatYmd(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
-  String formatDate(DateTime date) => DateFormat('dd MMM yyyy').format(date);
 
   void openDetail(OutflowOrderModel order) {
     if (Get.isRegistered<OutflowOrderListDetailController>()) {

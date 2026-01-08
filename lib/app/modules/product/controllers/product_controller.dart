@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
+import 'package:intl/intl.dart';
 
 import 'product_detail.controller.dart';
 import 'product_transaction_list_controller.dart';
@@ -10,7 +14,7 @@ import '../../../data/models/product_summary_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../data/providers/product_provider.dart';
 
-class ProductController extends GetxController {
+class ProductController extends GetxController  implements TopFilterController{
   Timer? _debounce;
   final provider = Get.find<ProductProvider>();
 
@@ -35,8 +39,27 @@ class ProductController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
+  // 🗓️ Date filter fields
+  @override
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
+  @override
+  final Rx<DateTime?> endDate = Rx<DateTime?>(null);
+  @override
+  RxInt limit = 20.obs;
+  @override
+  RxDouble minPrice = 0.0.obs;
+  @override
+  RxDouble maxPrice = 100000000.0.obs;
+  @override
+  final enablePriceRange = false.obs;
+  final qtyRemainingLessThan = RxnInt();
+
+
   @override
   void onInit() {
+    searchFocus.addListener(() {
+      isSearchFocused.value = searchFocus.hasFocus;
+    });
     loadProducts();
     super.onInit();
   }
@@ -66,9 +89,10 @@ class ProductController extends GetxController {
   }
 
   Future<void> loadProducts() async {
+    log("buildParams ${buildParams().toString()}");
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getProductSummaries(),
+      task: () => provider.getProductSummaries(cursor: null,params: buildParams()),
     );
     if (res == null) return;
 
@@ -102,7 +126,7 @@ class ProductController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getProductSummaries(cursor: cursorNext.value),
+      task: () => provider.getProductSummaries(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -154,6 +178,55 @@ class ProductController extends GetxController {
       }
     });
   }
+
+  // 📅 Pick start date
+  @override
+  Future<void> pickStartDate(BuildContext context) async {
+    final picked = await pickDate(context, initialDate: startDate.value);
+    if (picked != null) startDate.value = picked;
+  }
+  @override
+  Future<void> pickEndDate(BuildContext context) async {
+    final picked = await pickDate(context, initialDate: endDate.value);
+    if (picked != null) endDate.value = picked;
+  }
+
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (qtyRemainingLessThan.value != null) 'qty_less_than': qtyRemainingLessThan.value.toString(),
+      // if (startDate.value != null)
+      //   'start_date': getDateString(startDate.value!),
+      // if (endDate.value != null)
+      //   'end_date': getDateString(endDate.value!), 
+      if (enablePriceRange.value) ...{
+        'min_price': minPrice.value.toString(),
+        'max_price': maxPrice.value.toString(),
+      },
+    };
+  }
+
+  @override
+  void applyFilter() {
+    loadProducts();
+  }
+
+  /// ♻️ Clear date filter
+  @override
+  void clearFilter () {
+    limit.value = 20;
+    startDate.value = null;
+    endDate.value = null;
+    qtyRemainingLessThan.value = null;
+    loadProducts();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
+  }
+
+  @override
+  String formatDate(DateTime date) {
+    return DateFormat('dd MMM yyyy').format(date);
+  }
+
 
   void openDetail(ProductSummaryModel product) {
     if (Get.isRegistered<ProductDetailController>()) {

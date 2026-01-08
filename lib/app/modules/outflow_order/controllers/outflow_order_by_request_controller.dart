@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ import '../../../modules/outflow_order/controllers/outflow_order_by_request_deta
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class OutflowOrderByRequestController extends GetxController {
+class OutflowOrderByRequestController extends GetxController  implements TopFilterController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -32,8 +33,18 @@ class OutflowOrderByRequestController extends GetxController {
   final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
-  var startDate = Rxn<DateTime>();
-  var endDate = Rxn<DateTime>();
+  @override
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
+  @override
+  final Rx<DateTime?> endDate = Rx<DateTime?>(null);
+  @override
+  RxInt limit = 20.obs;
+  @override
+  RxDouble minPrice = 0.0.obs;
+  @override
+  RxDouble maxPrice = 1000000.0.obs;
+  @override
+  final enablePriceRange = false.obs;
 
   @override
   void onInit() {
@@ -73,7 +84,7 @@ class OutflowOrderByRequestController extends GetxController {
   Future<void> loadRequestOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getOutflowRequests(cursor: null),
+      task: () => provider.getOutflowRequests(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -112,7 +123,7 @@ class OutflowOrderByRequestController extends GetxController {
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getOutflowRequests(cursor: cursorNext.value),
+      task: () => provider.getOutflowRequests(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -148,40 +159,47 @@ class OutflowOrderByRequestController extends GetxController {
   }
 
   // 📅 Pick start date
+  @override
   Future<void> pickStartDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
   }
-
+  @override
   Future<void> pickEndDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: endDate.value);
     if (picked != null) endDate.value = picked;
   }
 
-  // 📆 Apply date range filter
-  void applyDateFilter() {
-    if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(
-          title: 'Filter Tanggal',
-          'Please select both dates first.');
-      return;
-    }
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (startDate.value != null)
+        'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)
+        'end_date': getDateString(endDate.value!), 
+      // if (enablePriceRange.value) ...{
+      //   'min_price': minPrice.value.toString(),
+      //   'max_price': maxPrice.value.toString(),
+      // },
+    };
+  }
 
-    filteredOrders.assignAll(orders.where((order) {
-      final date = order.date;
-      return date.isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
-          date.isBefore(endDate.value!.add(const Duration(days: 1)));
-    }).toList());
+  @override
+  void applyFilter() {
+    loadRequestOrders();
   }
 
   /// ♻️ Clear date filter
-  void clearDateFilter() {
+  @override
+  void clearFilter () {
+    limit.value = 20;
     startDate.value = null;
     endDate.value = null;
-    filteredOrders.assignAll(orders);
-    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
+    loadRequestOrders();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
 
+  @override
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy').format(date);
   }
