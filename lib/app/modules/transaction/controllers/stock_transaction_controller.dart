@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:getx_project/app/data/providers/stock_transaction_provider.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:intl/intl.dart';
@@ -16,7 +17,6 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
   // Data
   var trans = <StockTransactionModel>[].obs;
-  var filteredTrans = <StockTransactionModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -24,10 +24,10 @@ class StockTransactionController extends GetxController implements TopFilterCont
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  final RxString searchQuery = ''.obs;
 
   // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
    // 🗓️ Date filter fields
   @override
@@ -61,10 +61,10 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredTrans.sort((a, b) => isAscending.value
+    trans.sort((a, b) => isAscending.value
         ? a.productName.compareTo(b.productName)
         : b.productName.compareTo(a.productName));
-    filteredTrans.refresh();
+    trans.refresh();
   }
 
   void clearSearch() {
@@ -75,22 +75,15 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
   // FIRST LOAD
   Future<void> loadstockTransactions() async {
+    cursorNext.value = null;
+    hasMore.value = true;
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       task: () => provider.getStockTransactions(cursor: null,params: buildParams()),
     );
-    // If network failed or exception handled, data is null
-    if (res == null) return;
 
-    // Reset hasMore
-    hasMore.value = true;
-
-    if (res['data'] == null) {
+     if (res == null || res['data'] == null) {
       trans.clear();
-      filteredTrans.clear();
-      cursorNext.value = null;
-      cursorPrev.value = null;
-      hasMore.value = false;
       return;
     }
 
@@ -98,22 +91,16 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
     // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
-
-    final mapped = rawList.map((e) => StockTransactionModel.fromJson(e)).toList();
-
-    trans.assignAll(mapped);
-    filteredTrans.assignAll(mapped);
+    
+    trans.assignAll(rawList.map((e) => StockTransactionModel.fromJson(e)).toList());
   }
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (!hasMore.value) return; // ⭐ stop if no more data
-    if (cursorNext.value == null) return; // no cursor → stop
-    if (isLoadingMore.value) return; // avoid double loads
+    if (!hasMore.value || cursorNext.value == null || isLoadingMore.value) return;
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
@@ -127,34 +114,20 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
-    if (cursorNext.value == null) {
-      hasMore.value = false;
-    }
+    hasMore.value = cursorNext.value != null;
 
     trans.addAll(newOrders);
-    filteredTrans.assignAll(trans);
   }
 
   String formatYmd(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date).toString();
   }
 
-  /// 🔍 Filter list by PO number
-  void filterList(String query) {
-    if (query.isEmpty) {
-      filteredTrans.assignAll(trans);
-    } else {
-      final lowerQuery = query.toLowerCase();
-      filteredTrans.assignAll(
-        trans.where((order) {
-          return order.productName.toLowerCase().contains(lowerQuery) ||
-              order.order!.code.toLowerCase().contains(lowerQuery);
-        }).toList(),
-      );
-    }
+   void onSearchChanged(String value) {
+    searchQuery.value = value.trim();
+    loadstockTransactions();
   }
 
   // 📅 Pick start date
@@ -172,14 +145,9 @@ class StockTransactionController extends GetxController implements TopFilterCont
   Map<String, String> buildParams() {
     return {
       'limit': limit.value.toString(),
-      if (startDate.value != null)
-        'start_date': getDateString(startDate.value!),
-      if (endDate.value != null)
-        'end_date': getDateString(endDate.value!), 
-      // if (enablePriceRange.value) ...{
-      //   'min_price': minPrice.value.toString(),
-      //   'max_price': maxPrice.value.toString(),
-      // },
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
+      if (startDate.value != null)  'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)    'end_date': getDateString(endDate.value!), 
     };
   }
 
@@ -194,6 +162,8 @@ class StockTransactionController extends GetxController implements TopFilterCont
     limit.value = 20;
     startDate.value = null;
     endDate.value = null;
+    searchQuery.value = '';
+    searchController.clear();
     loadstockTransactions();
     infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }

@@ -75,14 +75,14 @@ class ProductView extends GetView<ProductController> {
                     );
                   }
                   
-                  if (controller.filteredProductSummaries.isEmpty) {
+                  if (controller.productSummaries.isEmpty) {
                     return  SliverFillRemaining(
                       hasScrollBody: false,
                       child: textNoData(size),
                     );
                   }
                   
-                  var products = controller.filteredProductSummaries;
+                  var products = controller.productSummaries;
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                       childCount: products.length + 1,
@@ -96,7 +96,7 @@ class ProductView extends GetView<ProductController> {
                               onViewTransaction: () => controller.openTransaction(productSummary),
                             );
                         }
-                        if (controller.cursorNext.value != null && !controller.isSearchFocused.value) {
+                        if (controller.cursorNext.value != null &&controller.limit.value >= 8) {
                           return  Padding(
                             padding:  EdgeInsets.symmetric(vertical: size * 3),
                             child: const Center(
@@ -283,7 +283,7 @@ class ProductView extends GetView<ProductController> {
               : const SizedBox.shrink(),
             ),
             style: TextStyle(fontSize: size * 1.8),
-            onChanged: controller.onSearchChanged,
+            onChanged: controller.filterList,
           ),
         ),
         TextButton(

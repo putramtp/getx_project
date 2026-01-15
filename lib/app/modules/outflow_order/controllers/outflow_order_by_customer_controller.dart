@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'outflow_order_by_customer_detail_controller.dart';
-import '../../../global/alert.dart';
-import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/outflow_request_customer_model.dart';
 import '../../../data/providers/outflow_order_provider.dart';
@@ -47,23 +45,7 @@ class OutflowOrderByCustomerController extends GetxController {
     searchFocus.unfocus();
   }
 
-  void onSearchChanged(String value) {
-    filterList(value);
-  }
-
-  Future<void> loadCustomers() async {
-    final data = await ApiExecutor.run(
-      isLoading: isLoading,
-      task: () => provider.getCustomers(),
-    );
-    // If network failed or exception handled, data is null
-    if (data == null) return;
-    orders.assignAll(data);
-    filteredCustomers.assignAll(data);
-  }
-
-  /// 🔍 Filter list by customer name
-  void filterList(String query) {
+  void onSearchChanged(String query) {
     if (query.isEmpty) {
       filteredCustomers.assignAll(orders);
     } else {
@@ -79,39 +61,15 @@ class OutflowOrderByCustomerController extends GetxController {
     }
   }
 
-  // 📅 Pick start date
-  Future<void> pickStartDate(BuildContext context) async {
-    final picked = await pickDate(context, initialDate: startDate.value);
-    if (picked != null) startDate.value = picked;
-  }
-
-  Future<void> pickEndDate(BuildContext context) async {
-    final picked = await pickDate(context, initialDate: endDate.value);
-    if (picked != null) endDate.value = picked;
-  }
-
-  // 📆 Apply date range filter
-  void applyDateFilter() {
-    if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(
-          title: 'Filter Tanggal',
-          'Please select both dates first.');
-      return;
-    }
-
-    // filteredCustomers.assignAll(orders.where((order) {
-    //   final date = order.date;
-    //   return date.isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
-    //       date.isBefore(endDate.value!.add(const Duration(days: 1)));
-    // }).toList());
-  }
-
-  /// ♻️ Clear date filter
-  void clearDateFilter() {
-    startDate.value = null;
-    endDate.value = null;
-    filteredCustomers.assignAll(orders);
-    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
+  Future<void> loadCustomers() async {
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getCustomers(),
+    );
+    // If network failed or exception handled, data is null
+    if (data == null) return;
+    orders.assignAll(data);
+    filteredCustomers.assignAll(data);
   }
 
   String formatDate(DateTime date) {
@@ -125,7 +83,4 @@ class OutflowOrderByCustomerController extends GetxController {
     Get.toNamed(AppPages.outflowOrderByCustomerDetailPage, arguments: customer);
   }
 
-  void syncPO() async {
-    await loadCustomers();
-  }
 }

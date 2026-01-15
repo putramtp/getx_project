@@ -31,7 +31,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                       isAscending: controller.isAscending.value,
                       searchController: controller.searchController,
                       focusNode: controller.searchFocus,
-                      onSearchChanged: controller.filterList,
+                      onSearchChanged: controller.onSearchChanged,
                       onToggleSort: controller.toggleSort,
                       onOpenFilter: () => _openTopFilterSheet(context),
                     )),
@@ -42,7 +42,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                       return textLoading(size);
                     }
       
-                    final trans = controller.filteredTrans;
+                    final trans = controller.trans;
                     if (trans.isEmpty) {
                       return textNoData(size,message: "No stock transaction data.");
                     }
@@ -62,7 +62,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                             return _buildOrderCard(trans[index], size);
                           }
                           
-                          if (controller.cursorNext.value != null && !controller.isSearchFocused.value) {
+                          if (controller.cursorNext.value != null  &&  controller.limit.value >= 8 ) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 18),
                               child: Center(

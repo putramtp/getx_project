@@ -98,8 +98,10 @@ class LoginController extends GetxController {
           // ✅ Save auth data in AuthService
           _authService.setToken(token);
           _authService.setUsername(username);
-          _authService.setRoles(
-              (roles != null && roles.isNotEmpty) ? roles.join(', ') : '-');
+          if (roles != null && roles.isNotEmpty) {
+            final List<String> roleNames = (roles as List).map((role) => role['name'] as String).toList();
+            _authService.setRoles(roleNames.join(', '));
+          }
 
           // ✅ Success alert
           successAlert("Success Login as ${username ?? 'User'}");

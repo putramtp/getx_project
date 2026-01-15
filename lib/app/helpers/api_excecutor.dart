@@ -25,7 +25,7 @@ class ApiExecutor {
       // ✅ Run the actual API task
       return await task();
     } catch (e) {
-      errorAlert("Unexpected error: $e");
+      errorAlert("$e");
       return null;
     } finally {
       // ✅ Always turn off loading

@@ -77,10 +77,13 @@ class ProductProvider extends ApiProvider {
     }
   }
 
-  Future<Map<String, dynamic>> getProductCategories({String? cursor}) async {
+  Future<Map<String, dynamic>> getProductCategories({String? cursor, Map<String, String>? params}) async {
      final response = await get(
       '/item-category/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
     final resBody =  response.body;
     if (response.statusCode == 200 &&resBody != null && resBody['success'] == true) {
@@ -90,10 +93,29 @@ class ProductProvider extends ApiProvider {
     }
   }
 
-  Future<Map<String, dynamic>> getProductBrands({String? cursor}) async {
+  Future<Map<String, dynamic>> getProductUnits({String? cursor, Map<String, String>? params}) async {
+     final response = await get(
+      '/unit/pagination',
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
+    );
+    final resBody =  response.body;
+    if (response.statusCode == 200 &&resBody != null && resBody['success'] == true) {
+      return resBody;
+    } else {
+      throw Exception( 'Failed to load getProductUnits: ${response.statusText}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getProductBrands({String? cursor, Map<String, String>? params}) async {
      final response = await get(
       '/item-brand/pagination',
-      query: cursor != null ? {'cursor': cursor} : {},
+      query: {
+        if (params != null) ...params,
+        if (cursor != null) 'cursor': cursor,
+      },
     );
     final resBody =  response.body;
     if (response.statusCode == 200 &&resBody != null && resBody['success'] == true) {

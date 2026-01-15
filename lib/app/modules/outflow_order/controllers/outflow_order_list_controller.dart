@@ -17,7 +17,6 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
 
   // Data
   var orders = <OutflowOrderModel>[].obs;
-  var filteredOrders = <OutflowOrderModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -25,10 +24,10 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  final RxString searchQuery = ''.obs;
 
   // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
   @override
@@ -77,9 +76,7 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
 
     if (res['data'] == null) {
       orders.clear();
-      filteredOrders.clear();
       cursorNext.value = null;
-      cursorPrev.value = null;
       hasMore.value = false;
       return;
     }
@@ -88,7 +85,6 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
 
     // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
@@ -96,7 +92,6 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
     final mapped = rawList.map((e) => OutflowOrderModel.fromJson(e)).toList();
 
     orders.assignAll(mapped);
-    filteredOrders.assignAll(mapped);
   }
 
   // LOAD NEXT PAGE
@@ -117,7 +112,6 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
     if (cursorNext.value == null) {
@@ -125,31 +119,19 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
     }
 
     orders.addAll(newOrders);
-    filteredOrders.assignAll(orders);
   }
 
-  // SEARCH
-  void filterList(String query) {
-    if (query.isEmpty) {
-      filteredOrders.assignAll(orders);
-      return;
-    }
-
-    final lower = query.toLowerCase();
-    filteredOrders.assignAll(
-      orders.where((o) =>
-          o.code.toLowerCase().contains(lower) ||
-          o.customer.toLowerCase().contains(lower)),
-    );
+  void onSearchChanged(String value) {
+    searchQuery.value = value.trim();
+    loadOutflowOrders();
   }
-
   // SORT
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredOrders.sort((a, b) => isAscending.value
+    orders.sort((a, b) => isAscending.value
         ? a.code.compareTo(b.code)
         : b.code.compareTo(a.code));
-    filteredOrders.refresh();
+    orders.refresh();
   }
 
     // 📅 Pick start date
@@ -167,14 +149,9 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
   Map<String, String> buildParams() {
     return {
       'limit': limit.value.toString(),
-      if (startDate.value != null)
-        'start_date': getDateString(startDate.value!),
-      if (endDate.value != null)
-        'end_date': getDateString(endDate.value!), 
-      // if (enablePriceRange.value) ...{
-      //   'min_price': minPrice.value.toString(),
-      //   'max_price': maxPrice.value.toString(),
-      // },
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
+      if (startDate.value != null)'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)'end_date': getDateString(endDate.value!), 
     };
   }
 
@@ -189,6 +166,8 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
     limit.value = 20;
     startDate.value = null;
     endDate.value = null;
+    searchQuery.value = '';
+    searchController.clear();
     loadOutflowOrders();
     infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
@@ -197,7 +176,6 @@ class OutflowOrderListController extends GetxController  implements TopFilterCon
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy').format(date);
   }
-
 
   String formatYmd(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 

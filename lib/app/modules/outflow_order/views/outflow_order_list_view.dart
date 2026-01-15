@@ -31,7 +31,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                   isAscending: controller.isAscending.value,
                   searchController: controller.searchController,
                   focusNode: controller.searchFocus,
-                  onSearchChanged: controller.filterList,
+                  onSearchChanged: controller.onSearchChanged,
                   onToggleSort: controller.toggleSort,
                   onOpenFilter: () => _openTopFilterSheet(context),
                 )),
@@ -42,7 +42,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                       return textLoading(size);
                     }
       
-                    final orders = controller.filteredOrders;
+                    final orders = controller.orders;
                     if (orders.isEmpty) {
                       return textNoData(size);
                     }
@@ -60,7 +60,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                           if (index < orders.length) {
                             return _buildOrderCard(orders[index],size);
                           }
-                          if (controller.cursorNext.value != null && !controller.isSearchFocused.value) {
+                          if (controller.cursorNext.value != null &&controller.limit.value >= 8) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 18),
                               child: Center(

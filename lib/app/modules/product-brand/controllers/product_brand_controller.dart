@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 //=========== INTERNAL IMPORTS ============
@@ -15,7 +16,6 @@ class ProductBrandController extends GetxController {
 
   // Data
   var orders = <ProductBrandModel>[].obs;
-  var filteredOrders = <ProductBrandModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -23,10 +23,11 @@ class ProductBrandController extends GetxController {
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  RxInt limit = 20.obs;
+  final RxString searchQuery = ''.obs;
 
   // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
   @override
   void onInit() {
@@ -46,10 +47,10 @@ class ProductBrandController extends GetxController {
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredOrders.sort((a, b) => isAscending.value
+    orders.sort((a, b) => isAscending.value
         ? a.name.compareTo(b.name)
         : b.name.compareTo(a.name));
-    filteredOrders.refresh();
+    orders.refresh();
   }
 
   void clearSearch() {
@@ -57,15 +58,35 @@ class ProductBrandController extends GetxController {
     searchFocus.unfocus();
   }
 
+  void clearFilter() {
+    limit.value = 20;
+    searchQuery.value = '';
+    searchController.clear();
+    loadBrands();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
+  }
+
   void onSearchChanged(String value) {
-    filterList(value);
+    searchQuery.value = value.trim();
+    loadBrands();
+  }
+
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
+    };
+  }
+
+  void applyFilter() {
+    loadBrands();
   }
 
   // FIRST LOAD
   Future<void> loadBrands() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getProductBrands(cursor: null),
+      task: () => provider.getProductBrands(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -75,9 +96,7 @@ class ProductBrandController extends GetxController {
 
     if (res['data'] == null) {
       orders.clear();
-      filteredOrders.clear();
       cursorNext.value = null;
-      cursorPrev.value = null;
       hasMore.value = false;
       return;
     }
@@ -86,7 +105,6 @@ class ProductBrandController extends GetxController {
 
     // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
@@ -94,7 +112,6 @@ class ProductBrandController extends GetxController {
     final mapped = rawList.map((e) => ProductBrandModel.fromJson(e)).toList();
 
     orders.assignAll(mapped);
-    filteredOrders.assignAll(mapped);
   }
 
   // LOAD NEXT PAGE
@@ -115,7 +132,6 @@ class ProductBrandController extends GetxController {
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
     if (cursorNext.value == null) {
@@ -123,27 +139,12 @@ class ProductBrandController extends GetxController {
     }
 
     orders.addAll(newOrders);
-    filteredOrders.assignAll(orders);
   }
 
   String formatYmd(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date).toString();
   }
 
-  /// 🔍 Filter list by PO number
-  void filterList(String query) {
-    if (query.isEmpty) {
-      filteredOrders.assignAll(orders);
-    } else {
-      final lowerQuery = query.toLowerCase();
-      filteredOrders.assignAll(
-        orders.where((order) {
-          return order.name.toLowerCase().contains(lowerQuery) ||
-              order.initialCode.toLowerCase().contains(lowerQuery);
-        }).toList(),
-      );
-    }
-  }
 
   void openDetail(ProductBrandModel brand) {
     if (Get.isRegistered<ProductByBrandController>()) {

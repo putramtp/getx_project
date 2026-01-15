@@ -16,14 +16,15 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
   var orders = <PurchaseOrderModel>[].obs;
-  var filteredOrders = <PurchaseOrderModel>[].obs;
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; 
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  final RxString searchQuery = ''.obs;
+
+  // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
   @override
@@ -58,10 +59,10 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredOrders.sort((a, b) => isAscending.value
+    orders.sort((a, b) => isAscending.value
         ? a.poNumber.compareTo(b.poNumber)
         : b.poNumber.compareTo(a.poNumber));
-    filteredOrders.refresh();
+    orders.refresh();
   }
 
   void clearSearch() {
@@ -70,7 +71,8 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
   }
 
   void onSearchChanged(String value) {
-    filterList(value);
+    searchQuery.value = value.trim();
+    loadPurchaseOrders();
   }
 
   // FIRST LOAD
@@ -87,9 +89,7 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
 
     if (res['data'] == null) {
       orders.clear();
-      filteredOrders.clear();
       cursorNext.value = null;
-      cursorPrev.value = null;
       hasMore.value = false;
       return;
     }
@@ -98,14 +98,12 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
 
     // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
 
     final mapped = rawList.map((e) => PurchaseOrderModel.fromJson(e)).toList();
     orders.assignAll(mapped);
-    filteredOrders.assignAll(mapped);
   }
 
   // LOAD NEXT PAGE
@@ -126,7 +124,6 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
     if (cursorNext.value == null) {
@@ -134,20 +131,8 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
     }
 
     orders.addAll(newOrders);
-    filteredOrders.assignAll(orders);
   }
 
-  /// 🔍 Filter list by PO number
-  void filterList(String query) {
-    if (query.isEmpty) {
-      filteredOrders.assignAll(orders);
-    } else {
-      filteredOrders.assignAll(
-        orders.where((order) =>
-            order.poNumber.toLowerCase().contains(query.toLowerCase())),
-      );
-    }
-  }
 
 // 📅 Pick start date
   @override
@@ -164,14 +149,9 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
   Map<String, String> buildParams() {
     return {
       'limit': limit.value.toString(),
-      if (startDate.value != null)
-        'start_date': getDateString(startDate.value!),
-      if (endDate.value != null)
-        'end_date': getDateString(endDate.value!), 
-      // if (enablePriceRange.value) ...{
-      //   'min_price': minPrice.value.toString(),
-      //   'max_price': maxPrice.value.toString(),
-      // },
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
+      if (startDate.value != null)'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)'end_date': getDateString(endDate.value!), 
     };
   }
 
@@ -186,6 +166,8 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
     limit.value = 20;
     startDate.value = null;
     endDate.value = null;
+    searchQuery.value = '';
+    searchController.clear();
     loadPurchaseOrders();
     infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }

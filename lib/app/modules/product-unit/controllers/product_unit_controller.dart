@@ -1,4 +1,5 @@
 import 'package:getx_project/app/data/models/product_unit_model.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +12,7 @@ class ProductUnitController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   // Data
-  var orders = <ProductUnitModel>[].obs;
-  var filteredOrders = <ProductUnitModel>[].obs;
+  var units = <ProductUnitModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -20,10 +20,11 @@ class ProductUnitController extends GetxController {
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  RxInt limit = 20.obs;
+  final RxString searchQuery = ''.obs;
 
   // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
   @override
   void onInit() {
@@ -31,7 +32,7 @@ class ProductUnitController extends GetxController {
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    loadCategories();
+    loadUnits();
   }
 
   @override
@@ -43,10 +44,10 @@ class ProductUnitController extends GetxController {
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredOrders.sort((a, b) => isAscending.value
+    units.sort((a, b) => isAscending.value
         ? a.name.compareTo(b.name)
         : b.name.compareTo(a.name));
-    filteredOrders.refresh();
+    units.refresh();
   }
 
   void clearSearch() {
@@ -54,15 +55,35 @@ class ProductUnitController extends GetxController {
     searchFocus.unfocus();
   }
 
-  void onSearchChanged(String value) {
-    filterList(value);
+  
+  void clearFilter() {
+    limit.value = 20;
+    searchQuery.value = '';
+    searchController.clear();
+    loadUnits();
+    infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
 
+  void onSearchChanged(String value) {
+    searchQuery.value = value.trim();
+    loadUnits();
+  }
+
+  Map<String, String> buildParams() {
+    return {
+      'limit': limit.value.toString(),
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
+    };
+  }
+
+  void applyFilter() {
+    loadUnits();
+  }
   // FIRST LOAD
-  Future<void> loadCategories() async {
+  Future<void> loadUnits() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () => provider.getProductCategories(cursor: null),
+      task: () => provider.getProductUnits(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
     if (res == null) return;
@@ -71,10 +92,8 @@ class ProductUnitController extends GetxController {
     hasMore.value = true;
 
     if (res['data'] == null) {
-      orders.clear();
-      filteredOrders.clear();
+      units.clear();
       cursorNext.value = null;
-      cursorPrev.value = null;
       hasMore.value = false;
       return;
     }
@@ -83,15 +102,13 @@ class ProductUnitController extends GetxController {
 
     // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
 
     final mapped = rawList.map((e) => ProductUnitModel.fromJson(e)).toList();
 
-    orders.assignAll(mapped);
-    filteredOrders.assignAll(mapped);
+    units.assignAll(mapped);
   }
 
   // LOAD NEXT PAGE
@@ -112,35 +129,19 @@ class ProductUnitController extends GetxController {
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
     if (cursorNext.value == null) {
       hasMore.value = false;
     }
 
-    orders.addAll(newOrders);
-    filteredOrders.assignAll(orders);
+    units.addAll(newOrders);
   }
 
   String formatYmd(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date).toString();
   }
 
-  /// 🔍 Filter list by PO number
-  void filterList(String query) {
-    if (query.isEmpty) {
-      filteredOrders.assignAll(orders);
-    } else {
-      final lowerQuery = query.toLowerCase();
-      filteredOrders.assignAll(
-        orders.where((order) {
-          return order.name.toLowerCase().contains(lowerQuery) ||
-              order.description.toLowerCase().contains(lowerQuery);
-        }).toList(),
-      );
-    }
-  }
 
   void openDetail(ProductUnitModel unit) {
     Get.defaultDialog(

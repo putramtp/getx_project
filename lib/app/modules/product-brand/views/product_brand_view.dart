@@ -35,6 +35,7 @@ class ProductBrandView extends GetView<ProductBrandController> {
                     focusNode: controller.searchFocus,
                     onSearchChanged: controller.onSearchChanged,
                     onToggleSort: controller.toggleSort,
+                    onOpenFilter: () => _showLimitDialog(context:context),
                 )),
                 const SizedBox(height: 12),
                 Expanded(
@@ -43,7 +44,7 @@ class ProductBrandView extends GetView<ProductBrandController> {
                       return textLoading(size);
                     }
     
-                    final orders = controller.filteredOrders;
+                    final orders = controller.orders;
                     if (orders.isEmpty) {
                       return textNoData(size);
                     }
@@ -70,7 +71,7 @@ class ProductBrandView extends GetView<ProductBrandController> {
                             return _brandGridCard(orders[index], size);
                           }
                         
-                          if (controller.cursorNext.value != null) {
+                          if (controller.cursorNext.value != null && controller.limit.value >= 8) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 18),
                               child: Center(
@@ -111,6 +112,103 @@ class ProductBrandView extends GetView<ProductBrandController> {
           ),
         ),
       ),
+    );
+  }
+
+    void _showLimitDialog({
+    required BuildContext context,
+  }) {
+    final TextEditingController tController =
+        TextEditingController(text: controller.limit.value.toString());
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Limit Dialog',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (_, __, ___) {
+        return Center(
+          child: Material(
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Set Limit',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: tController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Limit',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            controller.clearFilter();
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Clear'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                          ),
+                          onPressed: () {
+                            final value = int.tryParse(tController.text);
+
+                            if (value == null || value <= 0) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please enter a valid number'),
+                                ),
+                              );
+                              return;
+                            }
+                            controller.limit.value = value;
+                            controller.applyFilter();
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Apply',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (_, animation, __, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutBack,
+          ),
+          child: child,
+        );
+      },
     );
   }
 

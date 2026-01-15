@@ -1,10 +1,8 @@
-import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
 import '../controllers/receive_order_by_supplier_detail_controller.dart';
 import '../../../global/alert.dart';
-import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/purchase_order_supplier_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
@@ -20,10 +18,6 @@ class ReceiveOrderBySupplierController extends GetxController {
   var filteredSuppliers = <PoSupplierModel>[].obs;
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
-
-  // 🗓️ Date filter fields
-  var startDate = Rxn<DateTime>();
-  var endDate = Rxn<DateTime>();
 
   @override
   void onInit() {
@@ -54,25 +48,8 @@ class ReceiveOrderBySupplierController extends GetxController {
     searchFocus.unfocus();
   }
 
-  void onSearchChanged(String value) {
-    filterList(value);
-  }
-
-  Future<void> loadSuppliers() async {
-    final data = await ApiExecutor.run(
-      isLoading: isLoading,
-      task: () => provider.getSuppliers(),
-    );
-
-    // If network failed or exception handled, data is null
-    if (data == null) return;
-    orders.assignAll(data);
-    filteredSuppliers.assignAll(data);
-  }
-
-  /// 🔍 Filter list by supplier name
-  void filterList(String query) {
-    if (query.isEmpty) {
+  void onSearchChanged(String query) {
+   if (query.isEmpty) {
       filteredSuppliers.assignAll(orders);
     } else {
       filteredSuppliers.assignAll(
@@ -86,44 +63,23 @@ class ReceiveOrderBySupplierController extends GetxController {
     }
   }
 
-  // 📅 Pick start date
-  Future<void> pickStartDate(BuildContext context) async {
-    final picked = await pickDate(context, initialDate: startDate.value);
-    if (picked != null) startDate.value = picked;
+  Future<void> loadSuppliers() async {
+    final data = await ApiExecutor.run(
+      isLoading: isLoading,
+      task: () => provider.getSuppliers(),
+    );
+    // If network failed or exception handled, data is null
+    if (data == null) return;
+    orders.assignAll(data);
+    filteredSuppliers.assignAll(data);
   }
 
-  Future<void> pickEndDate(BuildContext context) async {
-    final picked = await pickDate(context, initialDate: endDate.value);
-    if (picked != null) endDate.value = picked;
-  }
 
-  // 📆 Apply date range filter
-  void applyDateFilter() {
-    if (startDate.value == null || endDate.value == null) {
-      infoAlertBottom(
-          title: 'Filter Tanggal',
-          'Please select both dates first.');
-      return;
-    }
-
-    // filteredSuppliers.assignAll(orders.where((order) {
-    //   final date = order.date;
-    //   return date.isAfter(startDate.value!.subtract(const Duration(days: 1))) &&
-    //       date.isBefore(endDate.value!.add(const Duration(days: 1)));
-    // }).toList());
-  }
-
-  /// ♻️ Clear date filter
   void clearDateFilter() {
-    startDate.value = null;
-    endDate.value = null;
     filteredSuppliers.assignAll(orders);
     infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
   }
 
-  String formatDate(DateTime date) {
-    return DateFormat('dd MMM yyyy').format(date);
-  }
 
   void openDetail(PoSupplierModel supplier) {
     if (Get.isRegistered<ReceiveOrderBySupplierDetailController>()) {

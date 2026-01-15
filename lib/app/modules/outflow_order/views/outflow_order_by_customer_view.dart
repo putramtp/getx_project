@@ -106,7 +106,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      customer.customerCode,
+                      customer.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -116,7 +116,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      customer.name,
+                      customer.customerCode,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

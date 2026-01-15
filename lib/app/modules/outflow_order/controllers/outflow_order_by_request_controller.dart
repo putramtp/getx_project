@@ -18,7 +18,6 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
   // Data
   var orders = <OutflowRequestModel>[].obs;
-  var filteredOrders = <OutflowRequestModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -26,11 +25,11 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
+  final RxString searchQuery = ''.obs;
 
 
   // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
   @override
@@ -65,10 +64,10 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredOrders.sort((a, b) => isAscending.value
+    orders.sort((a, b) => isAscending.value
         ? a.code.compareTo(b.code)
         : b.code.compareTo(a.code));
-    filteredOrders.refresh();
+    orders.refresh();
   }
 
   void clearSearch() {
@@ -78,7 +77,8 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
   }
 
   void onSearchChanged(String value) {
-    filterList(value);
+    searchQuery.value = value.trim();
+    loadRequestOrders();
   }
 
   Future<void> loadRequestOrders() async {
@@ -94,9 +94,7 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
     if (res['data'] == null) {
       orders.clear();
-      filteredOrders.clear();
       cursorNext.value = null;
-      cursorPrev.value = null;
       hasMore.value = false;
       return;
     }
@@ -105,14 +103,12 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
     // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
 
     final mapped = rawList.map((e) => OutflowRequestModel.fromJson(e)).toList();
     orders.assignAll(mapped);
-    filteredOrders.assignAll(mapped);
   }
 
   // LOAD NEXT PAGE
@@ -133,7 +129,6 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
     if (cursorNext.value == null) {
@@ -141,22 +136,8 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
     }
 
     orders.addAll(newOrders);
-    filteredOrders.assignAll(orders);
   }
 
-  /// 🔍 Filter list by PO number
-  void filterList(String query) {
-    if (query.isEmpty) {
-      filteredOrders.assignAll(orders);
-    } else {
-      final lowerQuery = query.toLowerCase();
-      filteredOrders.assignAll(
-        orders.where((order) =>
-            order.code.toLowerCase().contains(lowerQuery) ||
-            order.customer.toLowerCase().contains(lowerQuery)),
-      );
-    }
-  }
 
   // 📅 Pick start date
   @override
@@ -173,14 +154,9 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
   Map<String, String> buildParams() {
     return {
       'limit': limit.value.toString(),
-      if (startDate.value != null)
-        'start_date': getDateString(startDate.value!),
-      if (endDate.value != null)
-        'end_date': getDateString(endDate.value!), 
-      // if (enablePriceRange.value) ...{
-      //   'min_price': minPrice.value.toString(),
-      //   'max_price': maxPrice.value.toString(),
-      // },
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
+      if (startDate.value != null)'start_date': getDateString(startDate.value!),
+      if (endDate.value != null)'end_date': getDateString(endDate.value!), 
     };
   }
 
@@ -195,6 +171,8 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
     limit.value = 20;
     startDate.value = null;
     endDate.value = null;
+    searchQuery.value = '';
+    searchController.clear();
     loadRequestOrders();
     infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }

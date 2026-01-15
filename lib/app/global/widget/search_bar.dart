@@ -53,16 +53,28 @@ class SearchBarWidget extends StatelessWidget {
                         borderSide: BorderSide.none,
                       ),
                       suffixIcon: isFocused
-                          ? IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                searchController.clear();
-                                FocusScope.of(context).unfocus();
-                              },
-                            )
+                          ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                  icon: const Icon(Icons.check),
+                                   onPressed: () {
+                                    onSearchChanged(searchController.text.trim());
+                                  },
+                              ),
+                              IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    searchController.clear();
+                                    onSearchChanged('');
+                                    FocusScope.of(context).unfocus();
+                                  },
+                                ),
+                            ],
+                          )
                           : null,
                     ),
-                    onChanged: onSearchChanged,
+                    // onChanged: onSearchChanged,
                   ),
                 ),
               ),

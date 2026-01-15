@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/alert.dart';
@@ -22,7 +21,6 @@ class ProductController extends GetxController  implements TopFilterController{
   final FocusNode searchFocus = FocusNode();
   // data
   var productSummaries = <ProductSummaryModel>[].obs;
-  var filteredProductSummaries = <ProductSummaryModel>[].obs;
 
   // State
   var isLoading = false.obs;
@@ -34,10 +32,10 @@ class ProductController extends GetxController  implements TopFilterController{
   var stockInHand = 0.obs;
   var isSearching = false.obs;
   var isStillSearch = false.obs;
+  final RxString searchQuery = ''.obs;
 
   // Cursors
   final RxnString cursorNext = RxnString();
-  final RxnString cursorPrev = RxnString();
 
   // 🗓️ Date filter fields
   @override
@@ -89,14 +87,15 @@ class ProductController extends GetxController  implements TopFilterController{
   }
 
   Future<void> loadProducts() async {
-    log("buildParams ${buildParams().toString()}");
+    cursorNext.value = null;
+    hasMore.value = true;
+
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       task: () => provider.getProductSummaries(cursor: null,params: buildParams()),
     );
-    if (res == null) return;
-
-    if (res['data'] == null) {
+   
+    if (res == null || res['data'] == null) {
       productSummaries.clear();
       return;
     }
@@ -107,22 +106,16 @@ class ProductController extends GetxController  implements TopFilterController{
 
       // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If backend says no more pages
     hasMore.value = cursorNext.value != null;
 
-    final mapped = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
-
-    productSummaries.assignAll(mapped);
-    filteredProductSummaries.assignAll(mapped);
+    productSummaries.assignAll(rawList.map((e) => ProductSummaryModel.fromJson(e)).toList());
   }
 
     // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (!hasMore.value) return; // ⭐ stop if no more data
-    if (cursorNext.value == null) return; // no cursor → stop
-    if (isLoadingMore.value) return; // avoid double loads
+    if (!hasMore.value || cursorNext.value == null || isLoadingMore.value) return;
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
@@ -132,50 +125,37 @@ class ProductController extends GetxController  implements TopFilterController{
     if (res == null) return;
 
     final List rawList = res['data'] ?? [];
-    final newOrders = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
+    final newProducts = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
 
     // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
-    cursorPrev.value = res['prev_cursor'];
 
     // If response returns null cursor → no more data
-    if (cursorNext.value == null) {
-      hasMore.value = false;
-    }
+    hasMore.value = cursorNext.value != null;
 
-    productSummaries.addAll(newOrders);
-    filteredProductSummaries.assignAll(productSummaries);
+    productSummaries.addAll(newProducts);
   }
 
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredProductSummaries.sort((a, b) => isAscending.value
+    productSummaries.sort((a, b) => isAscending.value
         ? a.itemName.compareTo(b.itemName)
         : b.itemName.compareTo(a.itemName));
-    filteredProductSummaries.refresh();
+    productSummaries.refresh();
   }
 
-  void onSearchChanged(String value) {
-    isStillSearch.value = value.isEmpty ? false :true;
-    filterList(value);
-  }
+
 
   void filterList(String value) {
-    final query = value.trim().toLowerCase();
+    searchQuery.value = value.trim();
+    isStillSearch.value = value.isNotEmpty;
+
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      if (query.isEmpty) {
-        filteredProductSummaries.assignAll(productSummaries);
-      } else {
-        filteredProductSummaries.assignAll(
-          productSummaries.where((item) {
-            final name = item.itemName.trim().toLowerCase();
-            final code = item.itemCode.trim().toLowerCase();
-            return name.contains(query) || code.contains(query);
-          }).toList(),
-        );
-      }
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      final latestQuery = searchController.text.trim(); // latest
+      searchQuery.value = latestQuery;
+      loadProducts();
     });
   }
 
@@ -194,11 +174,8 @@ class ProductController extends GetxController  implements TopFilterController{
   Map<String, String> buildParams() {
     return {
       'limit': limit.value.toString(),
+      if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
       if (qtyRemainingLessThan.value != null) 'qty_less_than': qtyRemainingLessThan.value.toString(),
-      // if (startDate.value != null)
-      //   'start_date': getDateString(startDate.value!),
-      // if (endDate.value != null)
-      //   'end_date': getDateString(endDate.value!), 
       if (enablePriceRange.value) ...{
         'min_price': minPrice.value.toString(),
         'max_price': maxPrice.value.toString(),
@@ -218,6 +195,8 @@ class ProductController extends GetxController  implements TopFilterController{
     startDate.value = null;
     endDate.value = null;
     qtyRemainingLessThan.value = null;
+    searchQuery.value = '';
+    searchController.clear();
     loadProducts();
     infoAlertBottom(title: 'Filter deleted', 'Filter has been reset.');
   }
