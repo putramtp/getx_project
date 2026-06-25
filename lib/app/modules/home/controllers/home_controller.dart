@@ -11,6 +11,9 @@ import '../../../data/models/stock_transaction_model.dart';
 import '../../../data/providers/home_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../routes/app_pages.dart';
+import '../../../global/variables.dart';
+import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 
 class HomeController extends GetxController {
   final HomeProvider provider = Get.find<HomeProvider>();
@@ -158,7 +161,7 @@ class HomeController extends GetxController {
 
       if (i == 0) {
         return PieChartSectionData(
-          color: Colors.blue,
+          color: navyDark,
           value: uniquePercent,
           title: '${uniquePercent.toStringAsFixed(1)}%',
           radius: radius,
@@ -171,7 +174,7 @@ class HomeController extends GetxController {
         );
       } else {
         return PieChartSectionData(
-          color: Colors.yellow,
+          color: hex1,
           value: otherPercent,
           title: '${otherPercent.toStringAsFixed(1)}%',
           radius: radius,
@@ -187,41 +190,274 @@ class HomeController extends GetxController {
   }
 
   void showAccountSheet(String userName) {
-      Get.bottomSheet(
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.info, color: Color(0xff2D6187)),
-                title: const Text("Account Info"),
-                onTap: () {
-                  Get.back();
-                  Get.defaultDialog(
-                    title: "Account Detail",
-                    middleText: "Your logged in as:\n$userName",
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text("Logout"),
-                onTap: () {
-                  Get.back();
-                  logout();
-                  infoAlertBottom(
-                    title: "Logout",
-                    "You have been logged out",
-                  );
-                },
-              ),
-            ],
-          ),
+    final size = SizeConfig.defaultSize;
+    final roles = getRoles();
+    final initials = userName.trim().isEmpty
+        ? '?'
+        : userName.trim().split(' ').take(2).map((w) => w[0].toUpperCase()).join();
+
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-      );
-    }
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // handle
+            Container(
+              margin: EdgeInsets.only(top: size * 1.2),
+              width: size * 4,
+              height: size * 0.4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(size),
+              ),
+            ),
+
+            // avatar + name + role
+            Container(
+              margin: EdgeInsets.all(size * 2),
+              padding: EdgeInsets.all(size * 2),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [navyDark, navyMid],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(size * 2),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: size * 3,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: Text(
+                      initials,
+                      style: TextStyle(
+                        fontSize: size * 2,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: size * 1.5),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(userName, style: AppTextStyle.h4(size, color: Colors.white)),
+                        SizedBox(height: size * 0.4),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: size * 1, vertical: size * 0.3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(size * 2),
+                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.verified_user_rounded, color: Colors.white70, size: size * 1.3),
+                              SizedBox(width: size * 0.4),
+                              Text(roles, style: TextStyle(fontSize: size * 1.2, color: Colors.white, fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // menu items
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: size * 2),
+              child: Column(
+                children: [
+                  _sheetTile(
+                    size: size,
+                    icon: Icons.info_outline_rounded,
+                    iconColor: navyDark,
+                    label: 'Account Info',
+                    onTap: () {
+                      Get.back();
+                      _showAccountDetailDialog(userName, roles, size, initials);
+                    },
+                  ),
+                  Divider(height: 1, color: Colors.grey.shade100),
+                  _sheetTile(
+                    size: size,
+                    icon: Icons.logout_rounded,
+                    iconColor: Colors.red.shade400,
+                    label: 'Logout',
+                    labelColor: Colors.red.shade400,
+                    onTap: () {
+                      Get.back();
+                      logout();
+                      infoAlertBottom(title: "Logout", "You have been logged out");
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: size * 2),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showAccountDetailDialog(String userName, String roles, double size, String initials) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(size * 2.2)),
+        insetPadding: EdgeInsets.symmetric(horizontal: size * 3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(size * 2.5),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [navyDark, navyMid],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(size * 2.2)),
+              ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: size * 4,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: Text(
+                      initials,
+                      style: TextStyle(fontSize: size * 2.8, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(height: size * 1.2),
+                  Text(userName, style: AppTextStyle.h3(size, color: Colors.white)),
+                  SizedBox(height: size * 0.6),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: size * 1.2, vertical: size * 0.4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(size * 2),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.verified_user_rounded, color: Colors.white70, size: size * 1.3),
+                        SizedBox(width: size * 0.4),
+                        Text(roles, style: TextStyle(fontSize: size * 1.2, color: Colors.white, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // info rows
+            Padding(
+              padding: EdgeInsets.all(size * 2),
+              child: Column(
+                children: [
+                  _dialogInfoRow(size, Icons.person_outline_rounded,    'Username', userName),
+                  SizedBox(height: size * 1.2),
+                  _dialogInfoRow(size, Icons.shield_outlined,           'Role',     roles),
+                  SizedBox(height: size * 1.2),
+                  _dialogInfoRow(size, Icons.business_outlined,         'Company',  'Mastercool'),
+                  SizedBox(height: size * 2),
+
+                  // close button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Get.back(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: navyDark,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: size * 1.2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(size * 1.4)),
+                        elevation: 0,
+                      ),
+                      child: Text('Close', style: AppTextStyle.h5(size, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogInfoRow(double size, IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(size * 0.7),
+          decoration: BoxDecoration(
+            color: navyDark.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(size),
+          ),
+          child: Icon(icon, size: size * 1.6, color: navyDark),
+        ),
+        SizedBox(width: size * 1.2),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: AppTextStyle.small(size, color: Colors.grey.shade500)),
+            Text(value,  style: AppTextStyle.h5(size)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _sheetTile({
+    required double size,
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    Color? labelColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(size * 1.2),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: size * 1.2),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(size * 0.8),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(size * 1),
+              ),
+              child: Icon(icon, color: iconColor, size: size * 1.8),
+            ),
+            SizedBox(width: size * 1.4),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyle.h5(size, color: labelColor ?? Colors.black87),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400, size: size * 2),
+          ],
+        ),
+      ),
+    );
+  }
 }

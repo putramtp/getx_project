@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
@@ -29,18 +29,16 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: "Warehouse App",
         theme: ThemeData(
+            fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
             textTheme: TextTheme(
-              headlineLarge: TextStyle(fontSize: SizeConfig.fontSize(2.5),fontWeight: FontWeight.bold,),
-              headlineMedium: TextStyle(fontSize: SizeConfig.fontSize(2.3),fontWeight: FontWeight.bold),
-              headlineSmall: TextStyle(fontSize: SizeConfig.fontSize(2),fontWeight: FontWeight.bold),
-              titleLarge: TextStyle(
-                fontSize: SizeConfig.fontSize(2.1),
-                fontWeight: FontWeight.bold,
-              ),
+              headlineLarge: TextStyle(fontSize: SizeConfig.fontSize(2.5), fontWeight: FontWeight.bold),
+              headlineMedium: TextStyle(fontSize: SizeConfig.fontSize(2.3), fontWeight: FontWeight.bold),
+              headlineSmall: TextStyle(fontSize: SizeConfig.fontSize(2),   fontWeight: FontWeight.bold),
+              titleLarge:  TextStyle(fontSize: SizeConfig.fontSize(2.1),   fontWeight: FontWeight.bold),
               titleMedium: TextStyle(fontSize: SizeConfig.fontSize(1.7)),
-              bodyLarge: TextStyle(fontSize: SizeConfig.fontSize(1.5)),
-              bodyMedium: TextStyle(fontSize: SizeConfig.fontSize(1.3)),
-              bodySmall: TextStyle(fontSize: SizeConfig.fontSize(1.2)),
+              bodyLarge:   TextStyle(fontSize: SizeConfig.fontSize(1.5)),
+              bodyMedium:  TextStyle(fontSize: SizeConfig.fontSize(1.3)),
+              bodySmall:   TextStyle(fontSize: SizeConfig.fontSize(1.2)),
             ),
             useMaterial3: true,
             primaryColor: const Color(0xff90AEFF),

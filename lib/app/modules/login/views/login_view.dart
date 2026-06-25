@@ -89,7 +89,8 @@ class LoginView extends GetView<LoginController> {
                       ],
                     ),
                     padding: EdgeInsets.all(size * 2.5),
-                    child: Column(
+                    child: AutofillGroup(
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Username field
@@ -105,6 +106,7 @@ class LoginView extends GetView<LoginController> {
                         TextField(
                           controller: controller.emailController,
                           keyboardType: TextInputType.text,
+                          autofillHints: const [AutofillHints.username],
                           onChanged: (v) => controller.emailValue.value = v,
                           style: TextStyle(fontSize: size * 1.5),
                           decoration: InputDecoration(
@@ -142,6 +144,7 @@ class LoginView extends GetView<LoginController> {
                         Obx(() => TextField(
                               controller: controller.passwordController,
                               obscureText: !controller.isPasswordVisible.value,
+                              autofillHints: const [AutofillHints.password],
                               onChanged: (v) => controller.passwordValue.value = v,
                               style: TextStyle(fontSize: size * 1.5),
                               decoration: InputDecoration(
@@ -239,6 +242,7 @@ class LoginView extends GetView<LoginController> {
                               ),
                             )),
                       ],
+                    ),
                     ),
                   ),
 

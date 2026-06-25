@@ -18,55 +18,54 @@ class CircleMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(size *2),
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: size * 4,
-            height: size * 4,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(size * 1.6),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: size * 1.2),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [iconColor.withOpacity(0.12), iconColor.withOpacity(0.22)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(size * 1.6),
+            border: Border.all(color: iconColor.withOpacity(0.25), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withOpacity(0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(size * 0.8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.15),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: size *2.6,
-            ),
+                child: Icon(icon, color: iconColor, size: size * 2.2),
+              ),
+              SizedBox(height: size * 0.8),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: size * 1.1,
+                  fontWeight: FontWeight.w600,
+                  color: iconColor.withOpacity(0.85),
+                ),
+              ),
+            ],
           ),
-           SizedBox(height: size *0.8),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontSize: size * 0.9,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-                shadows: [
-                  Shadow(
-                    color: Colors.white.withOpacity(0.9),
-                    offset: const Offset(0, 1),
-                    blurRadius: 1,
-                  ),
-                  Shadow(
-                    color: Colors.black.withOpacity(0.15),
-                    offset: const Offset(0, -0.5),
-                    blurRadius: 1,
-                  ),
-                ]),
-          ),
-        ],
+        ),
       ),
     );
   }
