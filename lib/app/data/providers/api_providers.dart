@@ -19,8 +19,22 @@ class ApiProvider extends GetConnect {
       }
       return request;
     });
+
   }
 
-  // Future<Response> getUser(int id) => get('users/$id');
-  // Future<Response> postUser(Map data) => post('users', data);
+  void checkResponse(Response response) {
+    final code = response.statusCode;
+    if (code == null) {
+      throw Exception('No response from server. Check the API URL or network.');
+    }
+    if (code < 200 || code >= 300) {
+      String? serverMsg;
+      if (response.body is Map) {
+        serverMsg = response.body['message']?.toString();
+      }
+      throw Exception(
+        serverMsg ?? 'HTTP $code${response.statusText != null ? ": ${response.statusText}" : ""}',
+      );
+    }
+  }
 }

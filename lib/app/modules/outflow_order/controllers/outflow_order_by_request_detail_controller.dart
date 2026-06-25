@@ -195,25 +195,18 @@ class OutflowOrderByRequestDetailController extends GetxController {
       "or_id": or.id,
       "items": items.toList(),
     };
-    final response = await ApiExecutor.run(
+    final data = await ApiExecutor.run(
       isLoading: isLoadingOutflowing,
       task: () => provider.postOrLineToOutflowedData(payload),
     );
-    // If network failed or exception handled, data is null
-    if (response == null) return;
+    if (data == null) return;
 
-    if (response.isOk && response.body?['success'] == true) {
-      successAlertBottom("Outflowing process for ${or.code} completed!");
-      
-      await Future.delayed(const Duration(milliseconds: 400));
-      if (Get.isRegistered<OutflowOrderByRequestController>()) {
-        Get.delete<OutflowOrderByRequestController>(force: true);
-      }
-
-      Get.offAndToNamed(AppPages.outflowOrderByRequestPage);
-    } else {
-      errorAlertBottom("Failed to start outflowing for ${or.code}.");
+    successAlertBottom("Outflowing process for ${or.code} completed!");
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (Get.isRegistered<OutflowOrderByRequestController>()) {
+      Get.delete<OutflowOrderByRequestController>(force: true);
     }
+    Get.offAndToNamed(AppPages.outflowOrderByRequestPage);
     
   }
 }

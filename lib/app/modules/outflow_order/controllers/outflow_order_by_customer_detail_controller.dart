@@ -169,25 +169,17 @@ class OutflowOrderByCustomerDetailController extends GetxController {
       "customer_id": customer.id,
       "items": items.toList(),
     };
-    final response = await ApiExecutor.run(
+    final data = await ApiExecutor.run(
       isLoading: isLoadingOutflowing,
       task: () => provider.postOrLineToOutflowedData(payload),
     );
-    // If network failed or exception handled, data is null
-    if (response == null) return;
+    if (data == null) return;
 
-    if (response.isOk && response.body?["success"] == true) {
-      successAlertBottom("Outflow for ${customer.name} completed!");
-
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      if (Get.isRegistered<OutflowOrderByCustomerController>()) {
-        Get.delete<OutflowOrderByCustomerController>(force: true);
-      }
-
-      Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
-    } else {
-      errorAlertBottom("Failed to process outflow.");
+    successAlertBottom("Outflow for ${customer.name} completed!");
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (Get.isRegistered<OutflowOrderByCustomerController>()) {
+      Get.delete<OutflowOrderByCustomerController>(force: true);
     }
+    Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
   }
 }

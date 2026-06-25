@@ -80,43 +80,28 @@ class LoginController extends GetxController {
       task: () => _apiLogin.login(emailValue.value, passwordValue.value),
     );
 
-    // If response is null → network failed or exception handled
     if (response == null) return;
 
-    try {
-      // Check status code and body
-      if (response.statusCode == 200 && response.body != null) {
-        final data = response.body['data'];
-        final token = data?['token'];
-        final username = data?['name'];
-        final roles = data?['roles'];
+    final data = response['data'];
+    final token = data?['token'];
+    final username = data?['name'];
+    final roles = data?['roles'];
 
-        if (token != null && token.isNotEmpty) {
-          // ✅ Save email/password if remember me is checked
-          await saveLogin();
-
-          // ✅ Save auth data in AuthService
-          _authService.setToken(token);
-          _authService.setUsername(username);
-          if (roles != null && roles.isNotEmpty) {
-            final List<String> roleNames = (roles as List).map((role) => role['name'] as String).toList();
-            _authService.setRoles(roleNames.join(', '));
-          }
-
-          // ✅ Success alert
-          successAlert("Success Login as ${username ?? 'User'}");
-
-          // ✅ Navigate to HOME
-          Get.offAllNamed(Routes.HOME);
-        } else {
-          errorAlert("Login successful, but token is missing.");
-        }
-      } else {
-        final msg = response.body?['message'] ?? "Login failed. Please check your credentials.";
-        errorAlert(msg);
-      }
-    } catch (e) {
-      errorAlert("Unexpected error during login: $e");
+    if (token == null || token.isEmpty) {
+      errorAlert("Login successful, but token is missing.");
+      return;
     }
+
+    await saveLogin();
+
+    _authService.setToken(token);
+    _authService.setUsername(username);
+    if (roles != null && roles.isNotEmpty) {
+      final List<String> roleNames = (roles as List).map((role) => role['name'] as String).toList();
+      _authService.setRoles(roleNames.join(', '));
+    }
+
+    successAlert("Success Login as ${username ?? 'User'}");
+    Get.offAllNamed(Routes.HOME);
   }
 }

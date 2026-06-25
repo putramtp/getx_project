@@ -202,25 +202,20 @@ class ReceiveOrderByPoDetailController extends GetxController {
       "po_id": po.id,
       "items": items.map((e) => e).toList(), // ensure list of maps
     };
-    final response = await ApiExecutor.run(
+    final data = await ApiExecutor.run(
       isLoading: isLoadingReceiving,
       task: () => provider.postPoLineToReceivedData(payload),
     );
-    // If network failed or exception handled, data is null
-    if (response == null) return;
-    if (response.isOk && (response.body?['success'] == true)) {
-      if (Get.isDialogOpen == true) Get.back(); // closes confirmation dialog
-      
-      successAlertBottom("Receiving process for $poNumber started successfully.");
-      Future.delayed(const Duration(milliseconds: 500), () async {
-        if (Get.isRegistered<ReceiveOrderByPoController>()) {
-          Get.delete<ReceiveOrderByPoController>(force: true);
-        }
-        await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
-      });
-    } else {
-      errorAlertBottom("Unable to start receiving for $poNumber. Please try again.");
-    }
+    if (data == null) return;
+
+    if (Get.isDialogOpen == true) Get.back();
+    successAlertBottom("Receiving process for $poNumber started successfully.");
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      if (Get.isRegistered<ReceiveOrderByPoController>()) {
+        Get.delete<ReceiveOrderByPoController>(force: true);
+      }
+      await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
+    });
   }
 
   void setReceiveNumber(String value) => receiveNumber.value = value;

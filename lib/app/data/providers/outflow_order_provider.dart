@@ -4,11 +4,6 @@ import '../models/outflow_request_customer_model.dart';
 import '../models/outflow_request_line_item_model.dart';
 
 class OutflowOrderProvider extends ApiProvider {
-  // @override
-  // void onInit() {
-  //   httpClient.baseUrl = '';
-  // }
-
   Future<Map<String, dynamic>> getOutflowOrders({String? cursor, Map<String, String>? params}) async {
     final response = await get(
       '/outflow-order/pagination',
@@ -17,31 +12,17 @@ class OutflowOrderProvider extends ApiProvider {
         if (cursor != null) 'cursor': cursor,
       },
     );
-
-    if (response.statusCode == 200 && response.body != null) {
-      return response.body; // return full data including cursor
-    } else {
-      throw Exception(
-          'Failed to load getOutflowOrders: ${response.statusText}');
-    }
+    checkResponse(response);
+    return Map<String, dynamic>.from(response.body as Map);
   }
 
   Future<OutflowOrderDetailModel> getOutflowOrderDetail(int ooId) async {
     final response = await get('/outflow-order/$ooId');
-    if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'];
-      if (data is Map<String, dynamic>) {
-        return OutflowOrderDetailModel.fromJson(data);
-      } else {
-        throw Exception('Unexpected response format: data is not a Map');
-      }
-    } else {
-      throw Exception(
-          'Failed to load getOutflowOrderDetail: ${response.statusText}');
-    }
+    checkResponse(response);
+    return OutflowOrderDetailModel.fromJson(response.body['data'] as Map<String, dynamic>);
   }
-  
-  Future<Map<String, dynamic>> getOutflowRequests({String? cursor,Map<String, String>? params}) async {
+
+  Future<Map<String, dynamic>> getOutflowRequests({String? cursor, Map<String, String>? params}) async {
     final response = await get(
       '/outflow-request/pagination',
       query: {
@@ -49,54 +30,34 @@ class OutflowOrderProvider extends ApiProvider {
         if (cursor != null) 'cursor': cursor,
       },
     );
-
-    if (response.statusCode == 200 && response.body != null) {
-      return response.body; // return full data including cursor
-    } else {
-      throw Exception( 'Failed to load getOutflowRequests: ${response.statusText}');
-    }
+    checkResponse(response);
+    return Map<String, dynamic>.from(response.body as Map);
   }
 
-  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItem(
-      int orderId) async {
+  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItem(int orderId) async {
     final response = await get('/outflow-request/$orderId/summary');
-    if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OutflowRequestLineItemModel.fromJson(e)).toList();
-    } else {
-      throw Exception(
-          'Failed to load getOutflowRequestLineItem: ${response.statusText}');
-    }
+    checkResponse(response);
+    final List data = response.body['data'];
+    return data.map((e) => OutflowRequestLineItemModel.fromJson(e)).toList();
   }
 
-  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItemByCustomer(
-      int customerId) async {
+  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItemByCustomer(int customerId) async {
     final response = await get('/outflow-request/$customerId/customer-summary');
-    if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OutflowRequestLineItemModel.fromJson(e)).toList();
-    } else {
-      throw Exception(
-          'Failed to load getOutflowRequestLineItemByCustomer: ${response.statusText}');
-    }
+    checkResponse(response);
+    final List data = response.body['data'];
+    return data.map((e) => OutflowRequestLineItemModel.fromJson(e)).toList();
   }
 
-  Future postOrLineToOutflowedData(Map<String, dynamic> payload) async {
-    try {
-      final response = await post('/outflow-request/outflowData', payload);
-      return response;
-    } catch (e) {
-      rethrow;
-    }
+  Future<Map<String, dynamic>> postOrLineToOutflowedData(Map<String, dynamic> payload) async {
+    final response = await post('/outflow-request/outflowData', payload);
+    checkResponse(response);
+    return Map<String, dynamic>.from(response.body as Map);
   }
 
   Future<List<OrCustomerModel>> getCustomers() async {
     final response = await get('/outflow-request/customer-summary');
-    if (response.statusCode == 200 && response.body != null) {
-      final data = response.body['data'] as List<dynamic>;
-      return data.map((e) => OrCustomerModel.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load getCustomers: ${response.statusText}');
-    }
+    checkResponse(response);
+    final List data = response.body['data'];
+    return data.map((e) => OrCustomerModel.fromJson(e)).toList();
   }
 }

@@ -25,7 +25,8 @@ class ApiExecutor {
       // ✅ Run the actual API task
       return await task();
     } catch (e) {
-      errorAlert("$e");
+      final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+      errorAlert(msg);
       return null;
     } finally {
       // ✅ Always turn off loading
