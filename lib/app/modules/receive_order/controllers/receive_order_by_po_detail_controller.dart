@@ -210,11 +210,26 @@ class ReceiveOrderByPoDetailController extends GetxController {
 
     if (Get.isDialogOpen == true) Get.back();
     successAlertBottom("Receiving process for $poNumber started successfully.");
+
+    // The POST returns the created receive order; route straight into the
+    // serial-confirmation pass so each unit can be scanned one-by-one.
+    final ro = data['data'] as Map<String, dynamic>?;
+    final roId = ro?['id'];
+    final roCode = (ro?['code'] ?? '-').toString();
+
     Future.delayed(const Duration(milliseconds: 500), () async {
-      if (Get.isRegistered<ReceiveOrderByPoController>()) {
-        Get.delete<ReceiveOrderByPoController>(force: true);
+      if (roId is int) {
+        await Get.offAndToNamed(
+          AppPages.receiveOrderConfirmPage,
+          arguments: {'ro_id': roId, 'ro_code': roCode},
+        );
+      } else {
+        // Defensive fallback: behave as before if the id is missing.
+        if (Get.isRegistered<ReceiveOrderByPoController>()) {
+          Get.delete<ReceiveOrderByPoController>(force: true);
+        }
+        await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
       }
-      await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
     });
   }
 

@@ -212,11 +212,28 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
 
     if (Get.isDialogOpen == true) Get.back();
     successAlertBottom("Receiving process for $supplierName started successfully.");
+
+    // Route into the serial-confirmation pass for the created receive order.
+    final ro = data['data'] as Map<String, dynamic>?;
+    final roId = ro?['id'];
+    final roCode = (ro?['code'] ?? '-').toString();
+
     Future.delayed(const Duration(milliseconds: 500), () async {
-      if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
-        Get.delete<ReceiveOrderBySupplierController>(force: true);
+      if (roId is int) {
+        await Get.offAndToNamed(
+          AppPages.receiveOrderConfirmPage,
+          arguments: {
+            'ro_id': roId,
+            'ro_code': roCode,
+            'back_route': AppPages.receiveOrderBySupplierPage,
+          },
+        );
+      } else {
+        if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
+          Get.delete<ReceiveOrderBySupplierController>(force: true);
+        }
+        await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
       }
-      await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
     });
   }
 

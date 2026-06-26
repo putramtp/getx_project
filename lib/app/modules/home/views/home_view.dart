@@ -433,7 +433,7 @@ class HomeView extends GetView<HomeController> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text("${isIn ? '+' : '-'}${st.qty}", style: AppTextStyle.bodyBold(size, color: color)),
+                      Text("${isIn ? '+' : '-'}${st.qty % 1 == 0 ? st.qty.toInt() : st.qty}", style: AppTextStyle.bodyBold(size, color: color)),
                       const SizedBox(height: 4),
                       Text(st.time, style: AppTextStyle.info(size, color: Colors.grey.shade600)),
                     ],

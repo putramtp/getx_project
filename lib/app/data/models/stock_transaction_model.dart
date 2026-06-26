@@ -2,7 +2,7 @@ class StockTransactionModel {
   final String productName;
   final String type; 
   final String flowType; // IN / OUT
-  final int qty;
+  final double qty;
   final String time; // "2 Days Ago"
   final OrderInfo? order;
 
@@ -20,7 +20,7 @@ class StockTransactionModel {
       productName: json['item_name'],
       type: json['type'],
       flowType: json['flow_type'],
-      qty: json['qty'],
+      qty: double.parse(json['qty'].toString()),
       time: json['human_time'],
        order: json['order'] != null ? OrderInfo.fromJson(json['order']) : null,
     );

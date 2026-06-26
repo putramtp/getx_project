@@ -2,6 +2,7 @@ import 'api_providers.dart';
 import '../models/purchase_order_line_item_by_supplier_model.dart';
 import '../models/purchase_order_line_item_model.dart';
 import '../models/purchase_order_supplier_model.dart';
+import '../models/receive_confirm_serial_model.dart';
 import '../models/receive_order_detail_model.dart';
 
 class ReceiveOrderProvider extends ApiProvider {
@@ -21,6 +22,19 @@ class ReceiveOrderProvider extends ApiProvider {
     final response = await get('/receive-order/$roId');
     checkResponse(response);
     return ReceiveOrderDetailModel.fromJson(response.body['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<ReceiveConfirmSerialModel>> getReceiveOrderSerials(int roId) async {
+    final response = await get('/receive-order/$roId/serial-number');
+    checkResponse(response);
+    final List data = response.body['data'] ?? [];
+    return data.map((e) => ReceiveConfirmSerialModel.fromJson(e)).toList();
+  }
+
+  Future<Map<String, dynamic>> confirmReceiveSerial(int roId, List<String> codes) async {
+    final response = await post('/receive-order/$roId/confirm-serials', {'codes': codes});
+    checkResponse(response);
+    return Map<String, dynamic>.from(response.body as Map);
   }
 
   Future<Map<String, dynamic>> getPurchaseOrders({String? cursor, Map<String, String>? params}) async {

@@ -25,6 +25,7 @@ abstract class Routes {
   static const RECEIVE_ORDER_BY_PO_DETAIL = _Paths.RECEIVE_ORDER_BY_PO_DETAIL;
   static const RECEIVE_ORDER_BY_SUPPLIER = _Paths.RECEIVE_ORDER_BY_SUPPLIER;
   static const RECEIVE_ORDER_BY_SUPPLIER_DETAIL = _Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL;
+  static const RECEIVE_ORDER_CONFIRM = _Paths.RECEIVE_ORDER_CONFIRM;
   // OUTFLOW ORDER DETAIL
   static const OUTFLOW_ORDER_LIST = _Paths.OUTFLOW_ORDER_LIST;
   static const OUTFLOW_ORDER_LIST_DETAIL = _Paths.OUTFLOW_ORDER_LIST_DETAIL;
@@ -61,6 +62,7 @@ abstract class _Paths {
   static const RECEIVE_ORDER_BY_PO_DETAIL = '/receive-order/po/detail';
   static const RECEIVE_ORDER_BY_SUPPLIER = '/receive-order/supplier';
   static const RECEIVE_ORDER_BY_SUPPLIER_DETAIL = '/receive-order/supplier/detail';
+  static const RECEIVE_ORDER_CONFIRM = '/receive-order/confirm';
   // OUTFLOW ORDER
   static const OUTFLOW_ORDER_LIST = '/outflow-order/list';
   static const OUTFLOW_ORDER_LIST_DETAIL = '/outflow-order/detail';

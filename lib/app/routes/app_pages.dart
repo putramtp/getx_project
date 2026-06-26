@@ -31,6 +31,7 @@ import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_po_detail_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_confirm_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_detail_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_binding.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
@@ -39,6 +40,7 @@ import 'package:getx_project/app/modules/receive_order/views/receive_order_by_su
 import 'package:getx_project/app/modules/receive_order/views/receive_order_list_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_home_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
+import 'package:getx_project/app/modules/receive_order/views/receive_order_confirm_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
 import 'package:getx_project/app/modules/home/bindings/home_binding.dart';
 import 'package:getx_project/app/modules/home/views/home_view.dart';
@@ -80,6 +82,7 @@ class AppPages {
   static const receiveOrderByPoDetailPage = Routes.RECEIVE_ORDER_BY_PO_DETAIL;
   static const receiveOrderBySupplierPage = Routes.RECEIVE_ORDER_BY_SUPPLIER;
   static const receiveOrderBySupplierDetailPage = Routes.RECEIVE_ORDER_BY_SUPPLIER_DETAIL;
+  static const receiveOrderConfirmPage = Routes.RECEIVE_ORDER_CONFIRM;
   //OUTFLOW  ORDER
   static const outflowHomePage = Routes.OUTFLOW_ORDER_HOME;
   static const outflowOrderListPage = Routes.OUTFLOW_ORDER_LIST;
@@ -183,6 +186,11 @@ class AppPages {
       name: _Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL,
       page: () => const ReceiveOrderBySupplierDetailView(),
       binding: ReceiveOrderBySupplierDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.RECEIVE_ORDER_CONFIRM,
+      page: () => const ReceiveOrderConfirmView(),
+      binding: ReceiveOrderConfirmBinding(),
     ),
     // OUTFLOW ORDER
     GetPage(

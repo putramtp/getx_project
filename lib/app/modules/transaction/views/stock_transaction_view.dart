@@ -194,7 +194,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        "${isIn ? '+' : '-'}${st.qty}",
+                        "${isIn ? '+' : '-'}${st.qty % 1 == 0 ? st.qty.toInt() : st.qty}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: color,

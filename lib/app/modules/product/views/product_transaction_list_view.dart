@@ -328,7 +328,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "${isIn ? '+' : '-'}${transaction.qty}",
+              "${isIn ? '+' : '-'}${transaction.qty % 1 == 0 ? transaction.qty.toInt() : transaction.qty}",
               style: TextStyle(
                 fontSize: size * 1.2,
                 fontWeight: FontWeight.bold,
