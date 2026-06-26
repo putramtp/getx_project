@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
@@ -116,9 +115,8 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
       return;
     }
 
-    final barcode = await FlutterBarcodeScanner.scanBarcode(
-        "#ff6666", "Cancel", true, ScanMode.BARCODE);
-    if (barcode == "-1") return;
+    final barcode = await captureSerialInput(accent: mutedPurple);
+    if (barcode == null) return;
 
     if (serialType == 'BATCH') {
       final qty = await _showBatchQtyDialog();

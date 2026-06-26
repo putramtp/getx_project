@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
@@ -321,4 +322,102 @@ Widget textLoading(double size,{color = Colors.black54,message = "Loading..."}) 
 
 Widget textNoData(double size,{color = Colors.black54,message = "No data."})   {
   return Center(child: Text(message,style: AppTextStyle.infoBold(size,color: color)));
+}
+
+/// Capture a serial code for a serial-tracked item: the worker chooses to scan
+/// a barcode or type it manually. Returns the trimmed code, or null if
+/// cancelled. Shared by the receive-fill and outflow-scan flows.
+Future<String?> captureSerialInput({Color accent = Colors.blueAccent}) async {
+  final mode = await Get.bottomSheet<String>(
+    SafeArea(
+      child: Wrap(
+        children: [
+          ListTile(
+            leading: Icon(Icons.qr_code_scanner_rounded, color: accent),
+            title: const Text("Scan barcode"),
+            onTap: () => Get.back(result: 'scan'),
+          ),
+          ListTile(
+            leading: Icon(Icons.keyboard_rounded, color: accent),
+            title: const Text("Enter manually"),
+            onTap: () => Get.back(result: 'manual'),
+          ),
+        ],
+      ),
+    ),
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+  );
+
+  if (mode == 'scan') {
+    final barcode = await FlutterBarcodeScanner.scanBarcode(
+        "#ff6666", "Cancel", true, ScanMode.BARCODE);
+    return (barcode == "-1") ? null : barcode;
+  }
+  if (mode == 'manual') {
+    return showManualSerialDialog(accent: accent);
+  }
+  return null;
+}
+
+/// Manual serial-number entry dialog. Returns the trimmed code or null.
+Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async {
+  final TextEditingController controller = TextEditingController();
+  void submit() {
+    final value = controller.text.trim();
+    if (value.isNotEmpty) Get.back(result: value);
+  }
+
+  return Get.dialog<String>(
+    Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.keyboard_rounded, color: accent, size: 48),
+            const SizedBox(height: 16),
+            const Text("Enter Serial Number",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textAlign: TextAlign.center,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => submit(),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                labelText: "Serial Number",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: submit,
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: accent, foregroundColor: Colors.white),
+                  child: const Text("Save",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

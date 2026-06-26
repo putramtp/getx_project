@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
@@ -80,7 +79,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                         remaining <= 0 ? Colors.grey : Colors.red),
                   ]),
                   SizedBox(height: size * 2),
-                  Text(batchSerial ? "Scanned Serials" : "Filled Results",
+                  Text(batchSerial ? "Serials" : "Filled Results",
                       style: AppTextStyle.h5(size)),
                   SizedBox(height: size * 0.8),
                   Expanded(child: _buildFilledList(size, filled, batchSerial)),
@@ -100,7 +99,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
           size: size,
           color: _accent,
           icon: batchSerial
-              ? Icons.qr_code_scanner_rounded
+              ? Icons.keyboard_rounded
               : Icons.edit_note_rounded,
           onPressed: _onFillTap,
         );
@@ -122,9 +121,10 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     final bool batchSerial = item['manage_sn'] == true && serialType == 'BATCH';
 
     if (batchSerial) {
-      final barcode = await FlutterBarcodeScanner.scanBarcode(
-          "#ff6666", "Cancel", true, ScanMode.BARCODE);
-      if (barcode == "-1") return;
+      // Receive uses manual serial entry (no scanner — scanner is reserved for
+      // confirm-serial and outflow).
+      final barcode = await showManualSerialDialog(accent: _accent);
+      if (barcode == null) return;
       final result = await _showItemQtyDialog(
           type: serialType, manageExpired: manageExpired);
       if (result != null && result['qty'] != null && result['qty'] > 0) {
@@ -287,9 +287,9 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     if (filled.isEmpty) {
       return orderFillEmptyState(
         size: size,
-        icon: batchSerial ? Icons.qr_code_2_rounded : Icons.inventory_outlined,
+        icon: batchSerial ? Icons.keyboard_rounded : Icons.inventory_outlined,
         message: batchSerial
-            ? "No serials scanned yet"
+            ? "No serials entered yet"
             : "No items have been filled yet",
       );
     }
@@ -350,9 +350,8 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
               onTap: () async {
                 Get.back();
                 if (isSerial) {
-                  final barcode = await FlutterBarcodeScanner.scanBarcode(
-                      "#ff6666", "Cancel", true, ScanMode.BARCODE);
-                  if (barcode == "-1") return;
+                  final barcode = await showManualSerialDialog(accent: _accent);
+                  if (barcode == null) return;
                   final result = await _showItemQtyDialog(
                     type: 'BATCH',
                     manageExpired:
