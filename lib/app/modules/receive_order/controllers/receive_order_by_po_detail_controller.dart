@@ -48,6 +48,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
         "name": item.name,
         "serialNumberType": item.serialNumberType,
         "manageExpired": item.manageExpired,
+        "manage_sn": item.manageSn,
         "expected": item.expected,
         "received": item.received,
         "filled": filled,
@@ -113,6 +114,106 @@ class ReceiveOrderByPoDetailController extends GetxController {
     // log(
     //   "✅ [${DateTime.now().toIso8601String()}] Added/Updated fill for $itemName → $newData (Total now: ${totalFilledQty + qtyToAdd}/$expectedQty)",
     // );
+  }
+
+  /// 🔹 Add a scanned batch serial for a serial-managed BATCH item.
+  /// One receive line can be split across several batch serials — e.g. a batch
+  /// of 5 entered as 2 + 3 — so each call adds one `{serial, qty, expired_date}`
+  /// entry carrying its own batch [qty]. Only used for `manage_sn` + BATCH.
+  void addFilledSerial({required String serial, int qty = 1, String? expiredDate}) {
+    final index = selectedIndex.value;
+    if (index >= items.length) return;
+
+    final item = items[index];
+    final String itemName = item['name'] ?? '(unknown item)';
+    final expectedQty = item['expected'] ?? 0;
+    final receivedQty = item['received'] ?? 0;
+
+    final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
+
+    // Reject duplicate batch serials.
+    if (filled.any((e) => (e['serial']?.toString() ?? '') == serial)) {
+      warningAlertBottom(
+          title: "Duplicate Serial",
+          "Serial \"$serial\" is already added for $itemName.");
+      return;
+    }
+
+    final totalFilledQty = filled.fold<int>(0, (sum, e) {
+      final q = e['qty'];
+      return sum + (q is int ? q : int.tryParse('$q') ?? 0);
+    });
+
+    if (totalFilledQty + qty + receivedQty > expectedQty) {
+      errorAlertBottom(
+          title: "Exceeded Quantity",
+          "Adding this serial would exceed the expected qty ($expectedQty) for $itemName.");
+      return;
+    }
+
+    filled.add({"serial": serial, "qty": qty, "expired_date": expiredDate});
+    item['filled'] = filled;
+    items[index] = item;
+    items.refresh();
+  }
+
+  /// 🔹 Update a single filled entry (qty / expiry / batch serial) at [index]
+  /// for the currently selected item, with the same over-fill protection.
+  void updateFilledAt(int index,
+      {required int qty, String? expiredDate, String? serial}) {
+    final itemIndex = selectedIndex.value;
+    if (itemIndex >= items.length) return;
+
+    final item = items[itemIndex];
+    final String itemName = item['name'] ?? '(unknown item)';
+    final expectedQty = item['expected'] ?? 0;
+    final receivedQty = item['received'] ?? 0;
+
+    final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
+    if (index < 0 || index >= filled.length) return;
+
+    // Sum every other entry so the edited value is validated against the rest.
+    final othersTotal = filled.asMap().entries
+        .where((e) => e.key != index)
+        .fold<int>(0, (sum, e) {
+      final q = e.value['qty'];
+      return sum + (q is int ? q : int.tryParse('$q') ?? 0);
+    });
+
+    if (othersTotal + qty + receivedQty > expectedQty) {
+      errorAlertBottom(
+          title: "Exceeded Quantity",
+          "Updating this would exceed the expected qty ($expectedQty) for $itemName.");
+      return;
+    }
+
+    final entry = <String, dynamic>{"qty": qty, "expired_date": expiredDate};
+    // Preserve/replace the batch serial when editing a serial-managed entry.
+    final existingSerial = filled[index]['serial'];
+    if (serial != null) {
+      entry["serial"] = serial;
+    } else if (existingSerial != null) {
+      entry["serial"] = existingSerial;
+    }
+    filled[index] = entry;
+    item['filled'] = filled;
+    items[itemIndex] = item;
+    items.refresh();
+  }
+
+  /// 🔹 Remove a single filled entry at [index] for the current item.
+  void removeFilledAt(int index) {
+    final itemIndex = selectedIndex.value;
+    if (itemIndex >= items.length) return;
+
+    final item = items[itemIndex];
+    final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
+    if (index < 0 || index >= filled.length) return;
+
+    filled.removeAt(index);
+    item['filled'] = filled;
+    items[itemIndex] = item;
+    items.refresh();
   }
 
   /// Edit code (only applies to unique or batch)

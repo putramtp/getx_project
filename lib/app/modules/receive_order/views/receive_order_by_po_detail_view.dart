@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_by_po_detail_controller.dart';
 import '../views/receive_order_fill_by_po_view.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_list_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailController> {
@@ -73,35 +74,22 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                     bgColor = Colors.red;
                   }
 
-                  return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",style: AppTextStyle.h5(size)),
-                      subtitle: Text("Expected: $expected | Received: $received | receiving: $filledCount",style:AppTextStyle.body(size,color: Colors.grey)),
-                      leading: CircleAvatar(
-                        radius: size * 2.2,
-                        backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: size * 2),
-                      ),
-                      trailing: !isFinished
-                          ? ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
-                                padding:  const EdgeInsets.all(12), 
-                                minimumSize: Size.zero,           
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: () {
-                                controller.selectedIndex.value = index;
-                                controller.selectedItem.value = item;
-                                Get.to(() => const ReceiveOrderFillByPoView());
-                              },
-                             icon:  Icon(Icons.edit_rounded,size: size *1.5,color: Colors.black87,),
-                             label:  Text("fill",style: TextStyle(fontSize: size * 1.2,color: Colors.black87)),
-                            )
-                          : null,
-                    ),
+                  return orderItemSummaryTile(
+                    size: size,
+                    name: item['name'] ?? "Unnamed",
+                    subtitle:
+                        "Expected: $expected | Received: $received | receiving: $filledCount",
+                    statusIcon: icon,
+                    statusColor: bgColor,
+                    showAction: !isFinished,
+                    actionLabel: "Fill",
+                    actionIcon: Icons.edit_rounded,
+                    actionColor: skyBlue,
+                    onAction: () {
+                      controller.selectedIndex.value = index;
+                      controller.selectedItem.value = item;
+                      Get.to(() => const ReceiveOrderFillByPoView());
+                    },
                   );
                 },
               );
@@ -412,40 +400,13 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     );
   }
 
-  Widget _buildHeader(size) {
-    final po = controller.currentOrder;
-    final poNumber = po.poNumber;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xff434E78), Color(0xff607B8F), Color(0xff456882)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.description_rounded, color: Colors.white, size: size * 4),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Purchase Order",style: TextStyle(color: Colors.white70, fontSize: size * 1.4)),
-                Text("#$poNumber",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: size * 2.2)),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildHeader(double size) {
+    return orderDetailHeader(
+      size: size,
+      label: "Purchase Order",
+      code: controller.currentOrder.poNumber,
+      icon: Icons.description_rounded,
+      gradientColors: const [navyDark, navyMid, navyLight],
     );
   }
 }

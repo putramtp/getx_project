@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 import '../controllers/receive_order_by_po_controller.dart';
 import '../controllers/receive_order_by_supplier_controller.dart';
@@ -13,6 +14,12 @@ import '../../../routes/app_pages.dart';
 /// those are grouped into the scan loop; BATCH/OTHER lines need no confirmation.
 class ReceiveOrderConfirmController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
+
+  /// Local cache of confirmed serial codes, keyed per receive order. Protects
+  /// in-progress confirmations from being lost if the app is closed or offline
+  /// before the server state is re-fetched.
+  final GetStorage _box = GetStorage();
+  String get _cacheKey => 'ro_confirmed_$roId';
 
   late final int roId;
   late final String roCode;
@@ -63,7 +70,34 @@ class ReceiveOrderConfirmController extends GetxController {
     }
 
     groups.assignAll(byItem.values.toList());
+
+    // Re-apply locally cached confirmations on top of the server state, so a
+    // scan that was saved before an app close/offline gap still shows as done.
+    final cached = _cachedCodes();
+    if (cached.isNotEmpty) {
+      for (final group in groups) {
+        for (final s in serialsOf(group)) {
+          if (!s.isScanned &&
+              (cached.contains(s.internalCode) ||
+                  cached.contains(s.serialNumber))) {
+            s.isScanned = true;
+          }
+        }
+      }
+      groups.refresh();
+    }
+
     selectedIndex.value = 0;
+  }
+
+  /// Codes confirmed on this device for the current RO (local safety cache).
+  Set<String> _cachedCodes() =>
+      (_box.read<List>(_cacheKey)?.cast<String>() ?? const <String>[]).toSet();
+
+  /// Persist a confirmed code locally (idempotent).
+  void _cacheCode(String code) {
+    final codes = _cachedCodes()..add(code);
+    _box.write(_cacheKey, codes.toList());
   }
 
   List<ReceiveConfirmSerialModel> serialsOf(Map<String, dynamic> group) =>
@@ -134,6 +168,7 @@ class ReceiveOrderConfirmController extends GetxController {
 
     if (confirmed.contains(code) || already.contains(code)) {
       match.isScanned = true;
+      _cacheCode(code); // local safety copy
       groups.refresh();
       if (confirmedIn(group) >= serials.length) {
         successAlertBottom("${group['item_name']} fully confirmed.");
@@ -148,6 +183,8 @@ class ReceiveOrderConfirmController extends GetxController {
 
   /// Advance to the next UNIQUE item, or finish when on the last one.
   void goToNextItem() {
+    // Don't navigate while a scan is still being confirmed — wait for the save.
+    if (isConfirming.value) return;
     final next = selectedIndex.value + 1;
     if (next < groups.length) {
       selectedIndex.value = next;
@@ -159,6 +196,8 @@ class ReceiveOrderConfirmController extends GetxController {
   /// Leave the confirm flow and return to whichever list opened it, with a
   /// fresh controller so the just-received order reflects its new state.
   void finish() {
+    // Fully confirmed and persisted server-side — drop the local safety cache.
+    if (allConfirmed) _box.remove(_cacheKey);
     if (Get.isRegistered<ReceiveOrderByPoController>()) {
       Get.delete<ReceiveOrderByPoController>(force: true);
     }

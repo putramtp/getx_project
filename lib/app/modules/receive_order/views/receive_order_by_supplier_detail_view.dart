@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_by_supplier_detail_controller.dart';
 import '../views/receive_order_fill_by_supplier_view.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_list_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDetailController> {
@@ -73,39 +74,22 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                     bgColor = Colors.red;
                   }
 
-                  return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",
-                          style: AppTextStyle.h5(size)),
-                      subtitle: Text(
-                          "Expected: $expected | Received: $received | receiving: $filledCount",
-                          style: AppTextStyle.body(size,color:Colors.grey)),
-                      leading: CircleAvatar(
-                        radius: size * 2.2,
-                        backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: 26),
-                      ),
-                      trailing: !isFinished
-                          ? ElevatedButton.icon(
-                              onPressed: () {
-                                controller.selectedIndex.value = index;
-                                controller.selectedItem.value = item;
-                                Get.to(() => const ReceiveOrderFillBySupplierView());
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
-                                padding:  const EdgeInsets.all(12), 
-                                minimumSize: Size.zero,           
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              icon:  Icon(Icons.edit_rounded,size: size *1.5,color: Colors.black87,),
-                              label:  Text("fill",style: TextStyle(fontSize: size * 1.2,color: Colors.black87)),
-                            )
-                          : null,
-                    ),
+                  return orderItemSummaryTile(
+                    size: size,
+                    name: item['name'] ?? "Unnamed",
+                    subtitle:
+                        "Expected: $expected | Received: $received | receiving: $filledCount",
+                    statusIcon: icon,
+                    statusColor: bgColor,
+                    showAction: !isFinished,
+                    actionLabel: "Fill",
+                    actionIcon: Icons.edit_rounded,
+                    actionColor: sageTeal,
+                    onAction: () {
+                      controller.selectedIndex.value = index;
+                      controller.selectedItem.value = item;
+                      Get.to(() => const ReceiveOrderFillBySupplierView());
+                    },
                   );
                 },
               );
@@ -420,53 +404,12 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
   }
 
   Widget _buildHeaderGradient(double size) {
-    final supplier = controller.currentSupplier;
-    final supplierName = supplier.name ;
-    final supplierCode = supplier.code ;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [ Color(0xFF31694E), Color(0xFF658C58),Color(0xffBBC863)],
-          begin: Alignment.bottomLeft,
-          end: Alignment.topRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.store_rounded, color: Colors.white, size: 34),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Supplier / Vendor",style: TextStyle(color: Colors.white70, fontSize: size *1.4)),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("#$supplierName",
-                        style:  TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: size * 2.2)),
-                    Padding(
-                      padding:  EdgeInsets.only(left:size),
-                      child: Text(supplierCode,
-                          style:  TextStyle(
-                              color: Colors.grey.shade300,
-                              fontWeight: FontWeight.bold,
-                              fontSize: size * 1.2)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return orderDetailHeader(
+      size: size,
+      label: "Supplier / Vendor",
+      code: controller.currentSupplier.name,
+      icon: Icons.store_rounded,
+      gradientColors: const [sageTeal, sageGreen],
     );
   }
 }

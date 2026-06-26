@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/styles/app_text_style.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_list_widgets.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import '../../../modules/outflow_order/views/scan_page_by_customer.dart';
 import '../../../routes/app_pages.dart';
@@ -12,17 +12,22 @@ import '../../../routes/app_pages.dart';
 class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDetailController> {
   const OutflowOrderByCustomerDetailView({super.key});
 
+  // By-Customer flow accent (matches the header gradient + scan action).
+  static const Color _accent = amber;
+
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary",size,routeBackName: AppPages.outflowOrderByCustomerPage,hex1:"778873",hex2:'A1BC98'),
+      appBar: appBarOrder("Item Summary", size,
+          routeBackName: AppPages.outflowOrderByCustomerPage,
+          hex1: "#C4882A", hex2: "#D8B174"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(size),
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
@@ -73,37 +78,22 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                     bgColor = Colors.red;
                   }
 
-                  return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",style: AppTextStyle.h5(size)),
-                      subtitle: Text(
-                          "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
-                          style: AppTextStyle.body(size,color:Colors.grey)),
-                      leading: CircleAvatar(
-                        radius: size * 2.2,
-                        backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: size *2),
-                      ),
-                      trailing: !isFinished
-                          ? ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
-                                padding:  const EdgeInsets.all(12), 
-                                minimumSize: Size.zero,           
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: () {
-                                controller.selectedIndex.value = index;
-                                controller.selectedItem.value = item;
-                                Get.to(() => const ScanPageByCustomer());
-                              },
-                              icon:  Icon(Icons.qr_code_scanner_rounded,size: size *1.5,color:Colors.black87),
-                              label:  Text("Scan",style:TextStyle(fontSize: size *1.2,color:Colors.black87)),
-                            )
-                          : null,
-                    ),
+                  return orderItemSummaryTile(
+                    size: size,
+                    name: item['name'] ?? "Unnamed",
+                    subtitle:
+                        "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
+                    statusIcon: icon,
+                    statusColor: bgColor,
+                    showAction: !isFinished,
+                    actionLabel: "Scan",
+                    actionIcon: Icons.qr_code_scanner_rounded,
+                    actionColor: amber,
+                    onAction: () {
+                      controller.selectedIndex.value = index;
+                      controller.selectedItem.value = item;
+                      Get.to(() => const ScanPageByCustomer());
+                    },
                   );
                 },
               );
@@ -143,7 +133,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                   }
                 },
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xff435663),
+            backgroundColor: _accent,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
@@ -166,14 +156,14 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE3F2FD),
+                decoration: BoxDecoration(
+                  color: _accent.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(16),
                 child: const Icon(
                   Icons.receipt_long_rounded,
-                  color: Colors.blue,
+                  color: _accent,
                   size: 40,
                 ),
               ),
@@ -304,6 +294,13 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Get.back(result: false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _accent,
+                        side: const BorderSide(color: _accent),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
                       child: const Text('Cancel'),
                     ),
                   ),
@@ -311,6 +308,13 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => Get.back(result: true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _accent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
                       child: const Text('Continue'),
                     ),
                   ),
@@ -323,56 +327,13 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
     );
   }
 
-  Widget _buildHeader() {
-    final or = controller.currentOrCustomer;
-    final customerCode = or.customerCode;
-    final customerName = or.name;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        gradient:  LinearGradient(
-          colors: [HexColor("778873"), HexColor("A1BC98"), HexColor("D2DCB6")],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.qr_code_rounded, color: Colors.white, size: 32),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Customer",
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "#$customerName",
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20),
-                    ),
-                    Text(
-                     "($customerCode)",
-                      style:  TextStyle(
-                          color: Colors.grey.shade200,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildHeader(double size) {
+    return orderDetailHeader(
+      size: size,
+      label: "Customer",
+      code: controller.currentOrCustomer.name,
+      icon: Icons.groups_rounded,
+      gradientColors: [amber, Color.lerp(amber, Colors.white, 0.35)!],
     );
   }
 }

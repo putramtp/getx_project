@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'scan_page_by_request.dart';
-import 'package:getx_project/app/global/styles/app_text_style.dart';
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_list_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetailController> {
   const OutflowOrderByRequestDetailView({super.key});
+
+  // By-Request flow accent (matches the header gradient + scan action).
+  static const Color _accent = mutedPurple;
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary",size,routeBackName: AppPages.outflowOrderByRequestPage,hex1:'5170FD',hex2:"60ABFB"),
+      appBar: appBarOrder("Item Summary", size,
+          routeBackName: AppPages.outflowOrderByRequestPage,
+          hex1: "#6B5FB5", hex2: "#7C73C0"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -70,36 +76,22 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                     bgColor = Colors.red;
                   }
 
-                  return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      title: Text(item['name'] ?? "Unnamed",style: AppTextStyle.h5(size)),
-                      subtitle: Text("Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
-                          style: TextStyle(color: Colors.grey[700],fontSize: size *1.2)),
-                      leading: CircleAvatar(
-                        radius: size * 2.2,
-                        backgroundColor: bgColor.withOpacity(0.15),
-                        child: Icon(icon, color: bgColor, size: size *2),
-                      ),
-                      trailing: !isFinished
-                          ? ElevatedButton.icon(
-                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(228, 192, 225, 240),
-                                padding:  const EdgeInsets.all(12), 
-                                minimumSize: Size.zero,           
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: () {
-                                controller.selectedIndex.value = index;
-                                controller.selectedItem.value = item;
-                                Get.to(() => const ScanPageByRequest());
-                              },
-                              icon:  Icon(Icons.qr_code_scanner_rounded,size: size *1.5,color:Colors.black87),
-                              label:  Text("Scan",style:TextStyle(fontSize: size *1.2,color:Colors.black87)),
-                            )
-                          : null,
-                    ),
+                  return orderItemSummaryTile(
+                    size: size,
+                    name: item['name'] ?? "Unnamed",
+                    subtitle:
+                        "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
+                    statusIcon: icon,
+                    statusColor: bgColor,
+                    showAction: !isFinished,
+                    actionLabel: "Scan",
+                    actionIcon: Icons.qr_code_scanner_rounded,
+                    actionColor: mutedPurple,
+                    onAction: () {
+                      controller.selectedIndex.value = index;
+                      controller.selectedItem.value = item;
+                      Get.to(() => const ScanPageByRequest());
+                    },
                   );
                 },
               );
@@ -137,11 +129,10 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
             }
           },
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.blue[900],
+            backgroundColor: _accent,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(16),
-            
-            ),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
           ),
         );
       }),
@@ -162,14 +153,14 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE3F2FD),
+                decoration: BoxDecoration(
+                  color: _accent.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(16),
                 child: const Icon(
                   Icons.receipt_long_rounded,
-                  color: Colors.blue,
+                  color: _accent,
                   size: 40,
                 ),
               ),
@@ -300,6 +291,13 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Get.back(result: false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _accent,
+                        side: const BorderSide(color: _accent),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
                       child: const Text('Cancel'),
                     ),
                   ),
@@ -307,6 +305,13 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => Get.back(result: true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _accent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
                       child: const Text('Continue'),
                     ),
                   ),
@@ -320,37 +325,12 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
   }
 
   Widget _buildHeader(double size) {
-    final or = controller.currentOr;
-    final orCode = or.code;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF528FF3), Color(0xFF2163F0), Color(0xFF1B3B94)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.qr_code_rounded, color: Colors.white, size: size *3.2),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Outflow Request",style: TextStyle(color: Colors.white70, fontSize: size * 1.3)),
-              Text("#$orCode",
-                  style:  TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: size * 2)),
-            ],
-          ),
-        ],
-      ),
+    return orderDetailHeader(
+      size: size,
+      label: "Outflow Request",
+      code: controller.currentOr.code,
+      icon: Icons.assignment_rounded,
+      gradientColors: const [mutedPurple, softPurple, lightPurple],
     );
   }
 }

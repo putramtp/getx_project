@@ -5,7 +5,9 @@ import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_fill_widgets.dart';
 
 class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
   const ScanPageByRequest({super.key});
@@ -16,10 +18,12 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     final double size = SizeConfig.defaultSize;
 
     return Scaffold(
-      appBar: appBarOrder("Scan Item",size,showIcon: false,hex1:'5170FD',hex2:"60ABFB"),
+      backgroundColor: Colors.grey[100],
+      appBar: appBarOrder("Scan Item", size,
+          showIcon: false, hex1: "#6B5FB5", hex2: "#9B8FD5"),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(size * 1.6),
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
@@ -29,21 +33,18 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
             final item = controller.items[index];
             final int expected = (item["expected"] ?? 0) as int;
             final int received = (item["received"] ?? 0) as int;
-            final List<Map<String, dynamic>> scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
+            final List<Map<String, dynamic>> scanned =
+                List<Map<String, dynamic>>.from(item["scanned"] ?? []);
 
-            final int scannedQty = scanned.fold<int>(
-              0,
-              (sum, e) {
-                final qtyValue = e['qty'];
-                final parsedQty =
-                    qtyValue is int ? qtyValue : int.tryParse('$qtyValue') ?? 0;
-                return sum + parsedQty;
-              },
-            );
+            final int scannedQty = scanned.fold<int>(0, (sum, e) {
+              final qtyValue = e['qty'];
+              final parsedQty =
+                  qtyValue is int ? qtyValue : int.tryParse('$qtyValue') ?? 0;
+              return sum + parsedQty;
+            });
 
             final int remaining = expected - (received + scannedQty);
 
-            // AnimatedSwitcher keyed by item id -> animates when selectedIndex changes
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
               switchInCurve: Curves.easeOutCubic,
@@ -58,19 +59,24 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
                   child: FadeTransition(opacity: animation, child: child),
                 );
               },
-              // key must change when item changes
               child: Column(
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderCard(size,item),
-                  const SizedBox(height: 12),
-                  _buildQtyCard(expected, received, scannedQty, remaining,size),
-                  const SizedBox(height: 20),
-                  Text("Scanned Results",
-                      style: AppTextStyle.h5(size)),
-                  const SizedBox(height: 8),
-                  Expanded(child: _buildScannedList(size,scanned,context)),
+                  orderFillHeaderCard(
+                      size: size, name: item["name"].toString(), accent: mutedPurple),
+                  SizedBox(height: size * 1.4),
+                  orderFillStatsCard(size: size, stats: [
+                    FillStat("Expected", "$expected", Colors.grey.shade700),
+                    FillStat("Received", "$received", skyBlue),
+                    FillStat("Scanned", "$scannedQty", sageTeal),
+                    FillStat("Remaining", "$remaining",
+                        remaining <= 0 ? Colors.grey : Colors.red),
+                  ]),
+                  SizedBox(height: size * 2),
+                  Text("Scanned Results", style: AppTextStyle.h5(size)),
+                  SizedBox(height: size * 0.8),
+                  Expanded(child: _buildScannedList(size, scanned, context)),
                 ],
               ),
             );
@@ -78,56 +84,59 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: SizedBox(
-        width: size * 6,
-        height: size * 6,
-        child: FloatingActionButton(
-          backgroundColor: Colors.blue[900],
-          foregroundColor: Colors.white,
-          elevation: 5,
-          shape: const CircleBorder(),
-          child: Icon(Icons.qr_code_scanner, size: size * 4),
-          onPressed: () async {  
-            final barcode = await FlutterBarcodeScanner.scanBarcode(
-              "#ff6666",
-              "Cancel",
-              true,
-              ScanMode.BARCODE,
-            );
-            if (barcode == "-1") return;
-
-            final index = controller.selectedIndex.value;
-            final item = controller.items[index];
-            final serialType = item['serialNumberType'];
-
-            if (serialType == 'BATCH') {
-              final qty = await _showBatchQtyDialog();
-              if (qty != null && qty > 0) {
-                controller.addScannedCode(barcode, batchQty: qty);
-              }
-            } else if (serialType == 'OTHER') {
-              final result = await _showOtherItemDialog();
-              if (result != null) {
-                controller.addScannedCode(
-                  barcode,
-                  batchQty: result['qty'],
-                );
-                // log('🔹 Added OTHER item: $barcode | ${result['qty']} ');
-              }
-            } else {
-              controller.addScannedCode(barcode);
-            }
-          },
-        ),
-      ),
-      bottomNavigationBar: _buildBottomBar(),
+      floatingActionButton: Obx(() {
+        final index = controller.selectedIndex.value;
+        final manageSn = index < controller.items.length &&
+            controller.items[index]['manage_sn'] == true;
+        return orderScanFab(
+          size: size,
+          color: mutedPurple,
+          icon: manageSn ? Icons.qr_code_scanner : Icons.edit_note_rounded,
+          onPressed: _onScanTap,
+        );
+      }),
+      bottomNavigationBar: _buildBottomBar(size),
     );
   }
 
-  /// 🧮 Batch item qty input
+  /// Serial-tracked (manage_sn) items scan the serial leaving stock; everything
+  /// else is quantity-only (the backend deducts by qty, no serial needed).
+  Future<void> _onScanTap() async {
+    final index = controller.selectedIndex.value;
+    if (index >= controller.items.length) return;
+    final item = controller.items[index];
+    final manageSn = item['manage_sn'] == true;
+    final serialType = item['serialNumberType'];
+
+    if (!manageSn) {
+      final result = await _showOtherItemDialog();
+      if (result != null && result['qty'] != null && result['qty'] > 0) {
+        controller.setScannedQty(result['qty']);
+      }
+      return;
+    }
+
+    final barcode = await FlutterBarcodeScanner.scanBarcode(
+        "#ff6666", "Cancel", true, ScanMode.BARCODE);
+    if (barcode == "-1") return;
+
+    if (serialType == 'BATCH') {
+      final qty = await _showBatchQtyDialog();
+      if (qty != null && qty > 0) {
+        controller.addScannedCode(barcode, batchQty: qty);
+      }
+    } else if (serialType == 'OTHER') {
+      final result = await _showOtherItemDialog();
+      if (result != null) {
+        controller.addScannedCode(barcode, batchQty: result['qty']);
+      }
+    } else {
+      controller.addScannedCode(barcode);
+    }
+  }
+
   Future<int?> _showBatchQtyDialog() async {
     final TextEditingController qtyController = TextEditingController();
-
     return Get.dialog<int>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -155,10 +164,9 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     );
   }
 
-  /// 🧩 Dialog for OTHER type item
-  Future<Map<String, dynamic>?> _showOtherItemDialog() async {
-    final TextEditingController qtyController = TextEditingController();
-
+  Future<Map<String, dynamic>?> _showOtherItemDialog({int? initialQty}) async {
+    final TextEditingController qtyController =
+        TextEditingController(text: initialQty?.toString() ?? '');
     return Get.dialog<Map<String, dynamic>>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -191,9 +199,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     );
   }
 
-  // ===== UI helpers =====
-
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(double size) {
     return Obx(() {
       final items = controller.items;
       final hasItems = items.isNotEmpty;
@@ -203,130 +209,22 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
           ? items[selectedIndex]
           : null;
 
-      // ✅ unified scanned format
       final List<Map<String, dynamic>> scanned = currentItem != null
           ? List<Map<String, dynamic>>.from(currentItem["scanned"] ?? [])
           : [];
 
       final bool hasScannedCurrent = scanned.isNotEmpty;
-      final totalScanned = controller.totalScanned;
-      final bool hasAnyScanned = totalScanned > 0;
+      final bool hasAnyScanned = controller.totalScanned > 0;
 
-      return Container(
-        height: 60,
-        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(139, 252, 228, 236),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            /// 🗑 Clear scanned codes for current item
-            Expanded(
-              child: TextButton.icon(
-                onPressed: hasItems && hasScannedCurrent
-                    ? controller.clearScannedCodes
-                    : null,
-                icon: Icon(
-                  Icons.delete_forever,
-                  color: hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
-                ),
-                label: Text(
-                  "Clear",
-                  style: TextStyle(
-                    color:
-                        hasItems && hasScannedCurrent ? Colors.red : Colors.grey,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: TextButton.icon(
-                onPressed: hasAnyScanned ? controller.goToNextItem : null,
-                icon: Icon(
-                  Icons.save_rounded,
-                  color: hasAnyScanned ? Colors.blue : Colors.grey,
-                ),
-                label: Text(
-                  "Continue",
-                  style: TextStyle(
-                    color: hasAnyScanned ? Colors.blueAccent : Colors.grey,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      return orderFillBottomBar(
+        size: size,
+        clearEnabled: hasItems && hasScannedCurrent,
+        onClear: controller.clearScannedCodes,
+        continueEnabled: hasAnyScanned,
+        onContinue: controller.goToNextItem,
+        accent: mutedPurple,
       );
     });
-  }
-
-  Widget _buildHeaderCard(double size,Map<String, dynamic> item) {
-    return Card(
-      color: Colors.blue[50],
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(Icons.inventory_2_rounded,
-                color: Colors.blue[600], size: 32),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                item["name"].toString(),
-                style:AppTextStyle.h5(size),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQtyCard(
-    int expected,
-    int received,
-    int scannedQty,
-    int remaining,
-    double size
-  ) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildQtyInfo("Expected", expected.toString(), Colors.grey.shade700,size),
-            _buildQtyInfo("Received", received.toString(), Colors.blue,size),
-            _buildQtyInfo("Scanned", scannedQty.toString(), Colors.green,size),
-            _buildQtyInfo("Remaining",remaining.toString(),remaining <= 0 ? Colors.grey : Colors.red,size),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQtyInfo(String label, String value, Color color,double size) {
-    return Column(
-      children: [
-        Text(value,style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: size *2)),
-        Text(label,style: TextStyle(fontSize: size *1.3, color: Colors.grey.shade600)),
-      ],
-    );
   }
 
   Widget _buildScannedList(
@@ -335,99 +233,99 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     BuildContext context,
   ) {
     if (scanned.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.qr_code_2_rounded,
-                size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 12),
-            Text("No codes scanned yet",style:AppTextStyle.body(size,color: Colors.grey.shade600) ),
-          ],
-        ),
+      return orderFillEmptyState(
+        size: size,
+        icon: Icons.qr_code_2_rounded,
+        message: "No codes scanned yet",
       );
     }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(12),
-              itemCount: scanned.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (_, i) {
-                final code = scanned[i]['code'] ?? 'N/A';
-                final qty = scanned[i]['qty'] ?? 1;
-                final serialType =
-                    controller.items[controller.selectedIndex.value]
-                            ['serialNumberType'] ??
-                        'OTHER';
+    return orderFillResultsContainer(
+      size: size,
+      child: ListView.separated(
+        padding: EdgeInsets.all(size * 1.2),
+        itemCount: scanned.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (_, i) {
+          final code = scanned[i]['code'];
+          final qty = scanned[i]['qty'] ?? 1;
+          final serialType = controller.items[controller.selectedIndex.value]
+                  ['serialNumberType'] ??
+              'OTHER';
+          // Codeless entries are non serial-tracked (quantity-only) items.
+          final bool isQtyOnly = code == null;
+          final String title = isQtyOnly
+              ? "Qty: $qty"
+              : (serialType == 'UNIQUE' ? code : "$code (qty: $qty)");
 
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.pink[50],
-                    child:
-                        const Icon(Icons.qr_code, color: Colors.blue),
-                  ),
-                  // show qty only for batch items
-                  title: Text(
-                    serialType == 'UNIQUE' ? code : "$code (qty: $qty)",
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  onTap: () async {
-                    await Get.bottomSheet(
-                      SafeArea(
-                        child: Wrap(
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.edit,
-                                  color: Colors.blueAccent),
-                              title: const Text("Edit Code"),
-                              onTap: () {
-                                Get.back();
-                                showEditCodeDialog(
-                                  context,
-                                  code,
-                                  onSave: (newCode) {
-                                    controller.editScannedCode(
-                                      oldCode: code,
-                                      newCode: newCode,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.delete,
-                                  color: Colors.redAccent),
-                              title: const Text("Remove Code"),
-                              onTap: () {
-                                Get.back();
-                                showRemoveDialog(
-                                  context,
-                                  code,
-                                  () => controller.removeScannedCode(code),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      backgroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(20)),
-                      ),
-                    );
-                  },
-                );
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor: mutedPurple.withOpacity(0.12),
+              child: Icon(isQtyOnly ? Icons.tag_rounded : Icons.qr_code,
+                  color: mutedPurple),
+            ),
+            title: Text(
+              title,
+              style: AppTextStyle.bodyBold(size).copyWith(fontSize: size * 1.4),
+            ),
+            onTap: () => _showRowActions(context, i, isQtyOnly, code, qty),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _showRowActions(BuildContext context, int i, bool isQtyOnly,
+      String? code, dynamic qty) async {
+    await Get.bottomSheet(
+      SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: Colors.blueAccent),
+              title: Text(isQtyOnly ? "Edit Quantity" : "Edit Code"),
+              onTap: () async {
+                Get.back();
+                if (isQtyOnly) {
+                  final result = await _showOtherItemDialog(
+                      initialQty: qty is int ? qty : int.tryParse('$qty'));
+                  if (result != null &&
+                      result['qty'] != null &&
+                      result['qty'] > 0) {
+                    controller.setScannedQty(result['qty']);
+                  }
+                } else {
+                  final c = code!;
+                  showEditCodeDialog(
+                    context,
+                    c,
+                    onSave: (newCode) {
+                      controller.editScannedCode(oldCode: c, newCode: newCode);
+                    },
+                  );
+                }
               },
             ),
-          ),
-        ],
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.redAccent),
+              title: const Text("Remove"),
+              onTap: () {
+                Get.back();
+                if (isQtyOnly) {
+                  controller.clearScannedCodes();
+                } else {
+                  final c = code!;
+                  showRemoveDialog(
+                      context, c, () => controller.removeScannedCode(c));
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
     );
   }

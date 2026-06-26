@@ -5,24 +5,55 @@ import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_confirm_controller.dart';
 import '../../../data/models/receive_confirm_serial_model.dart';
+import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../routes/app_pages.dart';
 
 class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
   const ReceiveOrderConfirmView({super.key});
+
+  /// Match the accent of the flow that opened this screen: By-Supplier =
+  /// sageTeal, By-PO (default) = skyBlue.
+  bool get _isSupplier =>
+      controller.backRoute == AppPages.receiveOrderBySupplierPage;
+  Color get _accent => _isSupplier ? sageTeal : skyBlue;
+  String get _hex1 => _isSupplier ? "#5B8C7A" : "#4A90D9";
+  String get _hex2 => _isSupplier ? "#7FA593" : "#6FA8E0";
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
 
+    // Block leaving the screen while a scan is still being saved, so a serial
+    // can't be lost by navigating away mid-request.
+    return Obx(() {
+      final saving = controller.isConfirming.value;
+      return WillPopScope(
+        onWillPop: () async {
+          if (saving) {
+            warningAlertBottom(
+                title: "Saving…",
+                "Please wait — the last scan is still being confirmed.");
+            return false;
+          }
+          return true;
+        },
+        child: _buildScaffold(size),
+      );
+    });
+  }
+
+  Widget _buildScaffold(double size) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder(
         "Confirm Serials", size,
         icon: Icons.qr_code_scanner_rounded,
         routeBackName: controller.backRoute,
-        hex1: "75a340", hex2: "B1C29E",
+        hex1: _hex1, hex2: _hex2,
       ),
       body: SafeArea(
         child: Padding(
@@ -83,25 +114,37 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
       floatingActionButton: Obx(() {
         // Hide the scanner when there is nothing left to confirm anywhere.
         if (controller.groups.isEmpty) return const SizedBox.shrink();
+        // While a scan is saving, disable the button and show a spinner so a
+        // second scan can't fire before the previous one is persisted.
+        final saving = controller.isConfirming.value;
         return SizedBox(
           width: size * 6,
           height: size * 6,
           child: FloatingActionButton(
-            backgroundColor: const Color(0xFF658C58),
+            backgroundColor: saving ? Colors.grey.shade400 : _accent,
             foregroundColor: Colors.white,
             elevation: 5,
             shape: const CircleBorder(),
-            child: Icon(Icons.qr_code_scanner, size: size * 4),
-            onPressed: () async {
-              final barcode = await FlutterBarcodeScanner.scanBarcode(
-                "#ff6666",
-                "Cancel",
-                true,
-                ScanMode.BARCODE,
-              );
-              if (barcode == "-1") return;
-              await controller.confirmScan(barcode);
-            },
+            onPressed: saving
+                ? null
+                : () async {
+                    final barcode = await FlutterBarcodeScanner.scanBarcode(
+                      "#ff6666",
+                      "Cancel",
+                      true,
+                      ScanMode.BARCODE,
+                    );
+                    if (barcode == "-1") return;
+                    await controller.confirmScan(barcode);
+                  },
+            child: saving
+                ? SizedBox(
+                    width: size * 3,
+                    height: size * 3,
+                    child: const CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2.6),
+                  )
+                : Icon(Icons.qr_code_scanner, size: size * 4),
           ),
         );
       }),
@@ -129,7 +172,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF658C58),
+              backgroundColor: _accent,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               shape: RoundedRectangleBorder(
@@ -151,6 +194,8 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
 
       final isLast = controller.selectedIndex.value >= controller.groups.length - 1;
       final allDone = controller.allConfirmed;
+      // Lock navigation while a scan is being saved.
+      final saving = controller.isConfirming.value;
 
       return Container(
         height: size * 4,
@@ -167,44 +212,64 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SizedBox(width: 20),
-            Row(
-              children: [
-                Icon(
-                  allDone ? Icons.verified_rounded : Icons.fact_check_outlined,
-                  color: allDone ? Colors.green : Colors.grey.shade600,
-                  size: size * 2.4,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "${controller.totalConfirmed} / ${controller.totalSerials} confirmed",
-                  style: TextStyle(
-                    fontSize: size * 1.5,
-                    fontWeight: FontWeight.bold,
-                    color: allDone ? Colors.green : Colors.black87,
+            SizedBox(width: size * 1.6),
+            // Counter — constrained so it ellipsizes instead of sliding under
+            // the centre-docked scanner FAB.
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(
+                    allDone ? Icons.verified_rounded : Icons.fact_check_outlined,
+                    color: allDone ? Colors.green : Colors.grey.shade600,
+                    size: size * 2.4,
+                  ),
+                  SizedBox(width: size * 0.8),
+                  Flexible(
+                    child: Text(
+                      "${controller.totalConfirmed} / ${controller.totalSerials} confirmed",
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: size * 1.5,
+                        fontWeight: FontWeight.bold,
+                        color: allDone ? Colors.green : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Clearance for the centre-docked FAB.
+            SizedBox(width: size * 7),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: saving ? null : controller.goToNextItem,
+                  icon: Icon(
+                    isLast
+                        ? Icons.check_circle_rounded
+                        : Icons.arrow_forward_rounded,
+                    color: saving
+                        ? Colors.grey
+                        : (isLast ? Colors.green : _accent),
+                    size: size * 2.6,
+                  ),
+                  label: Text(
+                    isLast ? "Finish" : "Next Item",
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: size * 1.6,
+                      color: saving
+                          ? Colors.grey
+                          : (isLast ? Colors.green : _accent),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ],
-            ),
-            TextButton.icon(
-              onPressed: controller.goToNextItem,
-              icon: Icon(
-                isLast ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
-                color: isLast ? Colors.green : Colors.blue,
-                size: size * 2.6,
-              ),
-              label: Text(
-                isLast ? "Finish" : "Next Item",
-                style: TextStyle(
-                  fontSize: size * 1.6,
-                  color: isLast ? Colors.green : Colors.blueAccent,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: size * 0.6),
           ],
         ),
       );
@@ -212,26 +277,68 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
   }
 
   Widget _buildHeaderCard(double size, Map<String, dynamic> group) {
-    return Card(
-      color: Colors.green[50],
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size * 2),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_accent, _accent.withOpacity(0.78)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Stack(
           children: [
-            const Icon(Icons.inventory_2_rounded,
-                color: Colors.blueGrey, size: 32),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Soft decorative circle, like the other detail headers.
+            Positioned(
+              top: -size * 3,
+              right: -size * 3,
+              child: Container(
+                width: size * 12,
+                height: size * 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.08),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(size * 1.8),
+              child: Row(
                 children: [
-                  Text("RO #${controller.roCode}",
-                      style: AppTextStyle.body(size, color: Colors.grey)),
-                  const SizedBox(height: 2),
-                  Text(group['item_name'].toString(),
-                      style: AppTextStyle.h5(size)),
+                  Container(
+                    padding: EdgeInsets.all(size * 1.2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.qr_code_scanner_rounded,
+                        color: Colors.white, size: size * 2.8),
+                  ),
+                  SizedBox(width: size * 1.6),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.receipt_long_rounded,
+                                color: Colors.white70, size: size * 1.6),
+                            SizedBox(width: size * 0.5),
+                            Text("RO #${controller.roCode}",
+                                style: AppTextStyle.body(size,
+                                    color: Colors.white70)),
+                          ],
+                        ),
+                        SizedBox(height: size * 0.4),
+                        Text(group['item_name'].toString(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyle.h4(size, color: Colors.white)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

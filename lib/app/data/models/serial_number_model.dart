@@ -7,6 +7,12 @@ class SerialNumberModel {
   final bool isActive;
   final int qty;
 
+  /// Serial-confirmation status (scan-to-confirm pass). `scannedByName` is the
+  /// user who confirmed it; null/empty when still pending.
+  final bool isScanned;
+  final String? scannedAt;
+  final String? scannedByName;
+
   SerialNumberModel({
     required this.id,
     required this.serialNumber,
@@ -15,9 +21,13 @@ class SerialNumberModel {
     this.expiredDate,
     required this.isActive,
     required this.qty,
+    this.isScanned = false,
+    this.scannedAt,
+    this.scannedByName,
   });
 
   factory SerialNumberModel.fromJson(Map<String, dynamic> json) {
+    final scannedAt = json['scanned_at']?.toString() ?? '';
     return SerialNumberModel(
       id: json['id'],
       serialNumber: json['serial_number'] ?? '',
@@ -29,7 +39,10 @@ class SerialNumberModel {
           ? DateTime.tryParse(json['expired_date'])
           : null,
       isActive: json['is_active'] ?? false,
-      qty: json['qty'] ?? 0,
+      qty: (num.tryParse(json['qty']?.toString() ?? '') ?? 0).toInt(),
+      isScanned: json['is_scanned'] ?? false,
+      scannedAt: scannedAt.isNotEmpty ? scannedAt : null,
+      scannedByName: json['scanned_by_name'],
     );
   }
 
@@ -42,6 +55,9 @@ class SerialNumberModel {
       'expired_date': expiredDate?.toIso8601String(),
       'is_active': isActive,
       'qty': qty,
+      'is_scanned': isScanned,
+      'scanned_at': scannedAt,
+      'scanned_by_name': scannedByName,
     };
   }
 }

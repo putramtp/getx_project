@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getx_project/app/global/styles/app_text_style.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_menu_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderHomeView extends GetView {
@@ -12,174 +12,63 @@ class ReceiveOrderHomeView extends GetView {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> menuItems = [
-      {'title': 'By Purchase-order','icon': Icons.request_page_rounded,'color': HexColor("#155E95"),'route': AppPages.receiveOrderByPoPage},
-      {'title': 'By Supplier','icon': Icons.group_rounded,'color': HexColor("B1C29E"),'route': AppPages.receiveOrderBySupplierPage},
-      // {'title': 'Adjustment', 'icon': Icons.tune_rounded,'color': Colors.orange},
-      // {'title': 'Return', 'icon': Icons.insert_chart_rounded,'color': Colors.purple},
-      // {'title': 'Setting', 'icon': Icons.settings_rounded,'color': Colors.teal},
-    ];
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder(
-        "Receive Order Menu",size,
+        "Receive Order Menu", size,
         icon: Icons.grid_view_outlined,
         routeBackName: AppPages.homePage,
+        hex1: "#124076", hex2: "#2A5A8C",
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(28),
-              onTap: () => Get.toNamed(AppPages.receiveOrderListPage),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      HexColor("#6ea5f5"),
-                      HexColor("#195dbf"),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF667eea).withOpacity(0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.receipt_long_rounded,
-                        size: size * 4.5,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Receive Order",
-                            style:AppTextStyle.h1(size,color: Colors.white)
-                                .copyWith(
-                                  letterSpacing: 0.5,
-                                ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "View all receive orders",
-                            style:AppTextStyle.h4(size,color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Colors.white.withOpacity(0.8),
-                      size: size * 2,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // GRID MENU BELOW
-            Expanded(
-              child: GridView.builder(
-                physics: const BouncingScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 18,
-                  crossAxisSpacing: 18,
-                  childAspectRatio: 1.05,
-                ),
-                itemCount: menuItems.length,
-                itemBuilder: (context, index) {
-                  final item = menuItems[index];
-                  return _buildMenuCard(
-                    size: size,
-                    title: item['title'],
-                    icon: item['icon'],
-                    color: item['color'],
-                    onTap: () {
-                      final route = item['route'] as String;
-                      Get.toNamed(route);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuCard({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-    required size,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        splashColor: color.withOpacity(0.2),
-        highlightColor: color.withOpacity(0.1),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(size * 2),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: size * 4,
-                backgroundColor: color.withOpacity(0.12),
-                child: Icon(icon, size: size * 4.5, color: color),
+              orderMenuHero(
+                size: size,
+                title: "Receive Orders",
+                subtitle: "View all receiving history",
+                icon: Icons.move_to_inbox_rounded,
+                gradientColors: const [navyDark, navyMid, navyLight],
+                onTap: () => Get.toNamed(AppPages.receiveOrderListPage),
               ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: size * 1.5,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+              SizedBox(height: size * 3),
+              orderMenuSectionHeader(
+                  size, "Create Receiving", Icons.add_circle_outline_rounded, steelBlue),
+              SizedBox(height: size * 2),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: orderMenuTile(
+                        size: size,
+                        title: "By Purchase-order",
+                        subtitle: "Receive against a PO",
+                        icon: Icons.request_page_rounded,
+                        color: skyBlue,
+                        onTap: () => Get.toNamed(AppPages.receiveOrderByPoPage),
+                      ),
+                    ),
+                    SizedBox(width: size * 1.6),
+                    Expanded(
+                      child: orderMenuTile(
+                        size: size,
+                        title: "By Supplier",
+                        subtitle: "Receive from a supplier",
+                        icon: Icons.groups_rounded,
+                        color: sageTeal,
+                        onTap: () =>
+                            Get.toNamed(AppPages.receiveOrderBySupplierPage),
+                      ),
+                    ),
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

@@ -99,9 +99,11 @@ class ReceiveOrderLine {
       itemId: json['item_id'],
       itemName: json['item_name'] ?? '-',
       poLineId: json['po_line_id']?.toString() ?? '',
-      qty: json['qty'] ?? 0,
-      pricePerUnit: (json['price_per_unit'] ?? 0).toDouble(),
-      priceTotal: (json['price_total'] ?? 0).toDouble(),
+      // qty / prices arrive as decimal strings (backend AsDecimalSix cast),
+      // so parse leniently from string-or-number instead of casting directly.
+      qty: (num.tryParse(json['qty']?.toString() ?? '') ?? 0).toInt(),
+      pricePerUnit: double.tryParse(json['price_per_unit']?.toString() ?? '') ?? 0,
+      priceTotal: double.tryParse(json['price_total']?.toString() ?? '') ?? 0,
       serialNumbers: (json['serial_numbers'] as List<dynamic>? ?? [])
           .map((e) => SerialNumberModel.fromJson(e))
           .toList(),
