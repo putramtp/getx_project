@@ -7,6 +7,7 @@ import '../../../global/widget/search_bar.dart';
 import '../../../data/models/stock_transaction_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class ProductTransactionListView extends GetView<ProductTransactionListController> {
   const ProductTransactionListView({Key? key}) : super(key: key);
@@ -37,7 +38,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
-                    return textLoading(size);
+                    return skeletonGenericList(size);
                   }
 
                   final transactions = controller.filteredTransactions;

@@ -9,21 +9,27 @@ class AuthService extends GetxService {
   // Storage keys
   final String _tokenKey = 'auth_token';
   final String _usernameKey = 'username_key';
-  final String _rolesKey = 'roles_key'; 
+  final String _rolesKey = 'roles_key';
+  final String _userIdKey = 'user_id_key';
 
   // Reactive variables for reactivity
-  final RxnString token = RxnString(null); 
-  final RxnString username = RxnString(null); 
-  final RxnString roles = RxnString(null); 
+  final RxnString token = RxnString(null);
+  final RxnString username = RxnString(null);
+  final RxnString roles = RxnString(null);
+  /// Authenticated user's id. The /login response doesn't include it, so it is
+  /// resolved lazily from /user/currentDetail when first needed (e.g. as the
+  /// `updated_by` field when updating a delivery).
+  final RxnInt userId = RxnInt(null);
 
   @override
   void onInit() {
     super.onInit();
 
     // Load saved credentials on startup
-    token.value = _box.read<String>(_tokenKey); 
+    token.value = _box.read<String>(_tokenKey);
     username.value = _box.read<String>(_usernameKey);
     roles.value = _box.read<String>(_rolesKey);
+    userId.value = _box.read<int>(_userIdKey);
 
     // if (token.value != null) {
     //   log('✅ AuthService initialized. Token loaded: ${token.value}');
@@ -54,16 +60,28 @@ class AuthService extends GetxService {
     roles.value = newRoles;
     _box.write(_rolesKey, newRoles);
   }
-  
+
+  /// Save the authenticated user's id to memory and storage
+  void setUserId(int? newUserId) {
+    userId.value = newUserId;
+    if (newUserId == null) {
+      _box.remove(_userIdKey);
+    } else {
+      _box.write(_userIdKey, newUserId);
+    }
+  }
+
   /// Clear all credentials (used on logout)
   void clearToken() {
     token.value = null;
     username.value = null;
     roles.value = null;
+    userId.value = null;
 
     _box.remove(_tokenKey);
     _box.remove(_usernameKey);
     _box.remove(_rolesKey);
+    _box.remove(_userIdKey);
 
     // log('🚪 Auth credentials cleared.');
   }
@@ -72,4 +90,5 @@ class AuthService extends GetxService {
   String? get currentToken => token.value;
   String? get currentUsername => username.value;
   String? get currentUserRoles => roles.value;
+  int? get currentUserId => userId.value;
 }

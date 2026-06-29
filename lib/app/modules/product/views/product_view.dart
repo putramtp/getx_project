@@ -7,6 +7,7 @@ import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import '../../../global/widget/animated_counter.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
@@ -69,9 +70,11 @@ class ProductView extends GetView<ProductController> {
                 // --- Products / Categories List ---
                 Obx(() {
                   if (controller.isLoading.value) {
-                    return  SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: textLoading(size),
+                    return  SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: skeletonGenericList(size),
+                      ),
                     );
                   }
                   

@@ -4,6 +4,7 @@ import 'package:getx_project/app/global/widget/product_tile.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/global/widget/search_bar.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/size_config.dart';
 import '../controllers/product_by_category_controller.dart';
@@ -37,7 +38,7 @@ class ProductByCategoryView extends GetView<ProductByCategoryController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return const Center(child: CircularProgressIndicator(strokeWidth: 2.0));
+                      return skeletonGenericList(size);
                     }
                     var products = controller.filteredProductSummaries;
                     if (products.isEmpty) {

@@ -8,6 +8,7 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class ReceiveOrderFillBySupplierView
     extends GetView<ReceiveOrderBySupplierDetailController> {
@@ -29,7 +30,7 @@ class ReceiveOrderFillBySupplierView
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return textLoading(size);
+              return skeletonSummaryList(size, accent: _accent);
             }
 
             final item = controller.items[index];

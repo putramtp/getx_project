@@ -34,6 +34,9 @@ abstract class Routes {
   static const OUTFLOW_ORDER_BY_REQUEST_DETAIL = _Paths.OUTFLOW_ORDER_BY_REQUEST_DETAIL;
   static const OUTFLOW_ORDER_BY_CUSTOMER = _Paths.OUTFLOW_ORDER_BY_CUSTOMER;
   static const OUTFLOW_ORDER_BY_CUSTOMER_DETAIL = _Paths.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL;
+  // DELIVERY
+  static const DELIVERY_LIST = _Paths.DELIVERY_LIST;
+  static const DELIVERY_DETAIL = _Paths.DELIVERY_DETAIL;
 
   static const RETURN = _Paths.RETURN;
 }
@@ -71,6 +74,9 @@ abstract class _Paths {
   static const OUTFLOW_ORDER_BY_REQUEST_DETAIL = '/outflow-order/request/detail';
   static const OUTFLOW_ORDER_BY_CUSTOMER = '/outflow-order/customer';
   static const OUTFLOW_ORDER_BY_CUSTOMER_DETAIL = '/outflow-order/customer/detail';
+  // DELIVERY
+  static const DELIVERY_LIST = '/delivery/list';
+  static const DELIVERY_DETAIL = '/delivery/detail';
 
   static const RETURN = '/return';
 }

@@ -7,6 +7,7 @@ import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailController> {
@@ -60,7 +61,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
               SizedBox(height: size * 2),
               Expanded(child: Obx(() {
                 if (controller.isLoading.value) {
-                  return textLoading(size, message: "loading items..");
+                  return skeletonLineList(size, accent: skyBlue);
                 }
                 if (controller.receiveOrderDetail.value == null) {
                   return textNoData(size, message: "No items found.");

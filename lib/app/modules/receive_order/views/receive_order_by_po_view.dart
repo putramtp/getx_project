@@ -9,6 +9,7 @@ import '../../../global/widget/order_list_widgets.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/receive_order_by_po_controller.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
   const ReceiveOrderByPoView({Key? key}) : super(key: key);
@@ -45,7 +46,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonOrderList(size, accent: skyBlue);
                     }
                     final orders = controller.orders;
                     if (orders.isEmpty) {

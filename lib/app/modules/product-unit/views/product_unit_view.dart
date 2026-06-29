@@ -7,6 +7,7 @@ import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/global/widget/search_bar.dart';
+import 'package:getx_project/app/global/widget/skeleton_widgets.dart';
 import 'package:getx_project/app/modules/product-unit/controllers/product_unit_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
@@ -41,9 +42,9 @@ class ProductUnitView extends GetView<ProductUnitController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonGenericList(size);
                     }
-      
+
                     final units = controller.units;
                     if (units.isEmpty) {
                       return textNoData(size,message: "No unit data.");

@@ -5,6 +5,7 @@ import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/modules/transaction/controllers/stock_transaction_detail_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../data/models/serial_number_model.dart';
 import '../../../routes/app_pages.dart';
 
@@ -27,7 +28,7 @@ class StockTransactionDetailView
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return textLoading(size,message: "loading items..");
+                return skeletonGenericList(size);
               }
 
               if (controller.receiveOrderDetail.value == null) {

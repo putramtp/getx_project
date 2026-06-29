@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/product_detail.controller.dart';
 
 class ProductDetailView extends GetView<ProductDetailController> {
@@ -34,35 +35,43 @@ class ProductDetailView extends GetView<ProductDetailController> {
                   const SizedBox(height: 20),
                   _buildProductCard(product, detail,size),
                   const SizedBox(height: 28),
-                  // SECTION: BASIC INFO
-                  _sectionCard(
-                    title: "Basic Information",
-                    size: size,
-                    children: [
-                      _infoRow("UPC", detail?.upc, size, loading),
-                      _infoRow("Product Type", detail?.type, size, loading),
-                      _infoRow("Category", detail?.categoryName, size, loading),
-                      _infoRow("Brand", detail?.brandName, size, loading),
-                    ],
-                  ),
+                  skeletonize(
+                    loading: loading,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // SECTION: BASIC INFO
+                        _sectionCard(
+                          title: "Basic Information",
+                          size: size,
+                          children: [
+                            _infoRow("UPC", detail?.upc, size, loading),
+                            _infoRow("Product Type", detail?.type, size, loading),
+                            _infoRow("Category", detail?.categoryName, size, loading),
+                            _infoRow("Brand", detail?.brandName, size, loading),
+                          ],
+                        ),
 
-                  const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                  // SECTION: PRICING
-                  _sectionCard(
-                    title: "Pricing",
-                    size: size,
-                    children: [
-                      _infoRow("Selling Price", "Rp ${formatPrice(detail?.priceSell)}",size, loading,isPrice: true),
-                      _infoRow("Serial Number", detail?.serialNumberType, size,loading),
-                      _infoRow("Expired",detail?.manageExpired == true ? "Yes" : "No",size,loading),
-                    ],
-                  ),
+                        // SECTION: PRICING
+                        _sectionCard(
+                          title: "Pricing",
+                          size: size,
+                          children: [
+                            _infoRow("Selling Price", "Rp ${formatPrice(detail?.priceSell)}",size, loading,isPrice: true),
+                            _infoRow("Serial Number", detail?.serialNumberType, size,loading),
+                            _infoRow("Expired",detail?.manageExpired == true ? "Yes" : "No",size,loading),
+                          ],
+                        ),
 
-                  const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                  // SECTION: DESCRIPTION
-                  _sectionCard(title: "Description",size: size,children: [_buildDescription(detail, size, loading)],
+                        // SECTION: DESCRIPTION
+                        _sectionCard(title: "Description",size: size,children: [_buildDescription(detail, size, loading)],
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 30),

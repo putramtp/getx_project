@@ -9,6 +9,7 @@ import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
@@ -60,7 +61,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
           padding: const EdgeInsets.all(16),
           child: Obx(() {
             if (controller.isLoading.value) {
-              return textLoading(size, message: "Loading serials...");
+              return skeletonLineList(size, accent: _accent);
             }
 
             // No UNIQUE items => nothing to scan-confirm.
@@ -70,7 +71,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
 
             final index = controller.selectedIndex.value;
             if (index >= controller.groups.length) {
-              return textLoading(size);
+              return skeletonLineList(size, accent: _accent);
             }
 
             final group = controller.groups[index];

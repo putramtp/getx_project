@@ -5,6 +5,7 @@ import 'package:getx_project/app/global/widget/product_tile.dart';
 import 'package:getx_project/app/global/widget/search_bar.dart';
 import 'package:getx_project/app/modules/product-brand/controllers/product_by_brand_controller.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/size_config.dart';
 
@@ -37,7 +38,7 @@ class ProductByBrandView extends GetView<ProductByBrandController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return const Center(child: CircularProgressIndicator(strokeWidth: 2.0));
+                      return skeletonGenericList(size);
                     }
                     var products = controller.filteredProductSummaries;
                     if (products.isEmpty) {

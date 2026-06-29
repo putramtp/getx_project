@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
+import 'package:getx_project/app/global/widget/skeleton_widgets.dart';
 import 'package:getx_project/app/modules/home/views/widgets/menu_card.dart';
 
 import '../controllers/home_controller.dart';
@@ -68,7 +69,7 @@ class HomeView extends GetView<HomeController> {
                     child: Column(
                       children: [
                         SizedBox(height: size * 12),
-                        _buildHeader(size, 'Dashboard', icon: Icons.home),
+                        _buildHeader(size, 'Dashboard', icon: Icons.home,isIconText: false),
                         SizedBox(height: size * 2),
                         _buildGreetingCard(size, userName, userRoles),
                         SizedBox(height: size * 2),
@@ -387,7 +388,7 @@ class HomeView extends GetView<HomeController> {
       children: [
         Obx(() {
           if (controller.isLatestLoading.value) {
-            return textLoading(size, message: "Loading transactions...");
+            return skeletonGenericList(size, count: 4);
           }
           if (controller.lastTransactions.isEmpty) {
             return textNoData(size);

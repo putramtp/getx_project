@@ -8,6 +8,7 @@ import '../../../global/widget/order_list_widgets.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerController> {
   const OutflowOrderByCustomerView({Key? key}) : super(key: key);
@@ -43,7 +44,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonOrderList(size, accent: amber);
                     }
                     final orders = controller.filteredCustomers;
                     if (orders.isEmpty) {

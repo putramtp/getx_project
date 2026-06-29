@@ -9,6 +9,7 @@ import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class OutflowOrderListView extends GetView<OutflowOrderListController> {
   const OutflowOrderListView({Key? key}) : super(key: key);
@@ -44,7 +45,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonOrderList(size, accent: softPurple);
                     }
                     final orders = controller.orders;
                     if (orders.isEmpty) {

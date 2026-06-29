@@ -12,6 +12,14 @@ class OutflowOrderDetailModel {
   final String? creatorName;
   final DateTime? date;
   final String? billNumber;
+
+  /// Whether this outflow order can be delivered (`is_deliverable` from the
+  /// backend — true only for `DO` type orders). Gates the delivery CTA.
+  final bool isDeliverable;
+
+  /// Whether a delivery has already been created for this outflow order
+  /// (`is_have_delivery` from the backend) — drives the "Create Delivery" CTA.
+  final bool isHaveDelivery;
   final List<OutflowOrderLine> outflowOrderLines;
 
   OutflowOrderDetailModel({
@@ -26,6 +34,8 @@ class OutflowOrderDetailModel {
     this.creatorName,
     this.date,
     this.billNumber,
+    this.isDeliverable = false,
+    this.isHaveDelivery = false,
     required this.outflowOrderLines,
   });
 
@@ -42,6 +52,8 @@ class OutflowOrderDetailModel {
       creatorName: json['creator_name'],
       date: DateTime.tryParse(json['date']),
       billNumber: json['bill_number'],
+      isDeliverable: json['is_deliverable'] == true,
+      isHaveDelivery: json['is_have_delivery'] == true,
       outflowOrderLines: (json['outflow_order_lines'] as List<dynamic>? ?? [])
           .map((e) => OutflowOrderLine.fromJson(e))
           .toList(),
@@ -61,6 +73,8 @@ class OutflowOrderDetailModel {
       'creator_name': creatorName,
       'date': date?.toIso8601String(),
       'bill_number': billNumber,
+      'is_deliverable': isDeliverable,
+      'is_have_delivery': isHaveDelivery,
       'outflow_order_lines':
           outflowOrderLines.map((line) => line.toJson()).toList(),
     };

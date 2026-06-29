@@ -8,6 +8,7 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController> {
   const ReceiveOrderFillByPoView({super.key});
@@ -28,7 +29,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return textLoading(size);
+              return skeletonSummaryList(size, accent: _accent);
             }
 
             final item = controller.items[index];

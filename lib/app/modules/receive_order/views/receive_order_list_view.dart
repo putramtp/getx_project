@@ -9,6 +9,7 @@ import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
   const ReceiveOrderListView({Key? key}) : super(key: key);
@@ -44,7 +45,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonOrderList(size, accent: skyBlue);
                     }
                     final orders = controller.orders;
                     if (orders.isEmpty) {

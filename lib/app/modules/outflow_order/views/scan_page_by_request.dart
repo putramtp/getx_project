@@ -7,6 +7,7 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
   const ScanPageByRequest({super.key});
@@ -26,7 +27,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return textLoading(size);
+              return skeletonSummaryList(size, accent: mutedPurple);
             }
 
             final item = controller.items[index];

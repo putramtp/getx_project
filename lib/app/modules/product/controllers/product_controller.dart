@@ -139,10 +139,9 @@ class ProductController extends GetxController  implements TopFilterController{
 
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    productSummaries.sort((a, b) => isAscending.value
-        ? a.itemName.compareTo(b.itemName)
-        : b.itemName.compareTo(a.itemName));
-    productSummaries.refresh();
+    // Reload from the backend so the whole list (all pages) is reordered by
+    // name, not just the page already in memory.
+    loadProducts();
   }
 
 
@@ -174,6 +173,7 @@ class ProductController extends GetxController  implements TopFilterController{
   Map<String, String> buildParams() {
     return {
       'limit': limit.value.toString(),
+      'sort_dir': isAscending.value ? 'asc' : 'desc',
       if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
       if (qtyRemainingLessThan.value != null) 'qty_less_than': qtyRemainingLessThan.value.toString(),
       if (enablePriceRange.value) ...{

@@ -42,6 +42,10 @@ import 'package:getx_project/app/modules/receive_order/views/receive_order_home_
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_confirm_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_list_view.dart';
+import 'package:getx_project/app/modules/delivery/bindings/delivery_list_binding.dart';
+import 'package:getx_project/app/modules/delivery/bindings/delivery_detail_binding.dart';
+import 'package:getx_project/app/modules/delivery/views/delivery_list_view.dart';
+import 'package:getx_project/app/modules/delivery/views/delivery_detail_view.dart';
 import 'package:getx_project/app/modules/home/bindings/home_binding.dart';
 import 'package:getx_project/app/modules/home/views/home_view.dart';
 import 'package:getx_project/app/modules/product/bindings/product_binding.dart';
@@ -91,6 +95,9 @@ class AppPages {
   static const outflowOrderByRequestDetailPage = Routes.OUTFLOW_ORDER_BY_REQUEST_DETAIL;
   static const outflowOrderByCustomerPage = Routes.OUTFLOW_ORDER_BY_CUSTOMER;
   static const outflowOrderByCustomerDetailPage = Routes.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL;
+  //DELIVERY
+  static const deliveryListPage = Routes.DELIVERY_LIST;
+  static const deliveryDetailPage = Routes.DELIVERY_DETAIL;
 
   static const returnPage = Routes.RETURN;
 
@@ -226,6 +233,18 @@ class AppPages {
       name: _Paths.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL,
       page: () => const OutflowOrderByCustomerDetailView(),
       binding: OutflowOrderByCustomerDetailBinding(),
+    ),
+
+    // DELIVERY
+    GetPage(
+      name: _Paths.DELIVERY_LIST,
+      page: () => const DeliveryListView(),
+      binding: DeliveryListBinding(),
+    ),
+    GetPage(
+      name: _Paths.DELIVERY_DETAIL,
+      page: () => const DeliveryDetailView(),
+      binding: DeliveryDetailBinding(),
     ),
 
     GetPage(

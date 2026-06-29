@@ -71,6 +71,18 @@ class OutflowOrderHomeView extends GetView {
                   ],
                 ),
               ),
+              SizedBox(height: size * 3),
+              orderMenuSectionHeader(
+                  size, "Logistics", Icons.local_shipping_outlined, steelBlue),
+              SizedBox(height: size * 2),
+              orderMenuHero(
+                size: size,
+                title: "Deliveries",
+                subtitle: "Track & dispatch deliveries",
+                icon: Icons.local_shipping_rounded,
+                gradientColors: const [steelBlue, lightSteelBlue],
+                onTap: () => Get.toNamed(AppPages.deliveryListPage),
+              ),
             ],
           ),
         ),

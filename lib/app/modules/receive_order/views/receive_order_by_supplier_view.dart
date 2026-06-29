@@ -7,6 +7,7 @@ import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierController> {
@@ -43,7 +44,7 @@ class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierControlle
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonOrderList(size, accent: sageTeal);
                     }
                     final orders = controller.filteredSuppliers;
                     if (orders.isEmpty) {

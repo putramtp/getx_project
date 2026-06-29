@@ -8,6 +8,7 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailController> {
@@ -27,7 +28,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return textLoading(size,message: "loading items..");
+                return skeletonSummaryList(size, accent: skyBlue);
               }
 
               if (controller.items.isEmpty) {

@@ -5,6 +5,7 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import '../../../modules/outflow_order/views/scan_page_by_customer.dart';
 import '../../../routes/app_pages.dart';
@@ -31,7 +32,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
             const SizedBox(height: 16),
             Expanded(child: Obx(() {
               if (controller.isLoading.value) {
-                return textLoading(size,message: "loading items..");
+                return skeletonSummaryList(size, accent: amber);
               }
 
               if (controller.items.isEmpty) {

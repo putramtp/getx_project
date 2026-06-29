@@ -7,6 +7,7 @@ import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 
 class StockTransactionView extends GetView<StockTransactionController> {
   const StockTransactionView({Key? key}) : super(key: key);
@@ -39,7 +40,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return textLoading(size);
+                      return skeletonGenericList(size);
                     }
       
                     final trans = controller.trans;

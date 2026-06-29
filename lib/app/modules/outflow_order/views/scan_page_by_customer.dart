@@ -6,6 +6,7 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
+import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/outflow_order_by_customer_detail_controller.dart';
 
 class ScanPageByCustomer
@@ -27,7 +28,7 @@ class ScanPageByCustomer
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return textLoading(size);
+              return skeletonSummaryList(size, accent: amber);
             }
 
             final item = controller.items[index];

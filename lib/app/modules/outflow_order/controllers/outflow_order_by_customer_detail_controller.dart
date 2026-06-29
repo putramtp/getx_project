@@ -6,6 +6,7 @@ import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/outflow_request_customer_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
+import '../../../modules/delivery/delivery_actions.dart';
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
@@ -252,10 +253,27 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     // Submitted to the server — drop the local in-progress cache.
     _box.remove(_cacheKey);
     successAlertBottom("Outflow for ${customer.name} completed!");
+
+    // Offer to create a delivery for the newly created outflow order.
+    final createdId = _createdOutflowId(data);
+    final wantsDelivery = createdId != null && await confirmCreateDelivery();
+
     await Future.delayed(const Duration(milliseconds: 300));
     if (Get.isRegistered<OutflowOrderByCustomerController>()) {
       Get.delete<OutflowOrderByCustomerController>(force: true);
     }
-    Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
+
+    if (wantsDelivery) {
+      await createDeliveryForOutflow(createdId);
+    } else {
+      Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
+    }
+  }
+
+  /// The created outflow order id from the submit response (`data.data.id`).
+  int? _createdOutflowId(Map<String, dynamic> data) {
+    final inner = data['data'];
+    final id = (inner is Map) ? inner['id'] : null;
+    return (id is int) ? id : int.tryParse(id?.toString() ?? '');
   }
 }
