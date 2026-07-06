@@ -21,7 +21,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Outflow Order Detail", size,
           routeBackName: AppPages.outflowOrderListPage,
-          hex1: "#6B5FB5", hex2: "#7C73C0"),
+          color1: mutedPurple, color2: softPurple),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),

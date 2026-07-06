@@ -67,4 +67,46 @@ class AppTextStyle {
   static TextStyle iconText(double size, {Color color = Colors.black54}) {
     return GoogleFonts.plusJakartaSans(fontSize: size * 1.3, color: color);
   }
+
+  // ── Escape hatch ────────────────────────────────────────────────
+  // For one-off sizes/weights that don't match a named style above. Still
+  // returns Plus Jakarta Sans so all text flows through the design system —
+  // prefer a named method when one fits. Pass [scale] for a size-relative
+  // value (fontSize = size * scale) or [px] for an absolute pixel size.
+
+  static TextStyle custom(
+    double size, {
+    double scale = 1.2,
+    double? px,
+    Color? color,
+    FontWeight? weight,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return GoogleFonts.plusJakartaSans(
+      fontSize: px ?? size * scale,
+      color: color,
+      fontWeight: weight,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
+
+  /// Color/weight-only style with NO font size — the size is inherited from the
+  /// surrounding text theme (Plus Jakarta Sans). Use to replace inline
+  /// `TextStyle(color: ...)` / `TextStyle(fontWeight: ...)` without forcing a
+  /// size (which would change appearance).
+  static TextStyle plain({
+    Color? color,
+    FontWeight? weight,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return GoogleFonts.plusJakartaSans(
+      color: color,
+      fontWeight: weight,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
 }

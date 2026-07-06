@@ -1,21 +1,40 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
+import 'package:getx_project/app/helpers/crash_reporter.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/services/network_service.dart';
 
 import 'app/global/size_config.dart';
 import 'app/routes/app_pages.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init(); // ✅ REQUIRED
-  Get.put(AuthService(), permanent: true);
-  Get.put(ApiProvider(), permanent: true);
-  Get.put(NetworkService(), permanent: true);
-  runApp(const MyApp());
+void main() {
+  // All startup + runApp happen inside a guarded zone so uncaught async errors
+  // are captured by CrashReporter instead of vanishing.
+  CrashReporter.runGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // Route framework + platform errors through the reporter.
+    FlutterError.onError = CrashReporter.recordFlutterError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      CrashReporter.recordError(error, stack, fatal: true, context: 'platform');
+      return true;
+    };
+    ErrorWidget.builder = CrashReporter.errorWidgetBuilder;
+    await CrashReporter.init();
+
+    await GetStorage.init(); // ✅ REQUIRED
+    // AuthService loads the token from secure storage asynchronously; await it so
+    // the token is in memory before any route/middleware/request reads it.
+    await Get.putAsync<AuthService>(() => AuthService().init(), permanent: true);
+    Get.put(ApiProvider(), permanent: true);
+    Get.put(NetworkService(), permanent: true);
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {

@@ -8,6 +8,7 @@ import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import '../../../global/widget/animated_counter.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
+import '../../../global/variables.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
@@ -20,7 +21,7 @@ class ProductView extends GetView<ProductController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
         backgroundColor: Colors.white,
-        appBar: appBarOrder("Product",size,icon: Icons.shopping_bag_outlined,routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
+        appBar: appBarOrder("Product",size,icon: Icons.shopping_bag_outlined,routeBackName: AppPages.homePage,color1: navyDark,color2: sageGreen),
         body: RefreshIndicator(
           onRefresh: controller.loadProducts,
           child: NotificationListener(
@@ -39,9 +40,9 @@ class ProductView extends GetView<ProductController> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Expanded(child: Obx(() => _metricBox('Total Products',controller.totalProducts.value,'+8.00%',size))),
+                        Expanded(child: Obx(() => _metricBox('Total Products',controller.totalProducts.value,size))),
                         SizedBox(width: size *2),
-                        Expanded(child: Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,'+2.34%',size))),
+                        Expanded(child: Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,size))),
                       ],
                     ),
                   ),
@@ -78,6 +79,13 @@ class ProductView extends GetView<ProductController> {
                     );
                   }
                   
+                  if (controller.hasError.value && controller.productSummaries.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: errorRetry(size, onRetry: controller.loadProducts, accent: navyDark),
+                    );
+                  }
+
                   if (controller.productSummaries.isEmpty) {
                     return  SliverFillRemaining(
                       hasScrollBody: false,
@@ -110,7 +118,7 @@ class ProductView extends GetView<ProductController> {
                         if (controller.cursorNext.value == null && products.isNotEmpty) {
                           return  Padding(
                             padding:  EdgeInsets.symmetric(vertical: size * 3),
-                            child: Center(child: Text("No more data.",style: TextStyle(fontSize: size *1.4,color: Colors.grey,fontWeight: FontWeight.w500)),
+                            child: Center(child: Text("No more data.",style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey, weight: FontWeight.w500)),
                             ),
                           );
                         }
@@ -125,7 +133,7 @@ class ProductView extends GetView<ProductController> {
         ));
   }
 
-  Widget _metricBox(String title, int value, String percent, size) {
+  Widget _metricBox(String title, int value, size) {
     return Container(
       width: size * 18,
       padding: EdgeInsets.all(size * 2),
@@ -136,25 +144,17 @@ class ProductView extends GetView<ProductController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,style: TextStyle(fontSize: size * 1.5,fontWeight: FontWeight.w400,color: Colors.black87)),
+          Text(title,style: AppTextStyle.custom(size, scale: 1.5, weight: FontWeight.w400, color: Colors.black87)),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               CircleAvatar(radius: size *2.7,backgroundColor: Colors.green.shade50,child: Icon(Icons.layers_outlined , size: size *3,color: Colors.green,)),
               SizedBox(width: size * 0.5),
-              Expanded(child: AnimatedCounter(value: value,style: TextStyle(fontSize: size * 1.8, fontWeight: FontWeight.bold))),
+              Expanded(child: AnimatedCounter(value: value,style: AppTextStyle.h4(size, weight: FontWeight.bold))),
             ],
           ),
           const SizedBox(height: 6),
-          // Container(
-          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          //   decoration: BoxDecoration(
-          //     color: Colors.green.withOpacity(0.2),
-          //     borderRadius: BorderRadius.circular(8),
-          //   ),
-          //   child: Text(percent,style: const TextStyle(color: Color.fromARGB(255, 2, 138, 7))),
-          // ),
         ],
       ),
     );
@@ -216,9 +216,10 @@ class ProductView extends GetView<ProductController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Qty remaining less than",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: AppTextStyle.custom(SizeConfig.defaultSize,
+                      px: 14, weight: FontWeight.w600),
                 ),
                 SizedBox(
                   width: 80,
@@ -277,7 +278,7 @@ class ProductView extends GetView<ProductController> {
               hintText: 'Search products...',
               border: InputBorder.none,
               prefixIcon:  Icon(Icons.search,size:size *2),
-              hintStyle: TextStyle(color: Colors.grey.shade500),
+              hintStyle: AppTextStyle.plain(color: Colors.grey.shade500),
               suffixIcon: controller.isStillSearch.value 
               ? IconButton(
                   icon:  Icon(Icons.clear_outlined,size: size * 1.6),
@@ -285,13 +286,13 @@ class ProductView extends GetView<ProductController> {
                 )
               : const SizedBox.shrink(),
             ),
-            style: TextStyle(fontSize: size * 1.8),
+            style: AppTextStyle.custom(size, scale: 1.8),
             onChanged: controller.filterList,
           ),
         ),
         TextButton(
           onPressed: controller.stopSearch,
-          child: Text('Cancel', style: TextStyle(color: Colors.grey[800], fontSize: size * 1.6)),
+          child: Text('Cancel', style: AppTextStyle.custom(size, scale: 1.6, color: Colors.grey[800])),
         ),
       ],
     );

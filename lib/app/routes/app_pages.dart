@@ -52,8 +52,6 @@ import 'package:getx_project/app/modules/product/bindings/product_binding.dart';
 import 'package:getx_project/app/modules/product/views/product_view.dart';
 import 'package:getx_project/app/modules/login/bindings/login_binding.dart';
 import 'package:getx_project/app/modules/login/views/login_view.dart';
-import 'package:getx_project/app/modules/return/bindings/return_binding.dart';
-import 'package:getx_project/app/modules/return/views/return_view.dart';
 import 'package:getx_project/app/middleware/auth_middleware.dart';
 import 'package:getx_project/app/modules/transaction/bindings/stock_transaction_binding.dart';
 import 'package:getx_project/app/modules/transaction/views/stock_transaction_view.dart';
@@ -77,7 +75,6 @@ class AppPages {
 
   static const stockTransactionPage = Routes.STOCK_TRANSACTION;
 
-  static const itemPage = Routes.ITEM;
   //RECEIVE ORDER
   static const receiveHomePage = Routes.RECEIVE_ORDER_HOME;
   static const receiveOrderListPage = Routes.RECEIVE_ORDER_LIST;
@@ -99,158 +96,96 @@ class AppPages {
   static const deliveryListPage = Routes.DELIVERY_LIST;
   static const deliveryDetailPage = Routes.DELIVERY_DETAIL;
 
-  static const returnPage = Routes.RETURN;
+  /// Builds a route guarded by [AuthMiddleware]. Every page except LOGIN goes
+  /// through this so a route can never accidentally ship unprotected.
+  static GetPage _guard(
+    String name,
+    GetPageBuilder page, {
+    Bindings? binding,
+  }) {
+    return GetPage(
+      name: name,
+      page: page,
+      binding: binding,
+      middlewares: [AuthMiddleware()],
+    );
+  }
 
   static final routes = [
+    // Public
     GetPage(
       name: _Paths.LOGIN,
       page: () => const LoginView(),
       binding: LoginBinding(),
     ),
-    GetPage(
-      name: _Paths.HOME,
-      page: () => const HomeView(),
-      binding: HomeBinding(),
-      middlewares: [AuthMiddleware()],
-    ),
-    GetPage(
-      name: _Paths.PRODUCT,
-      page: () => const ProductView(),
-      binding: ProductBinding(),
-      middlewares: [AuthMiddleware()],
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_DETAIL,
-      page: () => const ProductDetailView(),
-      binding: ProductDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_CATEGORY,
-      page: () => const ProductCategoryView(),
-      binding: ProductCategoryBinding(),
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_BY_CATEGORY,
-      page: () => const ProductByCategoryView(),
-      binding: ProductByCategoryBinding(),
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_BRAND,
-      page: () => const ProductBrandView(),
-      binding: ProductBrandBinding(),
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_UNIT,
-      page: () => const ProductUnitView(),
-      binding: ProductUnitBinding(),
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_BY_BRAND,
-      page: () => const ProductByBrandView(),
-      binding: ProductByBrandBinding(),
-    ),
-    GetPage(
-      name: _Paths.PRODUCT_TRANSACTION_LIST,
-      page: () => const ProductTransactionListView(),
-      binding: ProductTransactionListBinding(),
-    ),
-    GetPage(
-      name: _Paths.STOCK_TRANSACTION,
-      page: () => const StockTransactionView(),
-      binding: StockTransactionBinding(),
-    ),
-    //RECEIVE ORDER
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_HOME,
-      page: () => const ReceiveOrderHomeView(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_LIST,
-      page: () => const ReceiveOrderListView(),
-      binding: ReceiveOrderListBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_LIST_DETAIL,
-      page: () => const ReceiveOrderListDetailView(),
-      binding: ReceiveOrderListDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_BY_PO,
-      page: () => const ReceiveOrderByPoView(),
-      binding: ReceiveOrderByPoBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_BY_PO_DETAIL,
-      page: () => const ReceiveOrderByPoDetailView(),
-      binding: ReceiveOrderByPoDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_BY_SUPPLIER,
-      page: () => const ReceiveOrderBySupplierView(),
-      binding: ReceiveOrderBySupplierBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL,
-      page: () => const ReceiveOrderBySupplierDetailView(),
-      binding: ReceiveOrderBySupplierDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.RECEIVE_ORDER_CONFIRM,
-      page: () => const ReceiveOrderConfirmView(),
-      binding: ReceiveOrderConfirmBinding(),
-    ),
+
+    // Protected
+    _guard(_Paths.HOME, () => const HomeView(), binding: HomeBinding()),
+    _guard(_Paths.PRODUCT, () => const ProductView(),
+        binding: ProductBinding()),
+    _guard(_Paths.PRODUCT_DETAIL, () => const ProductDetailView(),
+        binding: ProductDetailBinding()),
+    _guard(_Paths.PRODUCT_CATEGORY, () => const ProductCategoryView(),
+        binding: ProductCategoryBinding()),
+    _guard(_Paths.PRODUCT_BY_CATEGORY, () => const ProductByCategoryView(),
+        binding: ProductByCategoryBinding()),
+    _guard(_Paths.PRODUCT_BRAND, () => const ProductBrandView(),
+        binding: ProductBrandBinding()),
+    _guard(_Paths.PRODUCT_UNIT, () => const ProductUnitView(),
+        binding: ProductUnitBinding()),
+    _guard(_Paths.PRODUCT_BY_BRAND, () => const ProductByBrandView(),
+        binding: ProductByBrandBinding()),
+    _guard(_Paths.PRODUCT_TRANSACTION_LIST,
+        () => const ProductTransactionListView(),
+        binding: ProductTransactionListBinding()),
+    _guard(_Paths.STOCK_TRANSACTION, () => const StockTransactionView(),
+        binding: StockTransactionBinding()),
+
+    // RECEIVE ORDER
+    _guard(_Paths.RECEIVE_ORDER_HOME, () => const ReceiveOrderHomeView()),
+    _guard(_Paths.RECEIVE_ORDER_LIST, () => const ReceiveOrderListView(),
+        binding: ReceiveOrderListBinding()),
+    _guard(_Paths.RECEIVE_ORDER_LIST_DETAIL,
+        () => const ReceiveOrderListDetailView(),
+        binding: ReceiveOrderListDetailBinding()),
+    _guard(_Paths.RECEIVE_ORDER_BY_PO, () => const ReceiveOrderByPoView(),
+        binding: ReceiveOrderByPoBinding()),
+    _guard(_Paths.RECEIVE_ORDER_BY_PO_DETAIL,
+        () => const ReceiveOrderByPoDetailView(),
+        binding: ReceiveOrderByPoDetailBinding()),
+    _guard(_Paths.RECEIVE_ORDER_BY_SUPPLIER,
+        () => const ReceiveOrderBySupplierView(),
+        binding: ReceiveOrderBySupplierBinding()),
+    _guard(_Paths.RECEIVE_ORDER_BY_SUPPLIER_DETAIL,
+        () => const ReceiveOrderBySupplierDetailView(),
+        binding: ReceiveOrderBySupplierDetailBinding()),
+    _guard(_Paths.RECEIVE_ORDER_CONFIRM, () => const ReceiveOrderConfirmView(),
+        binding: ReceiveOrderConfirmBinding()),
+
     // OUTFLOW ORDER
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_HOME,
-      page: () => const OutflowOrderHomeView(),
-    ),
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_LIST,
-      page: () => const OutflowOrderListView(),
-      binding: OutflowOrderListBinding(),
-    ),
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_LIST_DETAIL,
-      page: () => const OutflowOrderDetailView(),
-      binding: OutflowOrderListDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_BY_REQUEST,
-      page: () => const OutflowOrderByRequestView(),
-      binding: OutflowOrderByRequestBinding(),
-    ),
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_BY_REQUEST_DETAIL,
-      page: () => const OutflowOrderByRequestDetailView(),
-      binding: OutflowOrderByRequestDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_BY_CUSTOMER,
-      page: () => const OutflowOrderByCustomerView(),
-      binding: OutflowOrderByCustomerBinding(),
-    ),
-    GetPage(
-      name: _Paths.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL,
-      page: () => const OutflowOrderByCustomerDetailView(),
-      binding: OutflowOrderByCustomerDetailBinding(),
-    ),
+    _guard(_Paths.OUTFLOW_ORDER_HOME, () => const OutflowOrderHomeView()),
+    _guard(_Paths.OUTFLOW_ORDER_LIST, () => const OutflowOrderListView(),
+        binding: OutflowOrderListBinding()),
+    _guard(_Paths.OUTFLOW_ORDER_LIST_DETAIL,
+        () => const OutflowOrderDetailView(),
+        binding: OutflowOrderListDetailBinding()),
+    _guard(_Paths.OUTFLOW_ORDER_BY_REQUEST,
+        () => const OutflowOrderByRequestView(),
+        binding: OutflowOrderByRequestBinding()),
+    _guard(_Paths.OUTFLOW_ORDER_BY_REQUEST_DETAIL,
+        () => const OutflowOrderByRequestDetailView(),
+        binding: OutflowOrderByRequestDetailBinding()),
+    _guard(_Paths.OUTFLOW_ORDER_BY_CUSTOMER,
+        () => const OutflowOrderByCustomerView(),
+        binding: OutflowOrderByCustomerBinding()),
+    _guard(_Paths.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL,
+        () => const OutflowOrderByCustomerDetailView(),
+        binding: OutflowOrderByCustomerDetailBinding()),
 
     // DELIVERY
-    GetPage(
-      name: _Paths.DELIVERY_LIST,
-      page: () => const DeliveryListView(),
-      binding: DeliveryListBinding(),
-    ),
-    GetPage(
-      name: _Paths.DELIVERY_DETAIL,
-      page: () => const DeliveryDetailView(),
-      binding: DeliveryDetailBinding(),
-    ),
-
-    GetPage(
-      name: _Paths.RETURN,
-      page: () => const ReturnView(),
-      binding: ReturnBinding(),
-    ),
+    _guard(_Paths.DELIVERY_LIST, () => const DeliveryListView(),
+        binding: DeliveryListBinding()),
+    _guard(_Paths.DELIVERY_DETAIL, () => const DeliveryDetailView(),
+        binding: DeliveryDetailBinding()),
   ];
 }

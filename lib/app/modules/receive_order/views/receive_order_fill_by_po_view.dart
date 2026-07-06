@@ -22,7 +22,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Fill Item", size,
-          icon: Icons.edit_rounded, hex1: "#4A90D9", hex2: "#6FA8E0"),
+          icon: Icons.edit_rounded, color1: skyBlue, color2: skyBlueLight),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
@@ -179,12 +179,12 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     final TextEditingController expController =
         TextEditingController(text: initialExpired ?? '');
 
-    return Get.dialog<Map<String, dynamic>>(
+    final result = await Get.dialog<Map<String, dynamic>>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           type == 'BATCH' ? 'Batch Quantity' : 'Enter item quantity',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: AppTextStyle.plain(weight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -245,11 +245,14 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                 'expired_date': expController.text,
               });
             },
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+            child: Text('Save', style: AppTextStyle.plain(color: Colors.white)),
           ),
         ],
       ),
     );
+    qtyController.dispose();
+    expController.dispose();
+    return result;
   }
 
   Widget _buildBottomBar(double size) {

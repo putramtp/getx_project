@@ -15,7 +15,6 @@ abstract class Routes {
   static const PRODUCT_BY_BRAND   = _Paths.PRODUCT_BY_BRAND;
   static const PRODUCT_BY_CATEGORY = _Paths.PRODUCT_BY_CATEGORY;
   static const PRODUCT_TRANSACTION_LIST = _Paths.PRODUCT_TRANSACTION_LIST;
-  static const ITEM = _Paths.ITEM;
   static const STOCK_TRANSACTION = _Paths.STOCK_TRANSACTION;
   // RECEIVE ORDER
   static const RECEIVE_ORDER_LIST = _Paths.RECEIVE_ORDER_LIST;
@@ -37,8 +36,6 @@ abstract class Routes {
   // DELIVERY
   static const DELIVERY_LIST = _Paths.DELIVERY_LIST;
   static const DELIVERY_DETAIL = _Paths.DELIVERY_DETAIL;
-
-  static const RETURN = _Paths.RETURN;
 }
 
 abstract class _Paths {
@@ -46,7 +43,6 @@ abstract class _Paths {
   static const HOME = '/home';
   static const LOGIN = '/login';
 
-  static const ITEM = '/item';
   static const PRODUCT = '/product';
   static const PRODUCT_DETAIL = '/product/detail';
   static const PRODUCT_TRANSACTION_LIST = '/product/transaction';
@@ -77,6 +73,4 @@ abstract class _Paths {
   // DELIVERY
   static const DELIVERY_LIST = '/delivery/list';
   static const DELIVERY_DETAIL = '/delivery/detail';
-
-  static const RETURN = '/return';
 }

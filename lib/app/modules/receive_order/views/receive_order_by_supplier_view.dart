@@ -22,7 +22,7 @@ class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierControlle
       appBar: appBarOrder("Supplier List", size,
           icon: Icons.group_rounded,
           routeBackName: AppPages.receiveHomePage,
-          hex1: "#5B8C7A", hex2: "#7FA593"),
+          color1: sageTeal, color2: sageTealLight),
       body: RefreshIndicator(
         onRefresh: controller.loadSuppliers,
         child: SafeArea(
@@ -47,6 +47,9 @@ class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierControlle
                       return skeletonOrderList(size, accent: sageTeal);
                     }
                     final orders = controller.filteredSuppliers;
+                    if (controller.hasError.value && orders.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadSuppliers, accent: sageTeal);
+                    }
                     if (orders.isEmpty) {
                       return textNoData(size, message: "No supplier data.");
                     }

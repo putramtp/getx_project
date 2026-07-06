@@ -36,7 +36,7 @@ Future<bool> confirmCreateDelivery() async {
       actions: [
         TextButton(
           onPressed: () => Get.back(result: false),
-          child: const Text("Not now", style: TextStyle(color: Colors.grey)),
+          child: Text("Not now", style: AppTextStyle.plain(color: Colors.grey)),
         ),
         ElevatedButton(
           onPressed: () => Get.back(result: true),

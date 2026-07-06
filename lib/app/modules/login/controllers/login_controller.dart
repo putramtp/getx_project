@@ -31,36 +31,37 @@ class LoginController extends GetxController {
     loadSavedLogin().then((_) => checkAlreadyLoggedIn());
   }
 
-  /// ✅ Load saved login if "remember me" was checked
+  /// ✅ Load saved login if "remember me" was checked.
+  /// Only the email is prefilled — the password is never persisted. A returning
+  /// user stays signed in via the stored token (auto-login), and otherwise
+  /// re-enters their password.
   Future<void> loadSavedLogin() async {
+    // Purge any password left over from a previous (insecure) build.
+    _box.remove('saved_password');
 
     final savedRemember = _box.read('remember_me') ?? false;
     final savedEmail = _box.read('saved_email') ?? '';
-    final savedPassword = _box.read('saved_password') ?? '';
 
     rememberMe.value = savedRemember;
 
     if (savedRemember) {
       emailController.text = savedEmail;
-      passwordController.text = savedPassword;
       emailValue.value = savedEmail;
-      passwordValue.value = savedPassword;
     } else {
       emailController.clear();
       passwordController.clear();
     }
   }
 
-  /// ✅ Save or clear login based on rememberMe checkbox
+  /// ✅ Save or clear the remembered email based on the rememberMe checkbox.
+  /// The password is intentionally never written to storage.
   Future<void> saveLogin() async {
     if (rememberMe.value) {
       _box.write('saved_email', emailValue.value);
-      _box.write('saved_password', passwordValue.value);
       _box.write('remember_me', true);
     } else {
       _box.remove('saved_email');
-      _box.remove('saved_password');
-      _box.write('remember_me',false);
+      _box.write('remember_me', false);
     }
   }
 
@@ -94,7 +95,7 @@ class LoginController extends GetxController {
 
     await saveLogin();
 
-    _authService.setToken(token);
+    await _authService.setToken(token);
     _authService.setUsername(username);
     if (roles != null && roles.isNotEmpty) {
       final List<String> roleNames = (roles as List).map((role) => role['name'] as String).toList();

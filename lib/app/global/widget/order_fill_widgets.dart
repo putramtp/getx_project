@@ -72,10 +72,10 @@ Widget orderFillStatsCard({required double size, required List<FillStat> stats})
           Column(
             children: [
               Text(s.value,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: s.color,
-                      fontSize: size * 1.9)),
+                  style: AppTextStyle.custom(size,
+                      scale: 1.9,
+                      weight: FontWeight.bold,
+                      color: s.color)),
               SizedBox(height: size * 0.3),
               Text(s.label,
                   style: AppTextStyle.small(size, color: Colors.grey.shade600)
@@ -140,20 +140,20 @@ Widget orderFillBottomBar({
           icon: Icon(Icons.delete_forever_rounded,
               color: clearEnabled ? Colors.red : Colors.grey, size: size * 2.4),
           label: Text("Clear",
-              style: TextStyle(
-                  fontSize: size * 1.5,
+              style: AppTextStyle.custom(size,
+                  scale: 1.5,
                   color: clearEnabled ? Colors.red : Colors.grey,
-                  fontWeight: FontWeight.bold)),
+                  weight: FontWeight.bold)),
         ),
         TextButton.icon(
           onPressed: continueEnabled ? onContinue : null,
           icon: Icon(Icons.arrow_forward_rounded,
               color: continueEnabled ? accent : Colors.grey, size: size * 2.4),
           label: Text("Continue",
-              style: TextStyle(
-                  fontSize: size * 1.5,
+              style: AppTextStyle.custom(size,
+                  scale: 1.5,
                   color: continueEnabled ? accent : Colors.grey,
-                  fontWeight: FontWeight.bold)),
+                  weight: FontWeight.bold)),
         ),
       ],
     ),

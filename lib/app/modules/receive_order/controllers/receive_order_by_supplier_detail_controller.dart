@@ -263,8 +263,6 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
 
     if (nextIndex < items.length) {
       selectedIndex.value = nextIndex;
-      // final nextName = items[nextIndex]["name"] ?? "Next Item";
-      // log("➡️ Moved to next item: $nextName");
     } else {
       Get.back(result: true); // close fill page
     }

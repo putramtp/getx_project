@@ -21,6 +21,7 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
   // State
   var isLoading = false.obs;
+  var hasError = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
@@ -84,6 +85,7 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
   Future<void> loadRequestOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getOutflowRequests(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null

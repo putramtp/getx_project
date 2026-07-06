@@ -5,6 +5,7 @@ import '../controllers/receive_order_by_supplier_detail_controller.dart';
 import '../views/receive_order_fill_by_supplier_view.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
@@ -19,7 +20,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderBySupplierPage,hex1:"75a340",hex2:"B1C29E"),
+      appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderBySupplierPage,color1:sageTeal,color2:sageTealLight),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -204,22 +205,18 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                 },
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'Continue to Receiving ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.black,
-                      ),
+                      style: AppTextStyle.custom(SizeConfig.defaultSize,
+                          px: 20, weight: FontWeight.bold, color: Colors.black),
                       textAlign: TextAlign.center,
                     ),
                     Obx(() => Text(
                           '#${controller.receiveNumber.value}?',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Colors.blue,
-                          ),
+                          style: AppTextStyle.custom(SizeConfig.defaultSize,
+                              px: 20,
+                              weight: FontWeight.bold,
+                              color: Colors.blue),
                           textAlign: TextAlign.center,
                         )),
                   ],
@@ -228,10 +225,8 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
               const SizedBox(height: 12),
               Text(
                 'Total receiving quantity: $totalFilled',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
+                style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 16, weight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -272,20 +267,18 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                           Expanded(
                             child: Text(
                               name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                              style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                  px: 15,
+                                  weight: FontWeight.w600,
+                                  color: Colors.black87),
                             ),
                           ),
                           serialNumberType == 'BATCH'
                               ? Text(
                                   'Total: $itemQty',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black54,
-                                  ),
+                                  style: AppTextStyle.plain(
+                                      weight: FontWeight.w500,
+                                      color: Colors.black54),
                                 )
                               : const SizedBox.shrink(),
                         ],
@@ -309,10 +302,10 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                                     Expanded(
                                       child: Text(
                                         "Filled: $qty",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.black54,
-                                        ),
+                                        style: AppTextStyle.custom(
+                                            SizeConfig.defaultSize,
+                                            px: 13,
+                                            color: Colors.black54),
                                       ),
                                     ),
                                   ],
@@ -322,15 +315,13 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                           ),
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4, top: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 4),
                           child: Text(
                             "No filled quantities yet.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black45,
-                              fontStyle: FontStyle.italic,
-                            ),
+                            style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                    px: 13, color: Colors.black45)
+                                .copyWith(fontStyle: FontStyle.italic),
                           ),
                         ),
                     ],
@@ -355,9 +346,9 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                         backgroundColor: Colors.teal,
                       ),
                       onPressed: () => Get.back(result: true),
-                      child: const Text(
+                      child: Text(
                         'Continue',
-                        style: TextStyle(color: Colors.white),
+                        style: AppTextStyle.plain(color: Colors.white),
                       ),
                     ),
                   ),
@@ -374,7 +365,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
     final TextEditingController textController =
         TextEditingController(text: initialValue ?? '');
 
-    return Get.dialog<String>(
+    final result = await Get.dialog<String>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Receive Number'),
@@ -402,6 +393,8 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
         ],
       ),
     );
+    textController.dispose();
+    return result;
   }
 
   Widget _buildHeaderGradient(double size) {

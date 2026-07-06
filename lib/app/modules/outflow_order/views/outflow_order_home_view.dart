@@ -21,7 +21,7 @@ class OutflowOrderHomeView extends GetView {
         "Outflow Order Menu", size,
         icon: Icons.grid_view_outlined,
         routeBackName: AppPages.homePage,
-        hex1: "#6B5FB5", hex2: "#7C73C0",
+        color1: mutedPurple, color2: softPurple,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

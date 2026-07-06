@@ -20,8 +20,8 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
   bool get _isSupplier =>
       controller.backRoute == AppPages.receiveOrderBySupplierPage;
   Color get _accent => _isSupplier ? sageTeal : skyBlue;
-  String get _hex1 => _isSupplier ? "#5B8C7A" : "#4A90D9";
-  String get _hex2 => _isSupplier ? "#7FA593" : "#6FA8E0";
+  Color get _color1 => _isSupplier ? sageTeal : skyBlue;
+  Color get _color2 => _isSupplier ? sageTealLight : skyBlueLight;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
         "Confirm Serials", size,
         icon: Icons.qr_code_scanner_rounded,
         routeBackName: controller.backRoute,
-        hex1: _hex1, hex2: _hex2,
+        color1: _color1, color2: _color2,
       ),
       body: SafeArea(
         child: Padding(
@@ -182,7 +182,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
             ),
             onPressed: controller.finish,
             icon: const Icon(Icons.check_rounded),
-            label: Text("Done", style: TextStyle(fontSize: size * 1.6)),
+            label: Text("Done", style: AppTextStyle.custom(size, scale: 1.6)),
           ),
         ],
       ),
@@ -230,11 +230,10 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                     child: Text(
                       "${controller.totalConfirmed} / ${controller.totalSerials} confirmed",
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: size * 1.5,
-                        fontWeight: FontWeight.bold,
-                        color: allDone ? Colors.green : Colors.black87,
-                      ),
+                      style: AppTextStyle.custom(size,
+                          scale: 1.5,
+                          weight: FontWeight.bold,
+                          color: allDone ? Colors.green : Colors.black87),
                     ),
                   ),
                 ],
@@ -259,13 +258,12 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                   label: Text(
                     isLast ? "Finish" : "Next Item",
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: size * 1.6,
-                      color: saving
-                          ? Colors.grey
-                          : (isLast ? Colors.green : _accent),
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTextStyle.custom(size,
+                        scale: 1.6,
+                        color: saving
+                            ? Colors.grey
+                            : (isLast ? Colors.green : _accent),
+                        weight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -372,11 +370,12 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
     return Column(
       children: [
         Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.bold, color: color, fontSize: size * 1.6)),
+            style: AppTextStyle.custom(size,
+                scale: 1.6, weight: FontWeight.bold, color: color)),
         const SizedBox(height: 2),
         Text(label,
-            style: TextStyle(fontSize: size * 1.3, color: Colors.grey.shade600)),
+            style: AppTextStyle.custom(size,
+                scale: 1.3, color: Colors.grey.shade600)),
       ],
     );
   }
@@ -409,24 +408,22 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
             ),
             title: Text(
               s.internalCode.isNotEmpty ? s.internalCode : s.serialNumber,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontFamily: 'monospace',
+              style: AppTextStyle.plain(
+                weight: FontWeight.w600,
                 color: scanned ? Colors.black87 : Colors.black54,
-              ),
+              ).copyWith(fontFamily: 'monospace'),
             ),
             subtitle: (scanned && s.scannedByName != null)
                 ? Text("by ${s.scannedByName}",
-                    style: TextStyle(
-                        fontSize: size * 1.2, color: Colors.grey.shade600))
+                    style: AppTextStyle.custom(size,
+                        scale: 1.2, color: Colors.grey.shade600))
                 : null,
             trailing: Text(
               scanned ? "Confirmed" : "Pending",
-              style: TextStyle(
-                fontSize: size * 1.3,
-                fontWeight: FontWeight.w600,
-                color: scanned ? Colors.green : Colors.orange,
-              ),
+              style: AppTextStyle.custom(size,
+                  scale: 1.3,
+                  weight: FontWeight.w600,
+                  color: scanned ? Colors.green : Colors.orange),
             ),
           );
         },

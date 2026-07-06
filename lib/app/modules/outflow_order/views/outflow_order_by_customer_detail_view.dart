@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
@@ -23,7 +24,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
     return Scaffold(
       appBar: appBarOrder("Item Summary", size,
           routeBackName: AppPages.outflowOrderByCustomerPage,
-          hex1: "#C4882A", hex2: "#D8B174"),
+          color1: amber, color2: amberLight),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -169,18 +170,17 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
+              Text(
                 'Continue to Outflowing Items?',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 20, weight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 'Total Outflowing quantity: $totalScanned',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
+                style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 16, weight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -220,19 +220,17 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                           Expanded(
                             child: Text(
                               name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                              style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                  px: 15,
+                                  weight: FontWeight.w600,
+                                  color: Colors.black87),
                             ),
                           ),
                           Text(
                             'Total: $itemQty',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black54,
-                            ),
+                            style: AppTextStyle.plain(
+                                weight: FontWeight.w500,
+                                color: Colors.black54),
                           ),
                         ],
                       ),
@@ -259,10 +257,10 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                                         code != null
                                             ? displayText
                                             : "scanned: $qty",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.black54,
-                                        ),
+                                        style: AppTextStyle.custom(
+                                            SizeConfig.defaultSize,
+                                            px: 13,
+                                            color: Colors.black54),
                                       ),
                                     ),
                                   ],
@@ -272,15 +270,13 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                           ),
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4, top: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 4),
                           child: Text(
                             "No scanned codes yet.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black45,
-                              fontStyle: FontStyle.italic,
-                            ),
+                            style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                    px: 13, color: Colors.black45)
+                                .copyWith(fontStyle: FontStyle.italic),
                           ),
                         ),
                     ],

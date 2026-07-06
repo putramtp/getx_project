@@ -23,7 +23,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
       appBar: appBarOrder("Purchase Order List", size,
           icon: Icons.list_alt_sharp,
           routeBackName: AppPages.receiveHomePage,
-          hex1: "#4A90D9", hex2: "#6FA8E0"),
+          color1: skyBlue, color2: skyBlueLight),
       body: RefreshIndicator(
         onRefresh: controller.loadPurchaseOrders,
         child: SafeArea(
@@ -49,6 +49,9 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
                       return skeletonOrderList(size, accent: skyBlue);
                     }
                     final orders = controller.orders;
+                    if (controller.hasError.value && orders.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadPurchaseOrders, accent: skyBlue);
+                    }
                     if (orders.isEmpty) {
                       return textNoData(size, message: "No purchase order data.");
                     }

@@ -8,6 +8,8 @@ import '../../../data/models/stock_transaction_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
+import '../../../global/variables.dart';
+import '../../../global/styles/app_text_style.dart';
 
 class ProductTransactionListView extends GetView<ProductTransactionListController> {
   const ProductTransactionListView({Key? key}) : super(key: key);
@@ -18,7 +20,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Transaction",size,icon: Icons.list_alt_sharp,routeBackName: AppPages.productPage,hex1: '#124076',hex2: '#7F9F80'),
+      appBar: appBarOrder("Transaction",size,icon: Icons.list_alt_sharp,routeBackName: AppPages.productPage,color1: navyDark,color2: sageGreen),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -42,6 +44,9 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                   }
 
                   final transactions = controller.filteredTransactions;
+                  if (controller.hasError.value && transactions.isEmpty) {
+                    return errorRetry(size, onRetry: controller.loadProductTrans, accent: navyDark);
+                  }
                   if (transactions.isEmpty) {
                     return const Center(child: Text('No  transaction data.'));
                   }
@@ -82,11 +87,8 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                             child: Center(
                               child: Text(
                                 "No more data",
-                                style: TextStyle(
-                                  fontSize: size * 1.2,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: AppTextStyle.bodyBold(size,
+                                    color: Colors.grey, weight: FontWeight.w500),
                               ),
                             ),
                           );
@@ -149,10 +151,10 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         "Filter Options",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                        style: AppTextStyle.custom(SizeConfig.defaultSize,
+                            px: 18, weight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -211,9 +213,9 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                               },
                               icon:
                                   const Icon(Icons.check, color: Colors.white),
-                              label: const Text(
+                              label: Text(
                                 "Apply",
-                                style: TextStyle(color: Colors.white),
+                                style: AppTextStyle.plain(color: Colors.white),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
@@ -267,7 +269,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(value, style: const TextStyle(fontSize: 15)),
+            Text(value, style: AppTextStyle.custom(SizeConfig.defaultSize, px: 15)),
             const Icon(Icons.date_range, color: Colors.grey),
           ],
         ),
@@ -308,17 +310,12 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                 orderCode,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyle.plain(weight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
               Text(
                 transaction.time,
-                style: TextStyle(
-                  fontSize: size *1.3,
-                  color: Colors.grey.shade600,
-                ),
+                style: AppTextStyle.info(size, color: Colors.grey.shade600),
               ),
             ],
           ),
@@ -330,11 +327,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
           children: [
             Text(
               "${isIn ? '+' : '-'}${transaction.qty % 1 == 0 ? transaction.qty.toInt() : transaction.qty}",
-              style: TextStyle(
-                fontSize: size * 1.2,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+              style: AppTextStyle.bodyBold(size, color: color, weight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Container(
@@ -350,12 +343,8 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
               ),
               child: Text(
                 transaction.type,
-                style: TextStyle(
-                  fontSize: size * 1.2,
-                  color: isIn
-                      ? Colors.blue
-                      : Colors.orange,
-                ),
+                style: AppTextStyle.body(size,
+                    color: isIn ? Colors.blue : Colors.orange),
               ),
             ),
           ],

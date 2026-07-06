@@ -25,6 +25,7 @@ class ProductByBrandController extends GetxController {
   // State
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
+  var hasError = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
@@ -74,6 +75,7 @@ class ProductByBrandController extends GetxController {
   Future<void> loadProducts() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getProductSummariesByBrand(brandId: currentBrand.id),
     );
     if (res == null) return;
@@ -173,13 +175,4 @@ class ProductByBrandController extends GetxController {
   }
 
 
-  // @override
-  // void onReady() {
-  //   super.onReady();
-  // }
-
-  // @override
-  // void onClose() {
-  //   super.onClose();
-  // }
 }

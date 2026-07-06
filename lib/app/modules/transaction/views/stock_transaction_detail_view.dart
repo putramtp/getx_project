@@ -74,8 +74,8 @@ class StockTransactionDetailView
                                     ),
                                     title: Text(
                                       "Serial Numbers - ${line.itemName}",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
+                                      style: AppTextStyle.plain(
+                                          weight: FontWeight.bold),
                                     ),
                                     content: SizedBox(
                                       width: double.maxFinite,
@@ -112,20 +112,23 @@ class StockTransactionDetailView
                                               if (sn.internalCode.isNotEmpty)
                                                 Text(
                                                     "Internal: ${sn.internalCode}",
-                                                    style: const TextStyle(
-                                                        fontSize: 12,
+                                                    style: AppTextStyle.custom(
+                                                        size,
+                                                        px: 12,
                                                         color: Colors.grey)),
                                               if (sn.expiredDate != null)
                                                 Text(
                                                   "Expired: ${sn.expiredDate}",
-                                                  style: const TextStyle(
-                                                      fontSize: 12,
+                                                  style: AppTextStyle.custom(
+                                                      size,
+                                                      px: 12,
                                                       color: Colors.redAccent),
                                                 ),
                                               Text(
                                                 "Active: ${sn.isActive ? "Yes" : "No"}",
-                                                style: TextStyle(
-                                                  fontSize: 12,
+                                                style: AppTextStyle.custom(
+                                                  size,
+                                                  px: 12,
                                                   color: sn.isActive
                                                       ? Colors.green
                                                       : Colors.red,
@@ -182,13 +185,10 @@ class StockTransactionDetailView
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Receive Order",
-                    style:
-                        TextStyle(color: Colors.white70, fontSize: size * 1.3)),
+                    style: AppTextStyle.info(size, color: Colors.white70)),
                 Text("#$roCode",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: size * 1.8)),
+                    style: AppTextStyle.h4(size,
+                        color: Colors.white, weight: FontWeight.bold)),
               ],
             ),
           ),

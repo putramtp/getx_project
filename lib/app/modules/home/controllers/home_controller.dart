@@ -103,7 +103,6 @@ class HomeController extends GetxController {
   void goToCategoryPage() => Get.toNamed(AppPages.productCategory);
   void goToBrandPage() => Get.toNamed(AppPages.productBrand);
   void goToUnitPage() => Get.toNamed(AppPages.productUnit);
-  void goToReturnPage() => Get.toNamed(AppPages.returnPage);
   // ================= USER INFO =================   
 
   String getName() {
@@ -114,8 +113,8 @@ class HomeController extends GetxController {
     return _authService.currentUserRoles ?? "";
   }
 
-  void logout() {
-    _authService.clearToken();
+  Future<void> logout() async {
+    await _authService.clearToken();
     Get.offAllNamed(Routes.LOGIN);
   }
 
@@ -165,12 +164,8 @@ class HomeController extends GetxController {
           value: uniquePercent,
           title: '${uniquePercent.toStringAsFixed(1)}%',
           radius: radius,
-          titleStyle: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            shadows: shadows,
-          ),
+          titleStyle: AppTextStyle.custom(size, px: fontSize, weight: FontWeight.bold, color: Colors.white)
+              .copyWith(shadows: shadows),
         );
       } else {
         return PieChartSectionData(
@@ -178,12 +173,8 @@ class HomeController extends GetxController {
           value: otherPercent,
           title: '${otherPercent.toStringAsFixed(1)}%',
           radius: radius,
-          titleStyle: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            shadows: shadows,
-          ),
+          titleStyle: AppTextStyle.custom(size, px: fontSize, weight: FontWeight.bold, color: Colors.white)
+              .copyWith(shadows: shadows),
         );
       }
     });
@@ -235,11 +226,7 @@ class HomeController extends GetxController {
                     backgroundColor: Colors.white.withOpacity(0.2),
                     child: Text(
                       initials,
-                      style: TextStyle(
-                        fontSize: size * 2,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: AppTextStyle.h3(size, color: Colors.white, weight: FontWeight.bold),
                     ),
                   ),
                   SizedBox(width: size * 1.5),
@@ -261,7 +248,7 @@ class HomeController extends GetxController {
                             children: [
                               Icon(Icons.verified_user_rounded, color: Colors.white70, size: size * 1.3),
                               SizedBox(width: size * 0.4),
-                              Text(roles, style: TextStyle(fontSize: size * 1.2, color: Colors.white, fontWeight: FontWeight.w500)),
+                              Text(roles, style: AppTextStyle.bodyBold(size, color: Colors.white, weight: FontWeight.w500)),
                             ],
                           ),
                         ),
@@ -339,7 +326,7 @@ class HomeController extends GetxController {
                     backgroundColor: Colors.white.withOpacity(0.2),
                     child: Text(
                       initials,
-                      style: TextStyle(fontSize: size * 2.8, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: AppTextStyle.custom(size, scale: 2.8, weight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                   SizedBox(height: size * 1.2),
@@ -357,7 +344,7 @@ class HomeController extends GetxController {
                       children: [
                         Icon(Icons.verified_user_rounded, color: Colors.white70, size: size * 1.3),
                         SizedBox(width: size * 0.4),
-                        Text(roles, style: TextStyle(fontSize: size * 1.2, color: Colors.white, fontWeight: FontWeight.w500)),
+                        Text(roles, style: AppTextStyle.bodyBold(size, color: Colors.white, weight: FontWeight.w500)),
                       ],
                     ),
                   ),

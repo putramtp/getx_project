@@ -21,7 +21,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Receive Order Detail", size,
           routeBackName: AppPages.receiveOrderListPage,
-          hex1: "#124076", hex2: "#2A5A8C"),
+          color1: navyDark, color2: navyMid),
       floatingActionButton: Obx(() {
         // Offer a re-open entry into the serial-confirm pass only when this RO
         // actually carries serial numbers.

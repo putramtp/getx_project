@@ -23,7 +23,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
       appBar: appBarOrder("Deliveries", size,
           icon: Icons.local_shipping_rounded,
           routeBackName: AppPages.outflowHomePage,
-          hex1: "#4A70A9", hex2: "#8FABD4"),
+          color1: steelBlue, color2: lightSteelBlue),
       body: RefreshIndicator(
         onRefresh: controller.loadDeliveries,
         child: SafeArea(
@@ -50,6 +50,9 @@ class DeliveryListView extends GetView<DeliveryListController> {
                       return skeletonOrderList(size, accent: steelBlue);
                     }
                     final deliveries = controller.deliveries;
+                    if (controller.hasError.value && deliveries.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadDeliveries, accent: steelBlue);
+                    }
                     if (deliveries.isEmpty) {
                       return textNoData(size, message: "No deliveries found.");
                     }

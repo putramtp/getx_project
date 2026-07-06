@@ -8,6 +8,8 @@ import '../../../global/widget/search_bar.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
+import '../../../global/variables.dart';
+import '../../../global/styles/app_text_style.dart';
 
 class StockTransactionView extends GetView<StockTransactionController> {
   const StockTransactionView({Key? key}) : super(key: key);
@@ -18,7 +20,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Stock Transactions",size,icon: Icons.currency_exchange, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
+      appBar: appBarOrder("Stock Transactions",size,icon: Icons.currency_exchange, routeBackName: AppPages.homePage,color1: navyDark,color2: sageGreen),
       body: RefreshIndicator(
         onRefresh:  controller.loadstockTransactions,
         child: SafeArea(
@@ -44,6 +46,9 @@ class StockTransactionView extends GetView<StockTransactionController> {
                     }
       
                     final trans = controller.trans;
+                    if (controller.hasError.value && trans.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadstockTransactions, accent: navyDark);
+                    }
                     if (trans.isEmpty) {
                       return textNoData(size,message: "No stock transaction data.");
                     }
@@ -82,11 +87,9 @@ class StockTransactionView extends GetView<StockTransactionController> {
                               child: Center(
                                 child: Text(
                                   "No more data",
-                                  style: TextStyle(
-                                    fontSize: size * 1.2,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: AppTextStyle.bodyBold(size,
+                                      color: Colors.grey,
+                                      weight: FontWeight.w500),
                                 ),
                               ),
                             );
@@ -98,7 +101,6 @@ class StockTransactionView extends GetView<StockTransactionController> {
                     );
                   }),
                 ),
-                // buildSyncButton(name: 'Sync',size: size,onPressed: controller.loadstockTransactions,color: const Color.fromARGB(255, 25, 105, 116))
               ],
             ),
           ),
@@ -171,20 +173,16 @@ class StockTransactionView extends GetView<StockTransactionController> {
                           st.productName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:  TextStyle(
-                            // color: Color.fromARGB(255, 64, 114, 202),
-                            fontWeight: FontWeight.w400,
-                            fontSize: size * 1.4
-                          ),
+                          style: AppTextStyle.custom(size,
+                              scale: 1.4, weight: FontWeight.w400),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           st.order!.code,
-                          style: TextStyle(
-                            fontSize: size * 1.1,
-                            fontWeight: FontWeight.w400,
-                            color: isIn ? Colors.green : Colors.orange,
-                          ),
+                          style: AppTextStyle.custom(size,
+                              scale: 1.1,
+                              weight: FontWeight.w400,
+                              color: isIn ? Colors.green : Colors.orange),
                         ),
                       ],
                     ), 
@@ -196,18 +194,13 @@ class StockTransactionView extends GetView<StockTransactionController> {
                     children: [
                       Text(
                         "${isIn ? '+' : '-'}${st.qty % 1 == 0 ? st.qty.toInt() : st.qty}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
+                        style: AppTextStyle.plain(
+                            weight: FontWeight.bold, color: color),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         st.time,
-                        style: TextStyle(
-                          fontSize: size * 1.2,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: AppTextStyle.body(size, color: Colors.grey.shade600),
                       ),
                     ],
                   ),

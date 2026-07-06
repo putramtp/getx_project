@@ -15,12 +15,14 @@ const Color navyLight = Color(0xFF5B8FA6);
 
 // ── Accent blues ──────────────────────────────────────────────────
 const Color skyBlue        = Color(0xFF4A90D9);
+const Color skyBlueLight   = Color(0xFF6FA8E0); // gradient end for skyBlue
 const Color steelBlue      = Color(0xFF4A70A9);
 const Color lightSteelBlue = Color(0xFF8FABD4);
 
 // ── Greens ────────────────────────────────────────────────────────
-const Color sageTeal  = Color(0xFF5B8C7A);
-const Color sageGreen = Color(0xFF7F9F80);
+const Color sageTeal      = Color(0xFF5B8C7A);
+const Color sageTealLight = Color(0xFF7FA593); // gradient end for sageTeal
+const Color sageGreen     = Color(0xFF7F9F80);
 
 // ── Purples ───────────────────────────────────────────────────────
 const Color mutedPurple = Color(0xFF6B5FB5);
@@ -28,4 +30,5 @@ const Color lightPurple = Color(0xFF9B8FD5);
 const Color softPurple  = Color(0xFF7C73C0);
 
 // ── Warm accent ───────────────────────────────────────────────────
-const Color amber = Color(0xFFC4882A);
+const Color amber      = Color(0xFFC4882A);
+const Color amberLight = Color(0xFFD6A24E); // gradient end for amber

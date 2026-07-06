@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/data/models/product_summary_model.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 
 class ProductTile extends StatelessWidget {
@@ -56,10 +57,9 @@ class ProductTile extends StatelessWidget {
                   product.itemName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: size * 1.6,
-                    fontWeight: FontWeight.w600,
+                  style: AppTextStyle.h5(size,
                     color: const Color.fromARGB(255, 35, 132, 211),
+                    weight: FontWeight.w600,
                   ),
                 ),
 
@@ -85,9 +85,9 @@ class ProductTile extends StatelessWidget {
                           product.itemCode,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: size * 1.15,
-                            fontWeight: FontWeight.w600,
+                          style: AppTextStyle.custom(size,
+                            scale: 1.15,
+                            weight: FontWeight.w600,
                             color: Colors.grey.shade700,
                             letterSpacing: 0.5,
                           ),
@@ -99,7 +99,7 @@ class ProductTile extends StatelessWidget {
                       onPressed: onViewDetail,
                       child: Text(
                         "View details",
-                        style: TextStyle(fontSize: size * 1.1),
+                        style: AppTextStyle.custom(size, scale: 1.1),
                       ),
                     ),
                   ],
@@ -147,10 +147,10 @@ class ProductTile extends StatelessWidget {
                               ),
                               child: Text(
                                 "Low Stock",
-                                style: TextStyle(
+                                style: AppTextStyle.custom(size,
+                                  scale: 1.1,
                                   color: Colors.orange.shade700,
-                                  fontSize: size * 1.1,
-                                  fontWeight: FontWeight.w500,
+                                  weight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -161,7 +161,7 @@ class ProductTile extends StatelessWidget {
                       onPressed: onViewTransaction,
                       child: Text(
                         "View Transactions",
-                        style: TextStyle(fontSize: size * 1.1),
+                        style: AppTextStyle.custom(size, scale: 1.1),
                       ),
                     ),
                   ],

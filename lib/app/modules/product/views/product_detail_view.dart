@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/product_detail.controller.dart';
 
@@ -75,8 +76,6 @@ class ProductDetailView extends GetView<ProductDetailController> {
                   ),
 
                   const SizedBox(height: 30),
-
-                  // if (detail != null) _buildActionButtons(),
                 ],
               ),
             ),
@@ -115,11 +114,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
         ),
          Text(
           "Product Detail",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: size *2,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTextStyle.h3(size, color: Colors.white),
         ),
       ],
     );
@@ -154,7 +149,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.itemName,style:  TextStyle(fontSize: size * 2.2, fontWeight: FontWeight.w700)),
+                  Text(product.itemName,style:  AppTextStyle.custom(size, scale: 2.2, weight: FontWeight.w700)),
                   const SizedBox(height: 10),
 
                   // ITEM CODE TAG
@@ -180,10 +175,8 @@ class ProductDetailView extends GetView<ProductDetailController> {
       ),
       child: Text(
         text,
-        style: TextStyle(
-            fontSize: size * 1.4,
-            fontWeight: FontWeight.w600,
-            color: Colors.blue.shade800),
+        style: AppTextStyle.custom(size,
+            scale: 1.4, weight: FontWeight.w600, color: Colors.blue.shade800),
       ),
     );
   }
@@ -201,11 +194,8 @@ class ProductDetailView extends GetView<ProductDetailController> {
         const SizedBox(width: 8),
         Text(
           low ? "Low Stock" : "Available",
-          style: TextStyle(
-            fontSize: size *2,
-            fontWeight: FontWeight.w600,
-            color: low ? Colors.orange.shade700 : Colors.green.shade700,
-          ),
+          style: AppTextStyle.h3(size,
+              color: low ? Colors.orange.shade700 : Colors.green.shade700),
         ),
         const Spacer(),
         // QTY TAG
@@ -221,7 +211,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
           ),
           child: Text(
             "${product.qtyRemaining} ${detail?.unitName ?? ''}",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontSize: size *1.8),
+            style: AppTextStyle.h4(size, color: Colors.white, weight: FontWeight.bold),
           ),
         ),
       ],
@@ -251,8 +241,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title,
-            style:
-                TextStyle(fontSize: size * 1.8, fontWeight: FontWeight.w700)),
+            style: AppTextStyle.h4(size, weight: FontWeight.w700)),
         const SizedBox(height: 8),
         const Divider(),
         ...children,
@@ -272,19 +261,19 @@ class ProductDetailView extends GetView<ProductDetailController> {
           SizedBox(
             width: size * 12,
             child: Text(label,
-                style: TextStyle(
-                    fontSize: size * 1.4,
+                style: AppTextStyle.custom(size,
+                    scale: 1.4,
                     color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500)),
+                    weight: FontWeight.w500)),
           ),
           Expanded(
             child: Text(
               loading
                   ? "  ..."
                   : (value?.isNotEmpty == true ? value! : "-"),
-              style: TextStyle(
-                fontSize: size * 1.4,
-                fontWeight: isPrice ? FontWeight.bold : FontWeight.w600,
+              style: AppTextStyle.custom(size,
+                scale: 1.4,
+                weight: isPrice ? FontWeight.bold : FontWeight.w600,
                 color: isPrice ? Colors.indigo.shade700 : Colors.black87,
               ),
             ),
@@ -300,12 +289,12 @@ class ProductDetailView extends GetView<ProductDetailController> {
   Widget _buildDescription(detail, double size, bool loading) {
     if (loading) {
       return Text("  ...",
-          style: TextStyle(color: Colors.grey, fontSize: size * 1.4));
+          style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
     }
 
     if (detail?.descriptions == null || detail.descriptions.isEmpty) {
       return Text("No Descriptions",
-          style: TextStyle(color: Colors.grey, fontSize: size * 1.4));
+          style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
     }
 
     return Column(
@@ -314,46 +303,10 @@ class ProductDetailView extends GetView<ProductDetailController> {
           .map<Widget>((d) => Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text("• $d",
-                    style: const TextStyle(fontSize: 15, height: 1.4)),
+                    style: AppTextStyle.custom(size, px: 15, height: 1.4)),
               ))
           .toList(),
     );
   }
 
-  // --------------------------------------------------------------------------
-  // ACTION BUTTONS
-  // --------------------------------------------------------------------------
-  // Widget _buildActionButtons() {
-  //   return Row(
-  //     children: [
-  //       Expanded(
-  //         child: ElevatedButton.icon(
-  //           onPressed: () {},
-  //           icon: const Icon(Icons.edit_outlined, color: Colors.white),
-  //           label: const Text("Edit Product",style: TextStyle(color: Colors.white),),
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.blue.shade600,
-  //             padding: const EdgeInsets.symmetric(vertical: 16),
-  //             shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(14)),
-  //           ),
-  //         ),
-  //       ),
-  //       const SizedBox(width: 12),
-  //       Expanded(
-  //         child: OutlinedButton.icon(
-  //           onPressed: () {},
-  //           icon: const Icon(Icons.inventory_2_outlined),
-  //           label: const Text("Stock Adjust"),
-  //           style: OutlinedButton.styleFrom( 
-  //             padding: const EdgeInsets.symmetric(vertical: 16),
-  //             side: BorderSide(color: Colors.blue.shade600),
-  //             shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(14)),
-  //           ),
-  //         ),
-  //       )
-  //     ],
-  //   );
-  // }
 }

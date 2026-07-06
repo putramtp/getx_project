@@ -20,6 +20,7 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
   // State
   var isLoading = false.obs;
+  var hasError = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
@@ -79,6 +80,7 @@ class StockTransactionController extends GetxController implements TopFilterCont
     hasMore.value = true;
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getStockTransactions(cursor: null,params: buildParams()),
     );
 
@@ -173,10 +175,4 @@ class StockTransactionController extends GetxController implements TopFilterCont
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void openDetail(StockTransactionModel order) {
-    // if (Get.isRegistered<ReceiveOrderListDetailController>()) {
-    //   Get.delete<ReceiveOrderListDetailController>(force: true);
-    // }
-    // Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
-  }
 }

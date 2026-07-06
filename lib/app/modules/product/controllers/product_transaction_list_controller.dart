@@ -19,7 +19,8 @@ class ProductTransactionListController extends GetxController {
   var filteredTransactions = <StockTransactionModel>[].obs;
 
   // State
-  var isLoading = false.obs;  
+  var isLoading = false.obs;
+  var hasError = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
@@ -77,6 +78,7 @@ void toggleSort() {
   Future<void> loadProductTrans() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getStockTransactionByProduct(productId: 1 ,cursor: null),
     );
     // If network failed or exception handled, data is null

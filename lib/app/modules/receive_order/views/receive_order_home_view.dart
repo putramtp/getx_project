@@ -21,7 +21,7 @@ class ReceiveOrderHomeView extends GetView {
         "Receive Order Menu", size,
         icon: Icons.grid_view_outlined,
         routeBackName: AppPages.homePage,
-        hex1: "#124076", hex2: "#2A5A8C",
+        color1: navyDark, color2: navyMid,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

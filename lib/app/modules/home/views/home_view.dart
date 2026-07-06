@@ -234,7 +234,7 @@ class HomeView extends GetView<HomeController> {
                       children: [
                         Icon(Icons.verified_user_rounded, color: Colors.white70, size: size * 1.4),
                         SizedBox(width: size * 0.5),
-                        Text(userRoles, style: TextStyle(color: Colors.white, fontSize: size * 1.3, fontWeight: FontWeight.w500)),
+                        Text(userRoles, style: AppTextStyle.infoBold(size, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -300,7 +300,7 @@ class HomeView extends GetView<HomeController> {
                   children: [
                     Icon(Icons.calendar_today_outlined, size: size * 1.2, color: navyDark),
                     SizedBox(width: size * 0.5),
-                    Text('$year', style: TextStyle(fontSize: size * 1.2, color: navyDark, fontWeight: FontWeight.w600)),
+                    Text('$year', style: AppTextStyle.bodyBold(size, color: navyDark)),
                   ],
                 ),
               ),
@@ -356,7 +356,7 @@ class HomeView extends GetView<HomeController> {
             children: [
               Icon(Icons.grid_view_rounded, size: size * 1.8, color: Colors.grey.shade500),
               SizedBox(width: size * 0.8),
-              Text('Quick Access', style: TextStyle(fontSize: size * 1.4, fontWeight: FontWeight.w600, color: Colors.grey.shade600, letterSpacing: 0.4)),
+              Text('Quick Access', style: AppTextStyle.custom(size, scale: 1.4, weight: FontWeight.w600, color: Colors.grey.shade600, letterSpacing: 0.4)),
             ],
           ),
           SizedBox(height: size * 1.5),
@@ -467,7 +467,7 @@ class HomeView extends GetView<HomeController> {
           SizedBox(width: size * 0.6),
           Text(
             'Mastercool Inventory Management',
-            style: TextStyle(fontSize: size * 1.1, color: Colors.white54, fontStyle: FontStyle.italic),
+            style: AppTextStyle.custom(size, scale: 1.1, color: Colors.white54).copyWith(fontStyle: FontStyle.italic),
           ),
         ],
       ),
@@ -527,7 +527,7 @@ class HomeView extends GetView<HomeController> {
         child: Column(
           children: [
             SizedBox(height: size),
-            Text("Serial Number Type", style: TextStyle(fontSize: size * 1.5, color: sageTeal, fontWeight: FontWeight.w500)),
+            Text("Serial Number Type", style: AppTextStyle.custom(size, scale: 1.5, color: sageTeal, weight: FontWeight.w500)),
             Expanded(
               child: Obx(() {
                 final total = controller.productUnique + controller.productOther;
@@ -538,7 +538,7 @@ class HomeView extends GetView<HomeController> {
                       children: [
                         Icon(Icons.pie_chart_outline, size: size * 4, color: Colors.grey.shade300),
                         SizedBox(height: size),
-                        Text("No data available", style: TextStyle(fontSize: size * 1.4, color: Colors.grey.shade400)),
+                        Text("No data available", style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey.shade400)),
                       ],
                     ),
                   );

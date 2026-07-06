@@ -17,6 +17,7 @@ class ProductUnitController extends GetxController {
   // State
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
+  var hasError = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
@@ -83,6 +84,7 @@ class ProductUnitController extends GetxController {
   Future<void> loadUnits() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getProductUnits(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null
@@ -142,15 +144,5 @@ class ProductUnitController extends GetxController {
     return DateFormat('yyyy-MM-dd').format(date).toString();
   }
 
-
-  void openDetail(ProductUnitModel unit) {
-    Get.defaultDialog(
-      title: unit.name,
-      titleStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400,color: Colors.blueGrey),
-      content: Text(unit.description),
-      titlePadding: const EdgeInsets.all(12.0),
-      contentPadding:   const EdgeInsets.fromLTRB(16, 0, 16, 20),
-    );
-  }
 
 }

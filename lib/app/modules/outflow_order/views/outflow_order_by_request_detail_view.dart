@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'scan_page_by_request.dart';
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
@@ -22,7 +23,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
     return Scaffold(
       appBar: appBarOrder("Item Summary", size,
           routeBackName: AppPages.outflowOrderByRequestPage,
-          hex1: "#6B5FB5", hex2: "#7C73C0"),
+          color1: mutedPurple, color2: softPurple),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -166,18 +167,17 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
+              Text(
                 'Continue to Outflowing Items?',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 20, weight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 'Total Outflowing quantity: $totalScanned',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
+                style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 16, weight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -217,19 +217,17 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                           Expanded(
                             child: Text(
                               name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                              style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                  px: 15,
+                                  weight: FontWeight.w600,
+                                  color: Colors.black87),
                             ),
                           ),
                           Text(
                             'Total: $itemQty',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black54,
-                            ),
+                            style: AppTextStyle.plain(
+                                weight: FontWeight.w500,
+                                color: Colors.black54),
                           ),
                         ],
                       ),
@@ -256,10 +254,10 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                                         code != null
                                             ? displayText
                                             : "scanned: $qty",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.black54,
-                                        ),
+                                        style: AppTextStyle.custom(
+                                            SizeConfig.defaultSize,
+                                            px: 13,
+                                            color: Colors.black54),
                                       ),
                                     ),
                                   ],
@@ -269,15 +267,13 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                           ),
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4, top: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 4),
                           child: Text(
                             "No scanned codes yet.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black45,
-                              fontStyle: FontStyle.italic,
-                            ),
+                            style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                    px: 13, color: Colors.black45)
+                                .copyWith(fontStyle: FontStyle.italic),
                           ),
                         ),
                     ],

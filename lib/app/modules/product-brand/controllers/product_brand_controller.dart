@@ -20,6 +20,7 @@ class ProductBrandController extends GetxController {
   // State
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
+  var hasError = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
@@ -86,6 +87,7 @@ class ProductBrandController extends GetxController {
   Future<void> loadBrands() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getProductBrands(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null

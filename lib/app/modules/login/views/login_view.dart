@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
@@ -57,20 +58,12 @@ class LoginView extends GetView<LoginController> {
                   // Title
                   Text(
                     'Warehouse App',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size * 3,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
+                    style: AppTextStyle.custom(size, scale: 3, color: Colors.white, weight: FontWeight.bold, letterSpacing: 1),
                   ),
                   SizedBox(height: size * 0.6),
                   Text(
                     'Sign in to continue',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: size * 1.4,
-                    ),
+                    style: AppTextStyle.custom(size, scale: 1.4, color: Colors.white70),
                   ),
 
                   SizedBox(height: size * 3.5),
@@ -96,11 +89,7 @@ class LoginView extends GetView<LoginController> {
                         // Username field
                         Text(
                           'Username',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: size * 1.4,
-                            color: const Color(0xff1C3A5E),
-                          ),
+                          style: AppTextStyle.custom(size, scale: 1.4, weight: FontWeight.w600, color: const Color(0xff1C3A5E)),
                         ),
                         SizedBox(height: size * 0.8),
                         TextField(
@@ -108,10 +97,10 @@ class LoginView extends GetView<LoginController> {
                           keyboardType: TextInputType.text,
                           autofillHints: const [AutofillHints.username],
                           onChanged: (v) => controller.emailValue.value = v,
-                          style: TextStyle(fontSize: size * 1.5),
+                          style: AppTextStyle.custom(size, scale: 1.5),
                           decoration: InputDecoration(
                             hintText: 'Enter your username',
-                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: size * 1.4),
+                            hintStyle: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey.shade400),
                             prefixIcon: Icon(Icons.person_outline_rounded,
                                 color: const Color(0xff2D6187), size: size * 2.2),
                             filled: true,
@@ -134,11 +123,7 @@ class LoginView extends GetView<LoginController> {
                         // Password field
                         Text(
                           'Password',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: size * 1.4,
-                            color: const Color(0xff1C3A5E),
-                          ),
+                          style: AppTextStyle.custom(size, scale: 1.4, weight: FontWeight.w600, color: const Color(0xff1C3A5E)),
                         ),
                         SizedBox(height: size * 0.8),
                         Obx(() => TextField(
@@ -146,10 +131,10 @@ class LoginView extends GetView<LoginController> {
                               obscureText: !controller.isPasswordVisible.value,
                               autofillHints: const [AutofillHints.password],
                               onChanged: (v) => controller.passwordValue.value = v,
-                              style: TextStyle(fontSize: size * 1.5),
+                              style: AppTextStyle.custom(size, scale: 1.5),
                               decoration: InputDecoration(
                                 hintText: 'Enter your password',
-                                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: size * 1.4),
+                                hintStyle: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey.shade400),
                                 prefixIcon: Icon(Icons.lock_outline_rounded,
                                     color: const Color(0xff2D6187), size: size * 2.2),
                                 suffixIcon: IconButton(
@@ -197,10 +182,7 @@ class LoginView extends GetView<LoginController> {
                                 SizedBox(width: size * 0.6),
                                 Text(
                                   'Remember me',
-                                  style: TextStyle(
-                                    fontSize: size * 1.35,
-                                    color: Colors.grey.shade700,
-                                  ),
+                                  style: AppTextStyle.custom(size, scale: 1.35, color: Colors.grey.shade700),
                                 ),
                               ],
                             )),
@@ -232,12 +214,7 @@ class LoginView extends GetView<LoginController> {
                                       )
                                     : Text(
                                         'Sign In',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: size * 1.8,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
-                                        ),
+                                        style: AppTextStyle.custom(size, scale: 1.8, color: Colors.white, weight: FontWeight.bold, letterSpacing: 0.5),
                                       ),
                               ),
                             )),
@@ -253,12 +230,8 @@ class LoginView extends GetView<LoginController> {
                     onPressed: () {},
                     child: Text(
                       'Forgot Password?',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: size * 1.4,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.white54,
-                      ),
+                      style: AppTextStyle.custom(size, scale: 1.4, color: Colors.white70)
+                          .copyWith(decoration: TextDecoration.underline, decorationColor: Colors.white54),
                     ),
                   ),
 

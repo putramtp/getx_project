@@ -23,7 +23,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
       appBar: appBarOrder("Receive Order List", size,
           icon: Icons.list_alt_sharp,
           routeBackName: AppPages.receiveHomePage,
-          hex1: "#124076", hex2: "#2A5A8C"),
+          color1: navyDark, color2: navyMid),
       body: RefreshIndicator(
         onRefresh: controller.loadReceiveOrders,
         child: SafeArea(
@@ -48,6 +48,9 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                       return skeletonOrderList(size, accent: skyBlue);
                     }
                     final orders = controller.orders;
+                    if (controller.hasError.value && orders.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadReceiveOrders, accent: navyDark);
+                    }
                     if (orders.isEmpty) {
                       return textNoData(size, message: "No receive order data.");
                     }

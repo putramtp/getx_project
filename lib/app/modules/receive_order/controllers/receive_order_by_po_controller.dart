@@ -17,6 +17,7 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
   final FocusNode searchFocus = FocusNode();
   var orders = <PurchaseOrderModel>[].obs;
   var isLoading = false.obs;
+  var hasError = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; 
   var isAscending = true.obs;
@@ -79,6 +80,7 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
   Future<void> loadPurchaseOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getPurchaseOrders(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null

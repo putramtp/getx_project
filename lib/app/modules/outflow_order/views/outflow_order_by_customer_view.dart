@@ -22,7 +22,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
       appBar: appBarOrder("Customer List", size,
           icon: Icons.group_rounded,
           routeBackName: AppPages.outflowHomePage,
-          hex1: "#C4882A", hex2: "#D6A24E"),
+          color1: amber, color2: amberLight),
       body: RefreshIndicator(
         onRefresh: controller.loadCustomers,
         child: SafeArea(
@@ -47,6 +47,9 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
                       return skeletonOrderList(size, accent: amber);
                     }
                     final orders = controller.filteredCustomers;
+                    if (controller.hasError.value && orders.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadCustomers, accent: amber);
+                    }
                     if (orders.isEmpty) {
                       return textNoData(size, message: 'No Customer data.');
                     }

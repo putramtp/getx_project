@@ -25,6 +25,7 @@ class ProductByCategoryController extends GetxController {
   // State
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
+  var hasError = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
@@ -74,6 +75,7 @@ class ProductByCategoryController extends GetxController {
   Future<void> loadProducts() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getProductSummariesByCategory(catId: currentCategory.id),
     );
     if (res == null) return;
@@ -175,13 +177,4 @@ class ProductByCategoryController extends GetxController {
   }
 
 
-  // @override
-  // void onReady() {
-  //   super.onReady();
-  // }
-
-  // @override
-  // void onClose() {
-  //   super.onClose();
-  // }
 }

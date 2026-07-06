@@ -5,6 +5,7 @@ import '../controllers/receive_order_by_po_detail_controller.dart';
 import '../views/receive_order_fill_by_po_view.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
+import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
@@ -122,7 +123,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
               : const Icon(Icons.receipt_long_rounded),
           label: Text(isLoading
               ? "Processing..."
-              : "Continue to receiving items ($totalFilled filled)",style: TextStyle(fontSize: size * 1.4),),
+              : "Continue to receiving items ($totalFilled filled)",style: AppTextStyle.custom(size, scale: 1.4),),
           onPressed: isLoading ? null  :() async {
             if (controller.items.isEmpty) return;
             // Use the unified filled data
@@ -201,22 +202,18 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                 },
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'Continue to Receiving ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.black,
-                      ),
+                      style: AppTextStyle.custom(SizeConfig.defaultSize,
+                          px: 20, weight: FontWeight.bold, color: Colors.black),
                       textAlign: TextAlign.center,
                     ),
                     Obx(() => Text(
                           '#${controller.receiveNumber.value}?',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Colors.blue,
-                          ),
+                          style: AppTextStyle.custom(SizeConfig.defaultSize,
+                              px: 20,
+                              weight: FontWeight.bold,
+                              color: Colors.blue),
                           textAlign: TextAlign.center,
                         )),
                   ],
@@ -225,10 +222,8 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
               const SizedBox(height: 12),
               Text(
                 'Total receiving quantity: $totalFilled',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
+                style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 16, weight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -269,20 +264,18 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                           Expanded(
                             child: Text(
                               name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                              style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                  px: 15,
+                                  weight: FontWeight.w600,
+                                  color: Colors.black87),
                             ),
                           ),
                           serialNumberType == 'BATCH'
                               ? Text(
                                   'Total: $itemQty',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black54,
-                                  ),
+                                  style: AppTextStyle.plain(
+                                      weight: FontWeight.w500,
+                                      color: Colors.black54),
                                 )
                               : const SizedBox.shrink(),
                         ],
@@ -306,10 +299,10 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                                     Expanded(
                                       child: Text(
                                         "Filled: $qty",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.black54,
-                                        ),
+                                        style: AppTextStyle.custom(
+                                            SizeConfig.defaultSize,
+                                            px: 13,
+                                            color: Colors.black54),
                                       ),
                                     ),
                                   ],
@@ -319,15 +312,13 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                           ),
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4, top: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 4),
                           child: Text(
                             "No filled quantities yet.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black45,
-                              fontStyle: FontStyle.italic,
-                            ),
+                            style: AppTextStyle.custom(SizeConfig.defaultSize,
+                                    px: 13, color: Colors.black45)
+                                .copyWith(fontStyle: FontStyle.italic),
                           ),
                         ),
                     ],
@@ -352,9 +343,9 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                         backgroundColor: Colors.teal,
                       ),
                       onPressed: () => Get.back(result: true),
-                      child: const Text(
+                      child: Text(
                         'Continue',
-                        style: TextStyle(color: Colors.white),
+                        style: AppTextStyle.plain(color: Colors.white),
                       ),
                     ),
                   ),
@@ -371,7 +362,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     final TextEditingController textController =
         TextEditingController(text: initialValue ?? '');
 
-    return Get.dialog<String>(
+    final result = await Get.dialog<String>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Receive Number'),
@@ -399,6 +390,8 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
         ],
       ),
     );
+    textController.dispose();
+    return result;
   }
 
   Widget _buildHeader(double size) {

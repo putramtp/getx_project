@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../global/styles/app_text_style.dart';
+
 class CircleMenuItem extends StatelessWidget {
   final double size;
   final IconData icon;
@@ -57,11 +59,7 @@ class CircleMenuItem extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: size * 1.1,
-                  fontWeight: FontWeight.w600,
-                  color: iconColor.withOpacity(0.85),
-                ),
+                style: AppTextStyle.custom(size, scale: 1.1, weight: FontWeight.w600, color: iconColor.withOpacity(0.85)),
               ),
             ],
           ),

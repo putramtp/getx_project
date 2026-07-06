@@ -21,7 +21,7 @@ class ScanPageByCustomer
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Scan Item", size,
-          showIcon: false, hex1: "#C4882A", hex2: "#D6A24E"),
+          showIcon: false, color1: amber, color2: amberLight),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
@@ -137,7 +137,7 @@ class ScanPageByCustomer
 
   Future<int?> _showBatchQtyDialog() async {
     final TextEditingController qtyController = TextEditingController();
-    return Get.dialog<int>(
+    final result = await Get.dialog<int>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Batch Quantity'),
@@ -162,12 +162,14 @@ class ScanPageByCustomer
         ],
       ),
     );
+    qtyController.dispose();
+    return result;
   }
 
   Future<Map<String, dynamic>?> _showOtherItemDialog({int? initialQty}) async {
     final TextEditingController qtyController =
         TextEditingController(text: initialQty?.toString() ?? '');
-    return Get.dialog<Map<String, dynamic>>(
+    final result = await Get.dialog<Map<String, dynamic>>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Enter item quantity'),
@@ -197,6 +199,8 @@ class ScanPageByCustomer
         ],
       ),
     );
+    qtyController.dispose();
+    return result;
   }
 
   Widget _buildBottomBar(double size) {

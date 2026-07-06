@@ -24,6 +24,7 @@ dependencies:
   connectivity_plus: ^3.0.1
   fl_chart: ^0.60.0
   skeletonizer: ^1.4.3
+  flutter_secure_storage: ^9.2.2
   
 
 dev_dependencies: 

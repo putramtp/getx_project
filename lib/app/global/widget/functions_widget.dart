@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
-import 'package:hexcolor/hexcolor.dart';
+import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/variables.dart';
 
 AppBar costumAppbar(String title) {
   return AppBar(
@@ -17,25 +18,30 @@ AppBar costumAppbar(String title) {
 Widget titleApp(String text, double size) {
   return Text(
     text,
-    style: TextStyle(
-        fontSize: size * 1.8,
-        letterSpacing: 0.5,
-        wordSpacing: 2,
-        color: Colors.white,
-        fontWeight: FontWeight.w500),
+    style: AppTextStyle.custom(size,
+            scale: 1.8,
+            letterSpacing: 0.5,
+            color: Colors.white,
+            weight: FontWeight.w500)
+        .copyWith(wordSpacing: 2),
     overflow: TextOverflow.ellipsis,
   );
 }
 
 Widget titleMenu(String text, double size) {
-  return Text(text, style: TextStyle(fontSize: size * 1.17));
+  return Text(text, style: AppTextStyle.custom(size, scale: 1.17));
 }
 
 Widget testContainer(double size) {
   return Container(height: size, width: size, color: Colors.brown);
 }
 
-PreferredSizeWidget appBarOrder(String title,double size,{IconData? icon = Icons.inventory_2, String? routeBackName,bool showIcon = true, String? hex1,String? hex2}) {
+PreferredSizeWidget appBarOrder(String title, double size,
+    {IconData? icon = Icons.inventory_2,
+    String? routeBackName,
+    bool showIcon = true,
+    Color? color1,
+    Color? color2}) {
   return PreferredSize(
     preferredSize: const Size.fromHeight(65),
     child: AppBar(
@@ -43,7 +49,7 @@ PreferredSizeWidget appBarOrder(String title,double size,{IconData? icon = Icons
       flexibleSpace: Container(
         decoration:  BoxDecoration(
           gradient: LinearGradient(
-            colors: [HexColor(hex1 ?? "#4A70A9"),HexColor(hex2 ?? '#8FABD4')],
+            colors: [color1 ?? steelBlue, color2 ?? lightSteelBlue],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -68,10 +74,10 @@ PreferredSizeWidget appBarOrder(String title,double size,{IconData? icon = Icons
           Expanded(
             child: Text(
               title,
-              style:  TextStyle(
-                fontWeight: FontWeight.bold,
+              style: AppTextStyle.custom(size,
+                scale: 2.2,
+                weight: FontWeight.bold,
                 color: Colors.white,
-                fontSize: size * 2.2,
                 letterSpacing: 0.3,
               ),
             ),
@@ -117,11 +123,11 @@ Future<void> showRemoveDialog(
             const SizedBox(height: 16),
 
             // Title
-            const Text(
+            Text(
               "Remove Scanned Code",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+              style: AppTextStyle.custom(SizeConfig.defaultSize,
+                px: 20,
+                weight: FontWeight.bold,
               ),
             ),
 
@@ -134,8 +140,8 @@ Future<void> showRemoveDialog(
                 Text(
                   "Are you sure you want to remove this code?",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
+                  style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 15,
                     color: Colors.grey.shade700,
                     height: 1.4,
                   ),
@@ -143,9 +149,9 @@ Future<void> showRemoveDialog(
                 Text(
                   code,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
+                  style: AppTextStyle.custom(SizeConfig.defaultSize,
+                    px: 17,
+                    weight: FontWeight.bold,
                     color: Colors.blue.shade700,
                     height: 1.4,
                   ),
@@ -161,11 +167,11 @@ Future<void> showRemoveDialog(
               children: [
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: const Text(
+                  child: Text(
                     "Cancel",
-                    style: TextStyle(
+                    style: AppTextStyle.plain(
                       color: Colors.grey,
-                      fontWeight: FontWeight.w600,
+                      weight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -175,11 +181,11 @@ Future<void> showRemoveDialog(
                     onConfirm();
                     Get.back();
                   },
-                  child: const Text(
+                  child: Text(
                     "Remove",
-                    style: TextStyle(
+                    style: AppTextStyle.plain(
                       color: Colors.redAccent,
-                      fontWeight: FontWeight.bold,
+                      weight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -214,15 +220,15 @@ Future<void> showEditCodeDialog(
             const Icon(Icons.edit_note_rounded,
                 color: Colors.blueAccent, size: 48),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               "Edit Scanned Code",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: AppTextStyle.custom(SizeConfig.defaultSize, px: 20, weight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: AppTextStyle.custom(SizeConfig.defaultSize, px: 16, weight: FontWeight.w500),
               decoration: InputDecoration(
                 labelText: "Scanned Code",
                 border: OutlineInputBorder(
@@ -238,9 +244,9 @@ Future<void> showEditCodeDialog(
               children: [
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: const Text(
+                  child: Text(
                     "Cancel",
-                    style: TextStyle(color: Colors.grey),
+                    style: AppTextStyle.plain(color: Colors.grey),
                   ),
                 ),
                 ElevatedButton(
@@ -255,9 +261,9 @@ Future<void> showEditCodeDialog(
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text(
+                  child: Text(
                     "Save",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: AppTextStyle.plain(weight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -281,7 +287,7 @@ Widget buildSyncButton({required VoidCallback onPressed,required double size,Col
           icon:  Icon(Icons.sync, color: Colors.white,size: size *2,),
           label:  Text(
             name,
-            style: TextStyle(fontSize: size * 1.8, fontWeight: FontWeight.bold, color: Colors.white),
+            style: AppTextStyle.h4(size, color: Colors.white, weight: FontWeight.bold),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
@@ -309,7 +315,7 @@ Widget textWithIcon(double size, String text, IconData icon,Color iconColor) {
         ),
         TextSpan(
           text: text,
-          style: TextStyle(fontSize: size * 1.3, color: Colors.black),
+          style: AppTextStyle.info(size),
         ),
       ],
     ),
@@ -322,6 +328,47 @@ Widget textLoading(double size,{color = Colors.black54,message = "Loading..."}) 
 
 Widget textNoData(double size,{color = Colors.black54,message = "No data."})   {
   return Center(child: Text(message,style: AppTextStyle.infoBold(size,color: color)));
+}
+
+/// Error state with a Retry action, shown when a load fails (vs. the empty
+/// state, which means the load succeeded but returned nothing).
+Widget errorRetry(
+  double size, {
+  required VoidCallback onRetry,
+  String message = "Couldn't load data.\nCheck your connection and try again.",
+  Color accent = navyDark,
+}) {
+  return Center(
+    child: Padding(
+      padding: EdgeInsets.all(size * 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: size * 5, color: Colors.grey),
+          SizedBox(height: size * 1.2),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTextStyle.info(size, color: Colors.black54),
+          ),
+          SizedBox(height: size * 1.6),
+          ElevatedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: Text('Retry', style: AppTextStyle.bodyBold(size, color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accent,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(
+                  horizontal: size * 2.4, vertical: size * 1.2),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(size * 1.2)),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Capture a serial code for a serial-tracked item: the worker chooses to scan
@@ -381,8 +428,8 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
           children: [
             Icon(Icons.keyboard_rounded, color: accent, size: 48),
             const SizedBox(height: 16),
-            const Text("Enter Serial Number",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text("Enter Serial Number",
+                style: AppTextStyle.custom(SizeConfig.defaultSize, px: 20, weight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
@@ -390,7 +437,7 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
               textAlign: TextAlign.center,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => submit(),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: AppTextStyle.custom(SizeConfig.defaultSize, px: 16, weight: FontWeight.w500),
               decoration: InputDecoration(
                 labelText: "Serial Number",
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -404,14 +451,14 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
               children: [
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                  child: Text("Cancel", style: AppTextStyle.plain(color: Colors.grey)),
                 ),
                 ElevatedButton(
                   onPressed: submit,
                   style: ElevatedButton.styleFrom(
                       backgroundColor: accent, foregroundColor: Colors.white),
-                  child: const Text("Save",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text("Save",
+                      style: AppTextStyle.plain(weight: FontWeight.bold)),
                 ),
               ],
             ),

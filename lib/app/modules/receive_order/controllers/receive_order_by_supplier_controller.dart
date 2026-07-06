@@ -14,6 +14,7 @@ class ReceiveOrderBySupplierController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   var isLoading = false.obs;
+  var hasError = false.obs;
   var orders = <PoSupplierModel>[].obs;
   var filteredSuppliers = <PoSupplierModel>[].obs;
   var isAscending = true.obs;
@@ -66,6 +67,7 @@ class ReceiveOrderBySupplierController extends GetxController {
   Future<void> loadSuppliers() async {
     final data = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getSuppliers(),
     );
     // If network failed or exception handled, data is null

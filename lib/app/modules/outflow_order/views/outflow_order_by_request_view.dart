@@ -23,7 +23,7 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
       appBar: appBarOrder("Outflow Request List", size,
           icon: Icons.list_alt_sharp,
           routeBackName: AppPages.outflowHomePage,
-          hex1: "#6B5FB5", hex2: "#9B8FD5"),
+          color1: mutedPurple, color2: lightPurple),
       body: RefreshIndicator(
         onRefresh: controller.loadRequestOrders,
         child: SafeArea(
@@ -48,6 +48,9 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
                       return skeletonOrderList(size, accent: mutedPurple);
                     }
                     final orders = controller.orders;
+                    if (controller.hasError.value && orders.isEmpty) {
+                      return errorRetry(size, onRetry: controller.loadRequestOrders, accent: mutedPurple);
+                    }
                     if (orders.isEmpty) {
                       return textNoData(size);
                     }

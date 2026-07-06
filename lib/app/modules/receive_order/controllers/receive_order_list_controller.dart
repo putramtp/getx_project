@@ -22,6 +22,7 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
 
   // State
   var isLoading = false.obs;
+  var hasError = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
@@ -78,6 +79,7 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
   Future<void> loadReceiveOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getReceiveOrders(cursor: null,params: buildParams()),
     );
     // If network failed or exception handled, data is null

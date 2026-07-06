@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../global/styles/app_text_style.dart';
+
 class Indicator extends StatelessWidget {
   const Indicator({
     super.key,
@@ -34,11 +36,7 @@ class Indicator extends StatelessWidget {
         ),
         Text(
           text,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
+          style: AppTextStyle.custom(size, px: fontSize, weight: FontWeight.bold, color: textColor),
         )
       ],
     );

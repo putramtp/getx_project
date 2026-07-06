@@ -24,6 +24,7 @@ class DeliveryListController extends GetxController {
   final statusById = <int, DeliveryStatusModel>{}.obs;
 
   var isLoading = false.obs;
+  var hasError = false.obs;
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
   final RxString searchQuery = ''.obs;
@@ -56,11 +57,15 @@ class DeliveryListController extends GetxController {
     // flags so they don't toggle the shared one mid-load.
     isLoading.value = true;
     try {
+      hasError.value = false;
       final data = await ApiExecutor.run(
         isLoading: false.obs,
         task: () => provider.getDeliveries(),
       );
-      if (data == null) return;
+      if (data == null) {
+        hasError.value = true;
+        return;
+      }
 
       _all
         ..clear()

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/functions.dart';
+import 'package:getx_project/app/global/size_config.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget {
   const TopDateFilterPopup({super.key, required this.controller,  this.showPrice = false , this.showDateRange = true, this.children});
@@ -37,11 +39,11 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                 children: [
                   _dragHandle(),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     "Filter Options",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    style: AppTextStyle.custom(SizeConfig.defaultSize,
+                      px: 18,
+                      weight: FontWeight.bold,
                     ),
                   ),
                   if (showDateRange) ...[
@@ -80,9 +82,9 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                   ],
                   const SizedBox(height: 20),
                   // LIMIT FILTER
-                  const Text(
+                  Text(
                     "Limit",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: AppTextStyle.custom(SizeConfig.defaultSize, px: 14, weight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<int>(
@@ -113,9 +115,9 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           "Price Range",
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          style: AppTextStyle.custom(SizeConfig.defaultSize, px: 14, weight: FontWeight.w600),
                         ),
                         Obx(() => Switch(
                           activeColor: Colors.blue[300],
@@ -139,7 +141,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                           Text(
                             "Rp ${formatPrice(controller.minPrice.value)}"
                             " - Rp ${formatPrice(controller.maxPrice.value)}",
-                            style: TextStyle(color: Colors.grey.shade600),
+                            style: AppTextStyle.plain(color: Colors.grey.shade600),
                           ),
                           RangeSlider(
                             activeColor: Colors.blue[300],
@@ -184,9 +186,9 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.check, color: Colors.white),
-                          label: const Text(
+                          label: Text(
                             "Apply",
-                            style: TextStyle(color: Colors.white),
+                            style: AppTextStyle.plain(color: Colors.white),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
@@ -235,11 +237,11 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                style: AppTextStyle.custom(SizeConfig.defaultSize, px: 12, color: Colors.grey.shade600)),
             const SizedBox(height: 4),
             Text(value,
                 style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    AppTextStyle.custom(SizeConfig.defaultSize, px: 14, weight: FontWeight.w500)),
           ],
         ),
       ),

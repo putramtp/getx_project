@@ -24,7 +24,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
       appBar: appBarOrder("Delivery Detail", size,
           icon: Icons.local_shipping_rounded,
           routeBackName: AppPages.deliveryListPage,
-          hex1: "#4A70A9", hex2: "#8FABD4"),
+          color1: steelBlue, color2: lightSteelBlue),
       body: SafeArea(
         child: Obx(() {
           final d = controller.delivery.value;
@@ -375,7 +375,10 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
         );
       }),
       isScrollControlled: true,
-    );
+    ).whenComplete(() {
+      addressCtrl.dispose();
+      descCtrl.dispose();
+    });
   }
 
   InputDecoration _fieldDecoration(double size, {String? hint}) {

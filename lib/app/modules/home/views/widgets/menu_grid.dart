@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/animated_counter.dart';
 
 class MenuGrid extends StatelessWidget {
@@ -61,32 +62,19 @@ class MenuGrid extends StatelessWidget {
               SizedBox(height: size * 1.2),
               AnimatedCounter(
                 value: int.tryParse(status) ?? 0,
-                style: TextStyle(
-                  fontSize: size * 2.2,
-                  fontWeight: FontWeight.bold,
-                  color: color1,
-                ),
+                style: AppTextStyle.custom(size, scale: 2.2, weight: FontWeight.bold, color: color1),
               ),
               SizedBox(height: size * 0.3),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: size * 1.1,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
-                  letterSpacing: 0.3,
-                ),
+                style: AppTextStyle.custom(size, scale: 1.1, weight: FontWeight.w600, color: Colors.grey.shade600, letterSpacing: 0.3),
               ),
               SizedBox(height: size * 0.8),
               Row(
                 children: [
                   Text(
                     'View',
-                    style: TextStyle(
-                      fontSize: size * 1.1,
-                      color: color1,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextStyle.custom(size, scale: 1.1, color: color1, weight: FontWeight.w500),
                   ),
                   SizedBox(width: size * 0.3),
                   Icon(Icons.arrow_forward_rounded, size: size * 1.3, color: color1),

@@ -5,9 +5,8 @@ import 'package:get/get.dart';
 import 'package:getx_project/app/data/models/product_unit_model.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
-import 'package:getx_project/app/global/widget/functions_widget.dart';
-import 'package:getx_project/app/global/widget/search_bar.dart';
-import 'package:getx_project/app/global/widget/skeleton_widgets.dart';
+import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/widget/master_list_view.dart';
 import 'package:getx_project/app/modules/product-unit/controllers/product_unit_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
@@ -16,183 +15,164 @@ class ProductUnitView extends GetView<ProductUnitController> {
 
   @override
   Widget build(BuildContext context) {
-    SizeConfig.init(context);
-    final size = SizeConfig.defaultSize;
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Unit",size,icon: Icons.thermostat_auto, routeBackName: AppPages.homePage,hex1: '#124076',hex2: '#7F9F80'),
-      body: RefreshIndicator(
-        onRefresh:controller.loadUnits,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                Obx(() => SearchBarWidget(
-                      isFocused: controller.isSearchFocused.value,
-                      isAscending: controller.isAscending.value,
-                      searchController: controller.searchController,
-                      focusNode: controller.searchFocus,
-                      onSearchChanged: controller.onSearchChanged,
-                      onToggleSort: controller.toggleSort,
-                      onOpenFilter: () => _showLimitDialog(context:context),
-                    )),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: Obx(() {
-                    if (controller.isLoading.value) {
-                      return skeletonGenericList(size);
-                    }
-
-                    final units = controller.units;
-                    if (units.isEmpty) {
-                      return textNoData(size,message: "No unit data.");
-                    }
-      
-                    return NotificationListener(
-                      onNotification: (ScrollNotification notification) {
-                        if (notification.metrics.pixels >=
-                            notification.metrics.maxScrollExtent - 250) {
-                          controller.loadMore();
-                        }
-                        return false;
-                      },
-                      child: GridView.builder(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        itemCount: units.length + 1,
-                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: size * 17,
-                          mainAxisSpacing: size *2,
-                          crossAxisSpacing: size * 2,
-                          childAspectRatio: Get.width < 360 ? (size * 0.13) : (size * 0.06),
-                        ),
-                        itemBuilder: (context, index) {
-                          if (index < units.length) {
-                            return _gridCard(units[index], size);
-                          }
-                          
-                          if (controller.cursorNext.value != null && controller.limit.value >= 8) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 18),
-                              child: Center(
-                                child: SizedBox(
-                                  width: 26,
-                                  height: 26,
-                                  child: CircularProgressIndicator(strokeWidth: 3),
-                                ),
-                              ),
-                            );
-                          }
-                          
-                          if (controller.cursorNext.value == null && units.isNotEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 18),
-                              child: Center(
-                                child: Text(
-                                  "No more data",
-                                  style: TextStyle(
-                                    fontSize: size * 1.2,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    );
-                  }),
-                ),
-                // buildSyncButton(name: 'Sync',size: size,onPressed: controller.loadUnits,color: const Color.fromARGB(255, 25, 105, 116))
-              ],
-            ),
-          ),
-        ),
-      ),
+    return MasterListView<ProductUnitModel>(
+      title: "Unit",
+      icon: Icons.thermostat_auto,
+      routeBackName: AppPages.homePage,
+      isLoading: controller.isLoading,
+      isSearchFocused: controller.isSearchFocused,
+      isAscending: controller.isAscending,
+      cursorNext: controller.cursorNext,
+      limit: controller.limit,
+      items: controller.units,
+      hasError: controller.hasError,
+      searchController: controller.searchController,
+      searchFocus: controller.searchFocus,
+      onRefresh: controller.loadUnits,
+      onSearchChanged: controller.onSearchChanged,
+      onToggleSort: controller.toggleSort,
+      onLoadMore: controller.loadMore,
+      onApplyLimit: (value) {
+        controller.limit.value = value;
+        controller.applyFilter();
+      },
+      onClearFilter: controller.clearFilter,
+      emptyMessage: "No unit data.",
+      itemBuilder: (context, unit) {
+        final size = SizeConfig.defaultSize;
+        final hasDescription = unit.description.trim().isNotEmpty;
+        return masterListCard(
+          size: size,
+          accent: getAccentColor2(unit.name),
+          avatarText: masterMonogram(unit.name),
+          title: unit.name,
+          subtitle: hasDescription ? unit.description : 'No description',
+          subtitleColor: hasDescription ? null : Colors.grey[400],
+          onTap: () => _showUnitDetail(context, unit, size),
+        );
+      },
     );
   }
 
-
-  void _showLimitDialog({
-    required BuildContext context,
-  }) {
-    final TextEditingController tController = TextEditingController(text: controller.limit.value.toString());
+  // ── Unit detail popup ────────────────────────────────────────────
+  void _showUnitDetail(BuildContext context, ProductUnitModel unit, double size) {
+    final accent = getAccentColor2(unit.name);
+    final hasDescription = unit.description.trim().isNotEmpty;
 
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Limit Dialog',
+      barrierLabel: 'Unit Detail',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (_, __, ___) {
         return Center(
-          child: Material(
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Set Limit',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: size * 3),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(size * 2.4),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  /// Gradient header
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                        vertical: size * 2.6, horizontal: size * 2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          accent,
+                          Color.lerp(accent, Colors.white, 0.35)!,
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: tController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Limit',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    child: Column(
                       children: [
-                        TextButton(
-                          onPressed: () { 
-                            controller.clearFilter();
-                            Navigator.pop(context); 
-                          },
-                          child: const Text('Clear'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                        Container(
+                          width: size * 7,
+                          height: size * 7,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          onPressed: () {
-                            final value = int.tryParse(tController.text);
-
-                            if (value == null || value <= 0) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter a valid number'),
-                                ),
-                              );
-                              return;
-                            }
-                            controller.limit.value = value;
-                            controller.applyFilter();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Apply',style: TextStyle(color: Colors.white),),
+                          child: Text(
+                            masterMonogram(unit.name),
+                            style: AppTextStyle.h3(size, color: accent),
+                          ),
+                        ),
+                        SizedBox(height: size * 1.2),
+                        Text(
+                          unit.name,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyle.h4(size, color: Colors.white),
+                        ),
+                        SizedBox(height: size * 0.3),
+                        Text(
+                          'Product Unit',
+                          style: AppTextStyle.overline(size,
+                              color: Colors.white.withOpacity(0.85)),
                         ),
                       ],
-                    )
-                  ],
-                ),
+                    ),
+                  ),
+
+                  /// Body
+                  Padding(
+                    padding: EdgeInsets.all(size * 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('DESCRIPTION',
+                            style: AppTextStyle.overline(size,
+                                color: Colors.grey)),
+                        SizedBox(height: size * 0.8),
+                        Text(
+                          hasDescription
+                              ? unit.description
+                              : 'No description provided.',
+                          style: AppTextStyle.body(
+                            size,
+                            color: hasDescription
+                                ? Colors.black87
+                                : Colors.grey,
+                          ),
+                        ),
+                        SizedBox(height: size * 2),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: accent,
+                              elevation: 0,
+                              padding:
+                                  EdgeInsets.symmetric(vertical: size * 1.4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(size * 1.4),
+                              ),
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Close',
+                                style: AppTextStyle.bodyBold(size,
+                                    color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -200,76 +180,10 @@ class ProductUnitView extends GetView<ProductUnitController> {
       },
       transitionBuilder: (_, animation, __, child) {
         return ScaleTransition(
-          scale: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutBack,
-          ),
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
           child: child,
         );
       },
     );
   }
-  Widget _gridCard(ProductUnitModel unit, double size) {
-    final accent = getAccentColor2(unit.name);
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () => controller.openDetail(unit),
-      child: Ink(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              /// Badge (dynamic height)
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size * 1.4,
-                  vertical: size * 0.8,
-                ),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: accent.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(size),
-                ),
-                child: Text(
-                  unit.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: accent,
-                    fontSize: size * 1.6,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  unit.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: size * 1.6,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
-
-
 }

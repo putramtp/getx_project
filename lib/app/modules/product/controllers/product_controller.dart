@@ -24,6 +24,7 @@ class ProductController extends GetxController  implements TopFilterController{
 
   // State
   var isLoading = false.obs;
+  var hasError = false.obs;
   var isLoadingMore = false.obs;
   var hasMore = true.obs; // ⭐ add no-more-data indicator
   var isAscending = true.obs;
@@ -92,6 +93,7 @@ class ProductController extends GetxController  implements TopFilterController{
 
     final res = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getProductSummaries(cursor: null,params: buildParams()),
     );
    
@@ -220,14 +222,4 @@ class ProductController extends GetxController  implements TopFilterController{
     }
     Get.toNamed(AppPages.productTransactionListPage, arguments: product);
   }
-
-  // @override
-  // void onReady() {
-  //   super.onReady();
-  // }
-
-  // @override
-  // void onClose() {
-  //   super.onClose();
-  // }
 }

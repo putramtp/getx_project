@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../global/styles/app_text_style.dart';
+
 class MenuList extends StatelessWidget {
   const MenuList({
     super.key,
@@ -23,7 +25,7 @@ class MenuList extends StatelessWidget {
       ),
       child: ListTile(
         leading:  Icon(CupertinoIcons.clock_solid,color:Colors.grey[400]),
-        title: Text( title,style: TextStyle(fontWeight: FontWeight.w400,fontSize: size * 1.6),),
+        title: Text( title,style: AppTextStyle.custom(size, scale: 1.6, weight: FontWeight.w400),),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
        

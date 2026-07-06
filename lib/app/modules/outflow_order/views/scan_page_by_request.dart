@@ -20,7 +20,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: appBarOrder("Scan Item", size,
-          showIcon: false, hex1: "#6B5FB5", hex2: "#9B8FD5"),
+          showIcon: false, color1: mutedPurple, color2: lightPurple),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
@@ -136,7 +136,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
 
   Future<int?> _showBatchQtyDialog() async {
     final TextEditingController qtyController = TextEditingController();
-    return Get.dialog<int>(
+    final result = await Get.dialog<int>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Batch Quantity'),
@@ -161,12 +161,14 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         ],
       ),
     );
+    qtyController.dispose();
+    return result;
   }
 
   Future<Map<String, dynamic>?> _showOtherItemDialog({int? initialQty}) async {
     final TextEditingController qtyController =
         TextEditingController(text: initialQty?.toString() ?? '');
-    return Get.dialog<Map<String, dynamic>>(
+    final result = await Get.dialog<Map<String, dynamic>>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Enter item quantity'),
@@ -196,6 +198,8 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         ],
       ),
     );
+    qtyController.dispose();
+    return result;
   }
 
   Widget _buildBottomBar(double size) {

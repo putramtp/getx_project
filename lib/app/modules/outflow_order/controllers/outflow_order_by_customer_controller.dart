@@ -14,6 +14,7 @@ class OutflowOrderByCustomerController extends GetxController {
   final FocusNode searchFocus = FocusNode();
 
   var isLoading = false.obs;
+  var hasError = false.obs;
   var orders = <OrCustomerModel>[].obs;
   var filteredCustomers = <OrCustomerModel>[].obs;
   var isAscending = true.obs;
@@ -64,6 +65,7 @@ class OutflowOrderByCustomerController extends GetxController {
   Future<void> loadCustomers() async {
     final data = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getCustomers(),
     );
     // If network failed or exception handled, data is null
