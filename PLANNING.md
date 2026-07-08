@@ -107,11 +107,27 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## 🟡 P1 — UX resilience
 
-- [ ] **Offline support (highest-value gap)** — no local DB; everything is live
-      network held in memory. A worker who scans 50 serials and hits a failed submit
-      **loses the batch**. Add a local DB + persistence.
-- [ ] **Offline scan queue (outbox)** — persist scans locally, sync when back online.
-      Pairs with the local DB above.
+- [~] **Offline support (highest-value gap)** — **Drafts done.** Added a sqflite
+      local DB (`lib/app/services/draft_service.dart`, `DraftService` — permanent,
+      opened async in `main()`) with a tiny JSON-blob API
+      (`saveJson`/`readJson`/`remove`) + shared line-keyed helpers
+      (`readLineDraft`/`buildLineDraftMap`). Every in-progress scan/fill screen now
+      auto-persists (`ever(items, …)`) and restores on reopen, so a worker who scans
+      50 serials **no longer loses the batch** to an app kill/crash/offline. The
+      **receive fill** flow (by-PO + by-supplier) — the exact gap — now persists like
+      outflow already did; the two outflow controllers + the receive-confirm cache
+      were migrated off GetStorage onto `DraftService` (one unified store). Deps:
+      `sqflite ^2.2.0` + `path ^1.8.3`. `flutter analyze` clean; +3 unit tests
+      (`test/services/draft_service_test.dart`), full suite green (26 tests).
+      **Remaining:** offline *reads* (browse lists/details with no connection) — the
+      DB currently stores only outgoing drafts, not cached read data.
+- [~] **Offline scan queue (outbox)** — Scope was set to **drafts + manual retry**
+      (no data loss; submit still needs a connection and the worker re-submits when
+      back online), delivered by the draft store above. **Deferred:** true background
+      auto-replay of queued submits — the `receiveData`/`outflowData` responses carry
+      a created-order id the flow uses inline (route to confirm-serials, delivery
+      prompt), so background replay needs resume-later + notification UX; left as a
+      separate, larger effort.
 - [~] **Retry + error-vs-empty states** — Foundation done. `ApiExecutor.run` takes an
       optional `hasError` RxBool (set false on success / true on any failure); added a
       shared `errorRetry(size, onRetry:)` widget; wired through `MasterListView` +
@@ -129,27 +145,53 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
       DNS lookup of the API host (from `AppConfig`) with a 3s timeout after the
       interface check, so "connected to Wi-Fi, no internet" is correctly detected
       instead of proceeding to a generic failure. Interface-drop still fast-fails.
-- [ ] **Migrate scanner to `mobile_scanner`** — `flutter_barcode_scanner 2.0.0` is
-      single-shot + unmaintained (Android 13+ permission issues). Enables continuous
-      in-app batch scanning.
+- [x] **Migrate scanner to `mobile_scanner`** — Done, **with continuous batch
+      scanning**. Dropped `flutter_barcode_scanner 2.0.0` for `mobile_scanner ^3.4.0`
+      (resolved 3.5.7 — pinned to 3.x for the Dart 3.0.1 SDK). New shared
+      `global/widget/scanner_page.dart` (`ScannerPage`) with two modes off one
+      widget: **continuous batch** (`onCode` set — camera stays open, each scan fed
+      back, live colored feedback + running count, torch/flip/manual-entry controls,
+      debounced same-code re-reads, serialized against the in-flight save) and
+      **single-shot** (`scanSingle()` — pops the first code, for BATCH/OTHER flows
+      that need a follow-up qty dialog). Feedback is a dependency-free
+      `global/scan_feedback.dart` (`ScanFeedback`/`ScanStatus`) so controllers stay
+      Flutter-light. **Continuous wired into:** confirm-serials (new
+      `confirmAnyScan` auto-matches a label across *all* items, not just the selected
+      tab) and outflow UNIQUE items (new `scanUnique` on both outflow controllers,
+      one scan = one unit). BATCH/OTHER + manual entry keep the single-shot path via
+      the updated `captureSerialInput`. iOS `NSCameraUsageDescription` added; Android
+      `compileSdkVersion` bumped **33 → 34** (mobile_scanner's `androidx.camera`
+      requires compiling against 34; min/target/runtime unchanged) and Kotlin
+      **1.7.10 → 1.8.22** + stdlib-jdk7/jdk8 constraints (the camera libs pull
+      kotlin-stdlib 1.8, which collided with an older transitive jdk8 stub).
+      `flutter analyze` clean; `flutter test` green (26); **debug APK builds
+      (`app-debug.apk`)**; zero `flutter_barcode_scanner` refs left.
 
 ---
 
 ## 🟢 P2 — Features (ranked by warehouse value)
 
-- [ ] **Offline scan queue (outbox)** — see P1; listed here as the flagship feature.
-- [ ] **Continuous/batch barcode scanning** — via `mobile_scanner`.
+- [~] **Offline scan queue (outbox)** — see P1; listed here as the flagship feature.
+      Drafts + manual retry shipped (no data loss); true background auto-replay of
+      queued submits still deferred.
+- [x] **Continuous/batch barcode scanning** — Done via `mobile_scanner` (see the
+      P1 scanner-migration item). Continuous mode is live on confirm-serials and
+      outflow UNIQUE items.
 - [ ] **Stock count / cycle-count (opname) module** — core function currently missing:
       scan bin → count → reconcile vs system qty.
 - [ ] **Bin / location tracking** — where an item physically lives; put-away/pick guidance.
-- [ ] **Low-stock alerts & reorder thresholds** — push/dashboard badge below minimum.
+- [~] **Low-stock alerts & reorder thresholds** — a low-stock badge already renders on
+      the product tile + detail (`ProductSummaryModel.lowStock`, hardcoded `qty_remaining < 10`).
+      **Remaining:** configurable reorder threshold (not hardcoded), a dashboard badge/count,
+      and push notifications below minimum.
 - [ ] **Finish the Returns flow** — stubbed today; a genuine warehouse need.
 - [ ] **Reports & export** — CSV/PDF of transactions, receive/outflow, delivery
       (already have `data_table_2` + Syncfusion).
 - [ ] **Role-based UI** — `roles` are stored but not used to gate features.
 - [ ] **Biometric / PIN unlock** (`local_auth`) — quick re-auth on shared devices;
       lets you avoid persisting credentials.
-- [ ] **Wire dashboard gaps** — `goToReturnPage()` exists but no button reaches it.
+- [x] **Wire dashboard gaps** — Moot: the orphaned `goToReturnPage()` was removed
+      with the `return` module (P1). Revisit only if/when Returns is rebuilt.
 
 ---
 

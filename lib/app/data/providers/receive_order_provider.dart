@@ -6,16 +6,11 @@ import '../models/receive_confirm_serial_model.dart';
 import '../models/receive_order_detail_model.dart';
 
 class ReceiveOrderProvider extends ApiProvider {
-  Future<Map<String, dynamic>> getReceiveOrders({String? cursor, Map<String, String>? params}) async {
-    final response = await get(
-      '/receive-order/pagination',
-      query: {
-        if (params != null) ...params,
-        if (cursor != null) 'cursor': cursor,
-      },
-    );
-    checkResponse(response);
-    return Map<String, dynamic>.from(response.body as Map);
+  Future<Map<String, dynamic>> getReceiveOrders({String? cursor, Map<String, String>? params}) {
+    return getMap('/receive-order/pagination', query: {
+      if (params != null) ...params,
+      if (cursor != null) 'cursor': cursor,
+    });
   }
 
   Future<ReceiveOrderDetailModel> getReceiveOrderDetail(int roId) async {
@@ -24,55 +19,34 @@ class ReceiveOrderProvider extends ApiProvider {
     return ReceiveOrderDetailModel.fromJson(response.body['data'] as Map<String, dynamic>);
   }
 
-  Future<List<ReceiveConfirmSerialModel>> getReceiveOrderSerials(int roId) async {
-    final response = await get('/receive-order/$roId/serial-number');
-    checkResponse(response);
-    final List data = response.body['data'] ?? [];
-    return data.map((e) => ReceiveConfirmSerialModel.fromJson(e)).toList();
+  Future<List<ReceiveConfirmSerialModel>> getReceiveOrderSerials(int roId) {
+    return getList('/receive-order/$roId/serial-number', ReceiveConfirmSerialModel.fromJson);
   }
 
-  Future<Map<String, dynamic>> confirmReceiveSerial(int roId, List<String> codes) async {
-    final response = await post('/receive-order/$roId/confirm-serials', {'codes': codes});
-    checkResponse(response);
-    return Map<String, dynamic>.from(response.body as Map);
+  Future<Map<String, dynamic>> confirmReceiveSerial(int roId, List<String> codes) {
+    return postMap('/receive-order/$roId/confirm-serials', {'codes': codes});
   }
 
-  Future<Map<String, dynamic>> getPurchaseOrders({String? cursor, Map<String, String>? params}) async {
-    final response = await get(
-      '/purchase-order/pagination',
-      query: {
-        if (params != null) ...params,
-        if (cursor != null) 'cursor': cursor,
-      },
-    );
-    checkResponse(response);
-    return Map<String, dynamic>.from(response.body as Map);
+  Future<Map<String, dynamic>> getPurchaseOrders({String? cursor, Map<String, String>? params}) {
+    return getMap('/purchase-order/pagination', query: {
+      if (params != null) ...params,
+      if (cursor != null) 'cursor': cursor,
+    });
   }
 
-  Future<List<PurchaseOrderLineItemModel>> getPurchaseOrderLineItem(int poId) async {
-    final response = await get('/purchase-order/$poId/summary');
-    checkResponse(response);
-    final List data = response.body['data'];
-    return data.map((e) => PurchaseOrderLineItemModel.fromJson(e)).toList();
+  Future<List<PurchaseOrderLineItemModel>> getPurchaseOrderLineItem(int poId) {
+    return getList('/purchase-order/$poId/summary', PurchaseOrderLineItemModel.fromJson);
   }
 
-  Future<Map<String, dynamic>> postPoLineToReceivedData(Map<String, dynamic> payload) async {
-    final response = await post('/purchase-order/receiveData', payload);
-    checkResponse(response);
-    return Map<String, dynamic>.from(response.body as Map);
+  Future<Map<String, dynamic>> postPoLineToReceivedData(Map<String, dynamic> payload) {
+    return postMap('/purchase-order/receiveData', payload);
   }
 
-  Future<List<PoSupplierModel>> getSuppliers() async {
-    final response = await get('/purchase-order/supplier-summary');
-    checkResponse(response);
-    final List data = response.body['data'];
-    return data.map((e) => PoSupplierModel.fromJson(e)).toList();
+  Future<List<PoSupplierModel>> getSuppliers() {
+    return getList('/purchase-order/supplier-summary', PoSupplierModel.fromJson);
   }
 
-  Future<List<PurchaseOrderLineItemBySupplierModel>> getPurchaseOrderItemBySupplier(int supplierId) async {
-    final response = await get('/purchase-order/$supplierId/supplier-summary');
-    checkResponse(response);
-    final List data = response.body['data'];
-    return data.map((e) => PurchaseOrderLineItemBySupplierModel.fromJson(e)).toList();
+  Future<List<PurchaseOrderLineItemBySupplierModel>> getPurchaseOrderItemBySupplier(int supplierId) {
+    return getList('/purchase-order/$supplierId/supplier-summary', PurchaseOrderLineItemBySupplierModel.fromJson);
   }
 }

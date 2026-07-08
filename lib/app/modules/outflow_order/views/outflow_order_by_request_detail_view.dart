@@ -78,6 +78,11 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                     bgColor = Colors.red;
                   }
 
+                  // Serial-tracked (manage_sn) items scan a printed label;
+                  // quantity-only items just fill a qty, so mirror receive's
+                  // "Fill" action instead of showing a scanner.
+                  final bool manageSn = item['manage_sn'] == true;
+
                   return orderItemSummaryTile(
                     size: size,
                     name: item['name'] ?? "Unnamed",
@@ -86,8 +91,10 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                     statusIcon: icon,
                     statusColor: bgColor,
                     showAction: !isFinished,
-                    actionLabel: "Scan",
-                    actionIcon: Icons.qr_code_scanner_rounded,
+                    actionLabel: manageSn ? "Scan" : "Fill",
+                    actionIcon: manageSn
+                        ? Icons.qr_code_scanner_rounded
+                        : Icons.edit_rounded,
                     actionColor: mutedPurple,
                     onAction: () {
                       controller.selectedIndex.value = index;
@@ -238,7 +245,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: scannedList.map((entry) {
-                              final code = entry['code'];
+                              final code = entry['serial_number'];
                               final qty = entry['qty'];
                               final displayText = (qty == 1) ? code : "$code (qty: $qty)";
                               return Padding(

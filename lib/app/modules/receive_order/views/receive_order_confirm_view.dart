@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
@@ -9,6 +8,7 @@ import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/scanner_page.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
@@ -128,15 +128,16 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
             shape: const CircleBorder(),
             onPressed: saving
                 ? null
-                : () async {
-                    final barcode = await FlutterBarcodeScanner.scanBarcode(
-                      "#ff6666",
-                      "Cancel",
-                      true,
-                      ScanMode.BARCODE,
-                    );
-                    if (barcode == "-1") return;
-                    await controller.confirmScan(barcode);
+                : () {
+                    // Continuous batch scanning: the camera stays open and each
+                    // label is auto-matched + confirmed across all items.
+                    Get.to(() => ScannerPage(
+                          title: "Confirm Serials",
+                          accent: _accent,
+                          onCode: controller.confirmAnyScan,
+                          onManualEntry: () =>
+                              showManualSerialDialog(accent: _accent),
+                        ));
                   },
             child: saving
                 ? SizedBox(

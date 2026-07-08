@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/widget/scanner_page.dart';
 import 'package:getx_project/app/global/variables.dart';
 
 AppBar costumAppbar(String title) {
@@ -399,9 +399,7 @@ Future<String?> captureSerialInput({Color accent = Colors.blueAccent}) async {
   );
 
   if (mode == 'scan') {
-    final barcode = await FlutterBarcodeScanner.scanBarcode(
-        "#ff6666", "Cancel", true, ScanMode.BARCODE);
-    return (barcode == "-1") ? null : barcode;
+    return scanSingle(accent: accent);
   }
   if (mode == 'manual') {
     return showManualSerialDialog(accent: accent);

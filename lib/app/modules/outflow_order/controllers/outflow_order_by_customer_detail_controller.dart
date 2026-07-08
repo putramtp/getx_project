@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 
 import '../../../global/alert.dart';
 import '../../../global/functions.dart';
@@ -8,16 +7,18 @@ import '../../../data/models/outflow_request_customer_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
 import '../../../modules/delivery/delivery_actions.dart';
 import '../../../data/providers/outflow_order_provider.dart';
+import '../../../global/scan_feedback.dart';
+import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
 
 class OutflowOrderByCustomerDetailController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
 
-  /// Local cache of in-progress scans — they live only in memory until the
+  /// Durable store for in-progress scans — they live only in memory until the
   /// final submit, so persist them to survive an app close / accidental exit.
-  final GetStorage _box = GetStorage();
+  final DraftService _drafts = Get.find<DraftService>();
   Worker? _scanCacheWorker;
-  String get _cacheKey => 'or_cust_scanned_${currentOrCustomer.id}';
+  String get _draftScope => 'outflow_cust_${currentOrCustomer.id}';
 
   var items = <Map<String, dynamic>>[].obs;
   var selectedIndex = 0.obs;
@@ -57,7 +58,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     // If network failed or exception handled, data is null
     if (data == null) return;
 
-    final cached = _readCachedScanned();
+    final cached = await readLineDraft(_drafts, _draftScope);
     final normalized = data.map((item) {
       final serverScanned = (item.scanned != null && item.scanned!.isNotEmpty)
           ? item.scanned!
@@ -80,33 +81,13 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     items.assignAll(normalized);
   }
 
-  /// Read previously cached scans, keyed by line id (as string).
-  Map<String, List<Map<String, dynamic>>> _readCachedScanned() {
-    final raw = _box.read(_cacheKey);
-    if (raw is! Map) return {};
-    final result = <String, List<Map<String, dynamic>>>{};
-    raw.forEach((key, value) {
-      if (value is List) {
-        result[key.toString()] = value
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-    });
-    return result;
-  }
-
-  /// Persist current scans (only non-empty lines); clears the key when empty.
+  /// Persist current scans (only non-empty lines); clears the draft when empty.
   void _persistScanned() {
-    final map = <String, dynamic>{};
-    for (final item in items) {
-      final list = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
-      if (list.isNotEmpty) map[item['line_id'].toString()] = list;
-    }
+    final map = buildLineDraftMap(items, "scanned");
     if (map.isEmpty) {
-      _box.remove(_cacheKey);
+      _drafts.remove(_draftScope);
     } else {
-      _box.write(_cacheKey, map);
+      _drafts.saveJson(_draftScope, map);
     }
   }
 
@@ -120,7 +101,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     final received = item["received"] ?? 0;
 
     final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
-    final existingIndex = scanned.indexWhere((e) => e['code'] == code);
+    final existingIndex = scanned.indexWhere((e) => e['serial_number'] == code);
 
     final totalScanned =
         scanned.fold(0, (sum, e) => sum + (e['qty'] ?? 1) as int);
@@ -143,7 +124,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
       return;
     }
 
-    final newData = {"code": code, "qty": qty};
+    final newData = {"serial_number": code, "qty": qty};
 
     if (existingIndex != -1 && serialType == "BATCH") {
       scanned[existingIndex]['qty'] += qty;
@@ -154,6 +135,39 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     item["scanned"] = scanned;
     items[index] = item;
     items.refresh();
+  }
+
+  /// Continuous batch-scan add for a UNIQUE serial-tracked item (one scan = one
+  /// unit). Returns [ScanFeedback] for the scanner overlay instead of showing a
+  /// snackbar; the camera stays open so the worker scans unit after unit.
+  ScanFeedback scanUnique(String rawCode) {
+    final code = rawCode.trim();
+    if (code.isEmpty) return ScanFeedback.error("Empty code.");
+
+    final index = selectedIndex.value;
+    if (index >= items.length) return ScanFeedback.error("No item selected.");
+
+    final item = items[index];
+    final String itemName = item['name'] ?? 'item';
+    final expectedQty = item["expected"] ?? 0;
+    final received = item["received"] ?? 0;
+
+    final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
+    if (scanned.any((e) => e['serial_number'] == code)) {
+      return ScanFeedback.duplicate("\"$code\" already scanned.");
+    }
+
+    final total = scanned.fold<int>(0, (sum, e) => sum + safeToInt(e['qty']));
+    if (received + total + 1 > expectedQty) {
+      return ScanFeedback.error(
+          "Reached expected qty ($expectedQty) for $itemName.");
+    }
+
+    scanned.add({"serial_number": code, "qty": 1});
+    item["scanned"] = scanned;
+    items[index] = item;
+    items.refresh();
+    return ScanFeedback.ok("Scanned ${received + total + 1}/$expectedQty");
   }
 
   /// Non serial-tracked (manage_sn == false) items don't scan — they hold a
@@ -183,10 +197,10 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     final item = items[selectedIndex.value];
 
     final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
-    final idx = scanned.indexWhere((e) => e["code"] == oldCode);
+    final idx = scanned.indexWhere((e) => e["serial_number"] == oldCode);
 
     if (idx != -1) {
-      scanned[idx]["code"] = newCode;
+      scanned[idx]["serial_number"] = newCode;
       item["scanned"] = scanned;
       items.refresh();
     }
@@ -195,7 +209,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
   void removeScannedCode(String code) {
     final item = items[selectedIndex.value];
 
-    item["scanned"]?.removeWhere((e) => e["code"] == code);
+    item["scanned"]?.removeWhere((e) => e["serial_number"] == code);
     items.refresh();
   }
 
@@ -250,8 +264,8 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     );
     if (data == null) return;
 
-    // Submitted to the server — drop the local in-progress cache.
-    _box.remove(_cacheKey);
+    // Submitted to the server — drop the local in-progress draft.
+    await _drafts.remove(_draftScope);
     successAlertBottom("Outflow for ${customer.name} completed!");
 
     // Offer to create a delivery for the newly created outflow order.

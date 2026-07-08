@@ -6,6 +6,8 @@
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
 		<string>Warehouse app</string>
+		<key>NSCameraUsageDescription</key>
+		<string>This app uses the camera to scan barcodes and serial numbers.</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>

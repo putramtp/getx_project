@@ -5,10 +5,17 @@ import '../../../global/alert.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/purchase_order_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
+import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderByPoDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
+
+  /// Durable store for in-progress fills — they live only in memory until the
+  /// final submit, so persist them to survive an app close / crash / offline.
+  final DraftService _drafts = Get.find<DraftService>();
+  Worker? _fillCacheWorker;
+  String get _draftScope => 'receive_po_${currentOrder.id}';
 
   var items = <Map<String, dynamic>>[].obs;
   var selectedIndex = 0.obs;
@@ -25,10 +32,18 @@ class ReceiveOrderByPoDetailController extends GetxController {
     final args = Get.arguments;
     if (args != null && args is PurchaseOrderModel) {
       currentOrder = args;
+      // Auto-persist fills on every change so nothing is lost before submit.
+      _fillCacheWorker = ever(items, (_) => _persistDraft());
       loadPurchaseOrderItems();
     } else {
       errorAlert("⚠️ Invalid or missing arguments in currentOrder: $args");
     }
+  }
+
+  @override
+  void onClose() {
+    _fillCacheWorker?.dispose();
+    super.onClose();
   }
 
   /// 🔹 Fetch items for this order
@@ -39,10 +54,13 @@ class ReceiveOrderByPoDetailController extends GetxController {
         task: () => provider.getPurchaseOrderLineItem(orderId));
     if (data == null) return;
 
+    final cached = await readLineDraft(_drafts, _draftScope);
     final normalizedData = data.map((item) {
-      final filled = (item.filled != null && item.filled!.isNotEmpty)
+      final serverFilled = (item.filled != null && item.filled!.isNotEmpty)
           ? item.filled!
           : <String>[];
+      // Restore any locally cached in-progress fills for this line.
+      final filled = cached[item.lineId.toString()] ?? serverFilled;
       return {
         "line_id": item.lineId,
         "name": item.name,
@@ -56,6 +74,16 @@ class ReceiveOrderByPoDetailController extends GetxController {
     }).toList();
 
     items.assignAll(normalizedData);
+  }
+
+  /// Persist current fills (only non-empty lines); clears the draft when empty.
+  void _persistDraft() {
+    final map = buildLineDraftMap(items, "filled");
+    if (map.isEmpty) {
+      _drafts.remove(_draftScope);
+    } else {
+      _drafts.saveJson(_draftScope, map);
+    }
   }
 
   /// 🔹 Add new filled barcode (Unified format for UNIQUE + BATCH)
@@ -306,6 +334,10 @@ class ReceiveOrderByPoDetailController extends GetxController {
       task: () => provider.postPoLineToReceivedData(payload),
     );
     if (data == null) return;
+
+    // Submitted to the server — drop the local in-progress draft. (On failure
+    // the draft is intentionally kept so the worker can retry when back online.)
+    await _drafts.remove(_draftScope);
 
     if (Get.isDialogOpen == true) Get.back();
     successAlertBottom("Receiving process for $poNumber started successfully.");

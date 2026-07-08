@@ -50,7 +50,16 @@ class ApiProvider extends GetConnect {
       }
       String? serverMsg;
       if (response.body is Map) {
-        serverMsg = response.body['message']?.toString();
+        final body = response.body as Map;
+        serverMsg = body['message']?.toString();
+        // Surface the extra detail the backend sends alongside `message`
+        // (e.g. errorResponse(..., ["error" => $e->getMessage()]) or a
+        // Laravel `errors` validation map) so the real cause reaches the
+        // user instead of just the generic summary.
+        final detail = _stringifyDetail(body['error'] ?? body['errors']);
+        if (detail != null && detail.isNotEmpty && detail != serverMsg) {
+          serverMsg = serverMsg == null || serverMsg.isEmpty ? detail : '$serverMsg\n$detail';
+        }
       }
       throw Exception(
         serverMsg ?? 'HTTP $code${response.statusText != null ? ": ${response.statusText}" : ""}',
@@ -62,5 +71,51 @@ class ApiProvider extends GetConnect {
     if (response.body is String) {
       throw Exception('Unexpected response from server. Check the API URL.');
     }
+  }
+
+  /// Flatten an error `detail` payload into a single human-readable string.
+  /// Handles a plain string (`"error": "..."`), a list of messages, and
+  /// Laravel's validation map (`"errors": {field: [msg, ...]}`).
+  String? _stringifyDetail(dynamic detail) {
+    if (detail == null) return null;
+    if (detail is String) return detail;
+    if (detail is List) return detail.join('\n');
+    if (detail is Map) {
+      return detail.values.expand((v) => v is List ? v : [v]).join('\n');
+    }
+    return detail.toString();
+  }
+
+  /// GET a `{"data": [...]}` list endpoint and map each element with [fromJson].
+  /// Folds the repeated `get → checkResponse → response.body['data'].map(...)`
+  /// pattern shared by every list-returning provider method.
+  Future<List<T>> getList<T>(
+    String path,
+    T Function(Map<String, dynamic>) fromJson, {
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await get(path, query: query);
+    checkResponse(response);
+    final List data = response.body['data'] ?? [];
+    return data.map((e) => fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  /// GET an endpoint that returns a JSON object (e.g. paginated `{data, cursor}`
+  /// envelopes). Runs `get → checkResponse` and returns the body as a Map.
+  Future<Map<String, dynamic>> getMap(
+    String path, {
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await get(path, query: query);
+    checkResponse(response);
+    return Map<String, dynamic>.from(response.body as Map);
+  }
+
+  /// POST [body] to an endpoint and return the JSON object response.
+  /// Runs `post → checkResponse` and returns the body as a Map.
+  Future<Map<String, dynamic>> postMap(String path, dynamic body) async {
+    final response = await post(path, body);
+    checkResponse(response);
+    return Map<String, dynamic>.from(response.body as Map);
   }
 }

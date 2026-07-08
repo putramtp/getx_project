@@ -9,10 +9,11 @@ class HomeProvider extends ApiProvider {
     return DashboardModel.fromJson(response.body['data']);
   }
 
-  Future<List<StockTransactionModel>> getLatestTransaction({required int limit}) async {
-    final response = await get('/stock-transaction/latest', query: {'limit': limit.toString()});
-    checkResponse(response);
-    final List data = response.body['data'];
-    return data.map((e) => StockTransactionModel.fromJson(e)).toList();
+  Future<List<StockTransactionModel>> getLatestTransaction({required int limit}) {
+    return getList(
+      '/stock-transaction/latest',
+      StockTransactionModel.fromJson,
+      query: {'limit': limit.toString()},
+    );
   }
 }

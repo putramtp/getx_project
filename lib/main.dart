@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
 import 'package:getx_project/app/helpers/crash_reporter.dart';
 import 'package:getx_project/app/services/auth_service.dart';
+import 'package:getx_project/app/services/draft_service.dart';
 import 'package:getx_project/app/services/network_service.dart';
 
 import 'app/global/size_config.dart';
@@ -31,6 +32,9 @@ void main() {
     // AuthService loads the token from secure storage asynchronously; await it so
     // the token is in memory before any route/middleware/request reads it.
     await Get.putAsync<AuthService>(() => AuthService().init(), permanent: true);
+    // Durable draft store for in-progress scans/fills — opened async before any
+    // fill/scan screen can read/write a draft.
+    await Get.putAsync<DraftService>(() => DraftService().init(), permanent: true);
     Get.put(ApiProvider(), permanent: true);
     Get.put(NetworkService(), permanent: true);
     runApp(const MyApp());

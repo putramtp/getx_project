@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 
 import '../controllers/receive_order_by_po_controller.dart';
 import '../controllers/receive_order_by_supplier_controller.dart';
@@ -7,6 +6,8 @@ import '../../../global/alert.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/receive_confirm_serial_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
+import '../../../global/scan_feedback.dart';
+import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
 
 /// Drives the "scan to confirm" pass that runs immediately after a receive
@@ -18,8 +19,8 @@ class ReceiveOrderConfirmController extends GetxController {
   /// Local cache of confirmed serial codes, keyed per receive order. Protects
   /// in-progress confirmations from being lost if the app is closed or offline
   /// before the server state is re-fetched.
-  final GetStorage _box = GetStorage();
-  String get _cacheKey => 'ro_confirmed_$roId';
+  final DraftService _drafts = Get.find<DraftService>();
+  String get _draftScope => 'receive_confirm_$roId';
 
   late final int roId;
   late final String roCode;
@@ -73,7 +74,7 @@ class ReceiveOrderConfirmController extends GetxController {
 
     // Re-apply locally cached confirmations on top of the server state, so a
     // scan that was saved before an app close/offline gap still shows as done.
-    final cached = _cachedCodes();
+    final cached = await _cachedCodes();
     if (cached.isNotEmpty) {
       for (final group in groups) {
         for (final s in serialsOf(group)) {
@@ -91,13 +92,17 @@ class ReceiveOrderConfirmController extends GetxController {
   }
 
   /// Codes confirmed on this device for the current RO (local safety cache).
-  Set<String> _cachedCodes() =>
-      (_box.read<List>(_cacheKey)?.cast<String>() ?? const <String>[]).toSet();
+  Future<Set<String>> _cachedCodes() async {
+    final raw = await _drafts.readJson(_draftScope);
+    if (raw is! List) return <String>{};
+    return raw.map((e) => e.toString()).toSet();
+  }
 
   /// Persist a confirmed code locally (idempotent).
-  void _cacheCode(String code) {
-    final codes = _cachedCodes()..add(code);
-    _box.write(_cacheKey, codes.toList());
+  Future<void> _cacheCode(String code) async {
+    final codes = await _cachedCodes()
+      ..add(code);
+    await _drafts.saveJson(_draftScope, codes.toList());
   }
 
   List<ReceiveConfirmSerialModel> serialsOf(Map<String, dynamic> group) =>
@@ -117,68 +122,46 @@ class ReceiveOrderConfirmController extends GetxController {
   bool get allConfirmed =>
       groups.isNotEmpty && totalConfirmed >= totalSerials;
 
-  /// Handle a scanned barcode against the currently selected item.
-  Future<void> confirmScan(String rawCode) async {
+  /// Confirm a scanned label in continuous batch mode: match [rawCode] against
+  /// ANY UNIQUE serial across every item (batch scanning isn't scoped to the
+  /// selected tab), POST it, and return [ScanFeedback] for the scanner overlay
+  /// instead of showing a snackbar. Persisted + idempotent server-side.
+  Future<ScanFeedback> confirmAnyScan(String rawCode) async {
     final code = rawCode.trim();
-    if (code.isEmpty || groups.isEmpty) return;
+    if (code.isEmpty) return ScanFeedback.error("Empty code.");
+    if (groups.isEmpty) return ScanFeedback.error("Nothing to confirm.");
 
-    final index = selectedIndex.value;
-    if (index >= groups.length) return;
-    final group = groups[index];
-    final serials = serialsOf(group);
-
-    final match = serials.firstWhereOrNull(
-      (s) => s.internalCode == code || s.serialNumber == code,
-    );
-
-    if (match == null) {
-      // Help the worker if the label actually belongs to another item.
-      final otherGroup = groups.firstWhereOrNull((g) => g != group &&
-          serialsOf(g).any(
-              (s) => s.internalCode == code || s.serialNumber == code));
-      if (otherGroup != null) {
-        warningAlertBottom(
-          title: "Wrong Item",
-          "This label belongs to ${otherGroup['item_name']}. Switch to that item first.",
-        );
-      } else {
-        warningAlertBottom(
-          title: "Unknown Label",
-          "Code \"$code\" is not part of this receive order.",
-        );
-      }
-      return;
+    ReceiveConfirmSerialModel? match;
+    for (final group in groups) {
+      match = serialsOf(group).firstWhereOrNull(
+        (s) => s.internalCode == code || s.serialNumber == code,
+      );
+      if (match != null) break;
     }
 
+    if (match == null) {
+      return ScanFeedback.unknown("\"$code\" is not part of this order.");
+    }
     if (match.isScanned) {
-      infoAlertBottom(title: "Already Confirmed", "\"$code\" is already confirmed.");
-      return;
+      return ScanFeedback.duplicate("\"$code\" already confirmed.");
     }
 
     final res = await ApiExecutor.run<Map<String, dynamic>>(
       isLoading: isConfirming,
       task: () => provider.confirmReceiveSerial(roId, [code]),
     );
-    if (res == null) return;
+    if (res == null) return ScanFeedback.error("Save failed — check connection.");
 
-    final confirmed =
-        List<String>.from(res['data']?['confirmed'] ?? const []);
-    final already =
-        List<String>.from(res['data']?['already_scanned'] ?? const []);
+    final confirmed = List<String>.from(res['data']?['confirmed'] ?? const []);
+    final already = List<String>.from(res['data']?['already_scanned'] ?? const []);
 
     if (confirmed.contains(code) || already.contains(code)) {
       match.isScanned = true;
-      _cacheCode(code); // local safety copy
+      await _cacheCode(code); // local safety copy
       groups.refresh();
-      if (confirmedIn(group) >= serials.length) {
-        successAlertBottom("${group['item_name']} fully confirmed.");
-      }
-    } else {
-      warningAlertBottom(
-        title: "Not Confirmed",
-        "Server did not accept \"$code\".",
-      );
+      return ScanFeedback.ok("Confirmed $totalConfirmed/$totalSerials");
     }
+    return ScanFeedback.error("Server did not accept \"$code\".");
   }
 
   /// Advance to the next UNIQUE item, or finish when on the last one.
@@ -197,7 +180,7 @@ class ReceiveOrderConfirmController extends GetxController {
   /// fresh controller so the just-received order reflects its new state.
   void finish() {
     // Fully confirmed and persisted server-side — drop the local safety cache.
-    if (allConfirmed) _box.remove(_cacheKey);
+    if (allConfirmed) _drafts.remove(_draftScope);
     if (Get.isRegistered<ReceiveOrderByPoController>()) {
       Get.delete<ReceiveOrderByPoController>(force: true);
     }

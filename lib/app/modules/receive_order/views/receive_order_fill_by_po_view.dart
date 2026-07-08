@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_by_po_detail_controller.dart';
-import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
+import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
 class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController> {
@@ -126,7 +126,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
       // confirm-serial and outflow).
       final barcode = await showManualSerialDialog(accent: _accent);
       if (barcode == null) return;
-      final result = await _showItemQtyDialog(
+      final result = await showReceiveItemQtyDialog(accent: _accent,
           type: serialType, manageExpired: manageExpired);
       if (result != null && result['qty'] != null && result['qty'] > 0) {
         controller.addFilledSerial(
@@ -136,7 +136,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
         );
       }
     } else {
-      final result = await _showItemQtyDialog(
+      final result = await showReceiveItemQtyDialog(accent: _accent,
           type: serialType, manageExpired: manageExpired);
       if (result != null && result['qty'] != null && result['qty'] > 0) {
         controller.addFilledQty(
@@ -145,114 +145,6 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
         );
       }
     }
-  }
-
-  Future<String?> _pickExpiry() async {
-    final picked = await showDatePicker(
-      context: Get.context!,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: _accent,
-            onPrimary: Colors.white,
-            onSurface: Colors.black,
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked == null) return null;
-    return "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-  }
-
-  Future<Map<String, dynamic>?> _showItemQtyDialog({
-    String? type,
-    bool? manageExpired,
-    int? initialQty,
-    String? initialExpired,
-  }) async {
-    final TextEditingController qtyController =
-        TextEditingController(text: initialQty?.toString() ?? '');
-    final TextEditingController expController =
-        TextEditingController(text: initialExpired ?? '');
-
-    final result = await Get.dialog<Map<String, dynamic>>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          type == 'BATCH' ? 'Batch Quantity' : 'Enter item quantity',
-          style: AppTextStyle.plain(weight: FontWeight.bold),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: qtyController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity',
-                  prefixIcon: Icon(Icons.numbers),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (manageExpired == true) ...[
-                GestureDetector(
-                  onTap: () async {
-                    FocusScope.of(Get.context!).unfocus();
-                    final picked = await _pickExpiry();
-                    if (picked != null) expController.text = picked;
-                  },
-                  child: AbsorbPointer(
-                    child: TextField(
-                      controller: expController,
-                      decoration: const InputDecoration(
-                        labelText: 'Expiration Date',
-                        prefixIcon: Icon(Icons.date_range),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _accent),
-            onPressed: () {
-              final qty = int.tryParse(qtyController.text);
-              if (qty == null || qty <= 0) {
-                errorAlertBottom(
-                    title: "Invalid Input",
-                    "Please enter a valid quantity greater than 0.");
-                return;
-              }
-              if (manageExpired == true && expController.text.isEmpty) {
-                errorAlertBottom(
-                    title: "Missing Expiration Date",
-                    "Please select an expiration date.");
-                return;
-              }
-              Get.back(result: {
-                'qty': qty,
-                'expired_date': expController.text,
-              });
-            },
-            child: Text('Save', style: AppTextStyle.plain(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    qtyController.dispose();
-    expController.dispose();
-    return result;
   }
 
   Widget _buildBottomBar(double size) {
@@ -356,7 +248,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                 if (isSerial) {
                   final barcode = await showManualSerialDialog(accent: _accent);
                   if (barcode == null) return;
-                  final result = await _showItemQtyDialog(
+                  final result = await showReceiveItemQtyDialog(accent: _accent,
                     type: 'BATCH',
                     manageExpired:
                         controller.items[controller.selectedIndex.value]
@@ -378,7 +270,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                   return;
                 }
                 final cur = controller.items[controller.selectedIndex.value];
-                final result = await _showItemQtyDialog(
+                final result = await showReceiveItemQtyDialog(accent: _accent,
                   type: cur['serialNumberType'],
                   manageExpired: cur['manageExpired'],
                   initialQty: qty is int ? qty : int.tryParse('$qty'),

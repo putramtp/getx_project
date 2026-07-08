@@ -9,6 +9,7 @@ import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
+import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
@@ -141,7 +142,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
             // ✅ Make sure only one dialog opens at a time
             String? receiveNumber = controller.receiveNumber.value;
             if (receiveNumber.isEmpty) {
-              receiveNumber = await _showReceiveNumberDialog();
+              receiveNumber = await showReceiveNumberDialog();
               if (receiveNumber == null || receiveNumber.trim().isEmpty) {
                 return; // user cancelled or input empty
               }
@@ -196,7 +197,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
               const SizedBox(height: 18),
               TextButton(
                 onPressed: () async {
-                  final newNumber = await _showReceiveNumberDialog(
+                  final newNumber = await showReceiveNumberDialog(
                     initialValue: controller.receiveNumber.value,
                   );
                   if (newNumber != null && newNumber.trim().isNotEmpty) {
@@ -359,42 +360,6 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
         ),
       ),
     );
-  }
-
-  Future<String?> _showReceiveNumberDialog({String? initialValue}) async {
-    final TextEditingController textController =
-        TextEditingController(text: initialValue ?? '');
-
-    final result = await Get.dialog<String>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Receive Number'),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Enter receive number',
-            prefixIcon: Icon(Icons.confirmation_number),
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final val = textController.text.trim();
-              Get.back(result: val);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    textController.dispose();
-    return result;
   }
 
   Widget _buildHeaderGradient(double size) {

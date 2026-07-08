@@ -6,6 +6,8 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
+import '../../../global/widget/qty_input_dialogs.dart';
+import '../../../global/widget/scanner_page.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/outflow_order_by_customer_detail_controller.dart';
 
@@ -110,97 +112,41 @@ class ScanPageByCustomer
     final serialType = item['serialNumberType'];
 
     if (!manageSn) {
-      final result = await _showOtherItemDialog();
+      final result = await showOtherItemDialog();
       if (result != null && result['qty'] != null && result['qty'] > 0) {
         controller.setScannedQty(result['qty']);
       }
       return;
     }
 
+    // UNIQUE: continuous batch scanning — one scan = one unit, camera stays open.
+    if (serialType == 'UNIQUE') {
+      await Get.to(() => ScannerPage(
+            title: item['name']?.toString() ?? 'Scan Serial',
+            accent: amber,
+            onCode: (code) async => controller.scanUnique(code),
+            onManualEntry: () => showManualSerialDialog(accent: amber),
+          ));
+      return;
+    }
+
+    // BATCH / OTHER: a single scan (or manual entry) then a quantity dialog.
     final barcode = await captureSerialInput(accent: amber);
     if (barcode == null) return;
 
     if (serialType == 'BATCH') {
-      final qty = await _showBatchQtyDialog();
+      final qty = await showBatchQtyDialog();
       if (qty != null && qty > 0) {
         controller.addScannedCode(barcode, batchQty: qty);
       }
     } else if (serialType == 'OTHER') {
-      final result = await _showOtherItemDialog();
+      final result = await showOtherItemDialog();
       if (result != null) {
         controller.addScannedCode(barcode, batchQty: result['qty']);
       }
     } else {
       controller.addScannedCode(barcode);
     }
-  }
-
-  Future<int?> _showBatchQtyDialog() async {
-    final TextEditingController qtyController = TextEditingController();
-    final result = await Get.dialog<int>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Batch Quantity'),
-        content: TextField(
-          controller: qtyController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Enter quantity for this batch',
-            prefixIcon: Icon(Icons.numbers),
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              final val = int.tryParse(qtyController.text);
-              Get.back(result: val);
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-    qtyController.dispose();
-    return result;
-  }
-
-  Future<Map<String, dynamic>?> _showOtherItemDialog({int? initialQty}) async {
-    final TextEditingController qtyController =
-        TextEditingController(text: initialQty?.toString() ?? '');
-    final result = await Get.dialog<Map<String, dynamic>>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Enter item quantity'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: qtyController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                prefixIcon: Icon(Icons.numbers),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              final qty = int.tryParse(qtyController.text) ?? 1;
-              Get.back(result: {'qty': qty});
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    qtyController.dispose();
-    return result;
   }
 
   Widget _buildBottomBar(double size) {
@@ -251,7 +197,7 @@ class ScanPageByCustomer
         itemCount: scanned.length,
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (_, i) {
-          final code = scanned[i]['code'];
+          final code = scanned[i]['serial_number'];
           final qty = scanned[i]['qty'] ?? 1;
           final serialType = controller.items[controller.selectedIndex.value]
                   ['serialNumberType'] ??
@@ -291,7 +237,7 @@ class ScanPageByCustomer
               onTap: () async {
                 Get.back();
                 if (isQtyOnly) {
-                  final result = await _showOtherItemDialog(
+                  final result = await showOtherItemDialog(
                       initialQty: qty is int ? qty : int.tryParse('$qty'));
                   if (result != null &&
                       result['qty'] != null &&
