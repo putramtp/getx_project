@@ -58,6 +58,7 @@ PreferredSizeWidget appBarOrder(String title, double size,
       title: Row(
         children: [
           IconButton(
+            key: const Key('appBarBackButton'),
             icon:  Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white,size: size *2),
             onPressed: () =>
                 (routeBackName != null) ? Get.toNamed(routeBackName) : Get.back(),
@@ -430,6 +431,7 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
                 style: AppTextStyle.custom(SizeConfig.defaultSize, px: 20, weight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
+              key: const Key('serialDialogField'),
               controller: controller,
               autofocus: true,
               textAlign: TextAlign.center,

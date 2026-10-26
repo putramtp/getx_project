@@ -98,6 +98,7 @@ Widget orderScanFab({
     width: size * 6.5,
     height: size * 6.5,
     child: FloatingActionButton(
+      key: const Key('orderFillFab'),
       backgroundColor: color,
       foregroundColor: Colors.white,
       elevation: 5,
@@ -193,6 +194,8 @@ Widget orderFillResultsContainer({required double size, required Widget child}) 
       ],
     ),
     clipBehavior: Clip.antiAlias,
-    child: child,
+    // ListTile rows paint their ink on the nearest Material; without this one
+    // the white box above would hide them (and Flutter asserts in debug).
+    child: Material(type: MaterialType.transparency, child: child),
   );
 }

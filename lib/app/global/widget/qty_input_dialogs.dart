@@ -109,6 +109,7 @@ class _QtyDialogState extends State<_QtyDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(widget.title),
       content: TextField(
+        key: const Key('qtyDialogField'),
         controller: _controller,
         keyboardType: TextInputType.number,
         autofocus: true,
@@ -217,6 +218,7 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              key: const Key('qtyDialogField'),
               controller: _qtyController,
               keyboardType: TextInputType.number,
               autofocus: true,
@@ -232,6 +234,7 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
                 onTap: _pickExpiry,
                 child: AbsorbPointer(
                   child: TextField(
+                    key: const Key('qtyDialogExpiryField'),
                     controller: _expController,
                     decoration: const InputDecoration(
                       labelText: 'Expiration Date',
@@ -282,6 +285,7 @@ class _ReceiveNumberDialogState extends State<_ReceiveNumberDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text('Receive Number'),
       content: TextField(
+        key: const Key('receiveNumberField'),
         controller: _controller,
         autofocus: true,
         decoration: const InputDecoration(

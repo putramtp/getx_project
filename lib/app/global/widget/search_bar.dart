@@ -40,6 +40,7 @@ class SearchBarWidget extends StatelessWidget {
                 child: Focus(
                   focusNode: focusNode,
                   child: TextField(
+                    key: const Key('searchBarField'),
                     controller: searchController,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.search),
@@ -57,6 +58,7 @@ class SearchBarWidget extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
+                                  key: const Key('searchBarSubmit'),
                                   icon: const Icon(Icons.check),
                                    onPressed: () {
                                     onSearchChanged(searchController.text.trim());

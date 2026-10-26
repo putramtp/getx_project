@@ -316,6 +316,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                     style: AppTextStyle.small(size, color: Colors.grey.shade600)),
                 SizedBox(height: size * 0.6),
                 TextField(
+                  key: const Key('deliveryEditAddressField'),
                   controller: addressCtrl,
                   maxLines: 2,
                   decoration: _fieldDecoration(size, hint: "Delivery address"),
@@ -350,7 +351,9 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                                   address: addressCtrl.text,
                                   description: descCtrl.text,
                                 );
-                                if (Get.isBottomSheetOpen ?? false) Get.back();
+                                // Pop the sheet itself: submitUpdate just showed a
+                                // snackbar, and Get.back() would close that instead.
+                                if (context.mounted) Navigator.of(context).pop();
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: steelBlue,

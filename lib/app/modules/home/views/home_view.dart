@@ -43,6 +43,7 @@ class HomeView extends GetView<HomeController> {
           child: CircleAvatar(
             backgroundColor: Colors.white.withValues(alpha: 0.18),
             child: IconButton(
+              key: const Key('homeAccountButton'),
               icon: const Icon(Icons.account_circle_rounded, color: Colors.white),
               onPressed: () => controller.showAccountSheet(userName),
             ),

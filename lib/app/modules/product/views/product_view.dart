@@ -272,6 +272,7 @@ class ProductView extends GetView<ProductController> {
       children: [
         Expanded(
           child: TextField(
+            key: const Key('productSearchField'),
             controller: controller.searchController,
             autofocus: true,
             decoration: InputDecoration(

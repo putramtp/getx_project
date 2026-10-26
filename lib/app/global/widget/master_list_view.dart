@@ -196,6 +196,7 @@ class MasterListView<T> extends StatelessWidget {
                     Text('Set Limit', style: AppTextStyle.h4(size)),
                     const SizedBox(height: 12),
                     TextField(
+                      key: const Key('masterLimitField'),
                       controller: tController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(

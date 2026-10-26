@@ -120,6 +120,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
           width: size * 6,
           height: size * 6,
           child: FloatingActionButton(
+            key: const Key('receiveConfirmScanFab'),
             backgroundColor: saving ? Colors.grey.shade400 : _accent,
             foregroundColor: Colors.white,
             elevation: 5,

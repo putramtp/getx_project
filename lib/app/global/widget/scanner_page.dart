@@ -232,7 +232,8 @@ class _ScannerPageState extends State<ScannerPage> {
                   style: AppTextStyle.bodyBold(size, color: Colors.white)),
               const Spacer(),
               if (widget.onManualEntry != null)
-                _circleButton(size, Icons.keyboard_rounded, _manualEntry),
+                _circleButton(size, Icons.keyboard_rounded, _manualEntry,
+                    key: const Key('scannerManualEntryButton')),
             ],
           ),
           SizedBox(height: size * 1.2),
@@ -300,8 +301,9 @@ class _ScannerPageState extends State<ScannerPage> {
   }
 
   Widget _circleButton(double size, IconData icon, VoidCallback onTap,
-      {bool active = false}) {
+      {bool active = false, Key? key}) {
     return Material(
+      key: key,
       color: active ? widget.accent : Colors.black.withValues(alpha: 0.45),
       shape: const CircleBorder(),
       child: InkWell(
