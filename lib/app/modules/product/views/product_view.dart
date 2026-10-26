@@ -14,7 +14,7 @@ import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
 
 class ProductView extends GetView<ProductController> {
-  const ProductView({Key? key}) : super(key: key);
+  const ProductView({super.key});
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
@@ -160,7 +160,7 @@ class ProductView extends GetView<ProductController> {
     );
   }
 
-  Widget _buildTitleBar(size,context) {
+  Widget _buildTitleBar(double size, BuildContext context) {
     return Row(
       key: const ValueKey('title'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,9 +205,9 @@ class ProductView extends GetView<ProductController> {
       context: context,
       barrierLabel: "Filter",
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, _, _) {
         return TopDateFilterPopup(
           controller: controller,
           showPrice: true,
@@ -266,7 +266,7 @@ class ProductView extends GetView<ProductController> {
       },
     );
   }
-  Widget _buildSearchField(size,context) {
+  Widget _buildSearchField(double size, BuildContext context) {
     return Row(
       key: const ValueKey('search'),
       children: [

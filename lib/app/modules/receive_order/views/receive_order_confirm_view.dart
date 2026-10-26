@@ -32,15 +32,13 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
     // can't be lost by navigating away mid-request.
     return Obx(() {
       final saving = controller.isConfirming.value;
-      return WillPopScope(
-        onWillPop: () async {
-          if (saving) {
-            warningAlertBottom(
-                title: "Saving…",
-                "Please wait — the last scan is still being confirmed.");
-            return false;
-          }
-          return true;
+      return PopScope(
+        canPop: !saving,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          warningAlertBottom(
+              title: "Saving…",
+              "Please wait — the last scan is still being confirmed.");
         },
         child: _buildScaffold(size),
       );
@@ -207,7 +205,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
           borderRadius: BorderRadius.circular(40),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -283,7 +281,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [_accent, _accent.withOpacity(0.78)],
+            colors: [_accent, _accent.withValues(alpha: 0.78)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -299,7 +297,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                 height: size * 12,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
               ),
             ),
@@ -310,7 +308,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                   Container(
                     padding: EdgeInsets.all(size * 1.2),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.qr_code_scanner_rounded,
@@ -395,7 +393,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
       child: ListView.separated(
         padding: const EdgeInsets.all(12),
         itemCount: serials.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final s = serials[i];
           final scanned = s.isScanned;

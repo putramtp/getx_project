@@ -42,7 +42,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
 
               return ListView.separated(
                 itemCount: controller.items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = controller.items[index];
                   final expected = item['expected'] ?? 0;
@@ -166,7 +166,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.12),
+                  color: _accent.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(16),
@@ -289,7 +289,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                     ],
                   ),
                 );
-              }).toList(),
+              }),
 
               const SizedBox(height: 20),
 

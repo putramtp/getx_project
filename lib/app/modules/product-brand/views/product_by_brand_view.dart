@@ -6,7 +6,7 @@ import 'package:getx_project/app/modules/product-brand/controllers/product_by_br
 import '../../../routes/app_pages.dart';
 
 class ProductByBrandView extends GetView<ProductByBrandController> {
-  const ProductByBrandView({Key? key}) : super(key: key);
+  const ProductByBrandView({super.key});
 
   @override
   Widget build(BuildContext context) {

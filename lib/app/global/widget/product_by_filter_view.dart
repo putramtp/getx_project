@@ -50,7 +50,7 @@ class ProductByFilterView extends StatelessWidget {
   final void Function(ProductSummaryModel product) onViewTransaction;
 
   const ProductByFilterView({
-    Key? key,
+    super.key,
     required this.backRoute,
     required this.headerIcon,
     required this.headerLabel,
@@ -70,7 +70,7 @@ class ProductByFilterView extends StatelessWidget {
     required this.onLoadMore,
     required this.onViewDetail,
     required this.onViewTransaction,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

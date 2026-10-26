@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
+import '../../../data/models/product_detail_model.dart';
+import '../../../data/models/product_summary_model.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
@@ -88,7 +90,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // HEADER
   // --------------------------------------------------------------------------
-  Widget _buildHeaderGradient(size) {
+  Widget _buildHeaderGradient(double size) {
     return Container(
       height: size *23,
       decoration: BoxDecoration(
@@ -104,7 +106,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // APP BAR
   // --------------------------------------------------------------------------
-  Widget _buildAppBar(size) {
+  Widget _buildAppBar(double size) {
     return Row(
       children: [
         IconButton(
@@ -123,7 +125,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // PRODUCT CARD (Glassmorphism)
   // --------------------------------------------------------------------------
-  Widget _buildProductCard(product, detail,size) {
+  Widget _buildProductCard(ProductSummaryModel product, ProductDetailModel? detail, double size) {
     return Hero(
       tag: "product_${product.itemId}",
       child: Material(
@@ -135,14 +137,14 @@ class ProductDetailView extends GetView<ProductDetailController> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.65),
+                color: Colors.white.withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.white.withOpacity(0.25)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                 boxShadow: [
                   BoxShadow(
                     blurRadius: 15,
                     offset: const Offset(0, 8),
-                    color: Colors.black.withOpacity(0.10),
+                    color: Colors.black.withValues(alpha: 0.10),
                   )
                 ],
               ),
@@ -181,7 +183,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
     );
   }
 
-  Widget _buildStockRow(product, detail,size) {
+  Widget _buildStockRow(ProductSummaryModel product, ProductDetailModel? detail, double size) {
     final low = product.lowStock;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -235,7 +237,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
           BoxShadow(
             blurRadius: 18,
             offset: const Offset(0, 8),
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
           )
         ],
       ),
@@ -286,20 +288,21 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   // DESCRIPTION LIST
   // --------------------------------------------------------------------------
-  Widget _buildDescription(detail, double size, bool loading) {
+  Widget _buildDescription(ProductDetailModel? detail, double size, bool loading) {
     if (loading) {
       return Text("  ...",
           style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
     }
 
-    if (detail?.descriptions == null || detail.descriptions.isEmpty) {
+    final descriptions = detail?.descriptions;
+    if (descriptions == null || descriptions.isEmpty) {
       return Text("No Descriptions",
           style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: detail.descriptions
+      children: descriptions
           .map<Widget>((d) => Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text("• $d",

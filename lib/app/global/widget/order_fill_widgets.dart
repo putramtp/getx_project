@@ -24,16 +24,16 @@ Widget orderFillHeaderCard({
   return Container(
     padding: EdgeInsets.all(size * 1.6),
     decoration: BoxDecoration(
-      color: accent.withOpacity(0.08),
+      color: accent.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(size * 2),
-      border: Border.all(color: accent.withOpacity(0.18)),
+      border: Border.all(color: accent.withValues(alpha: 0.18)),
     ),
     child: Row(
       children: [
         Container(
           padding: EdgeInsets.all(size * 1.1),
           decoration: BoxDecoration(
-            color: accent.withOpacity(0.15),
+            color: accent.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(size * 1.2),
           ),
           child: Icon(Icons.inventory_2_rounded, color: accent, size: size * 2.6),
@@ -59,7 +59,7 @@ Widget orderFillStatsCard({required double size, required List<FillStat> stats})
       borderRadius: BorderRadius.circular(size * 2),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),
@@ -126,7 +126,7 @@ Widget orderFillBottomBar({
       borderRadius: BorderRadius.circular(size * 4),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.08),
+          color: Colors.black.withValues(alpha: 0.08),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -186,7 +186,7 @@ Widget orderFillResultsContainer({required double size, required Widget child}) 
       borderRadius: BorderRadius.circular(size * 2),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),

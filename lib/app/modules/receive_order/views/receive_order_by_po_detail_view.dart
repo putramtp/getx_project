@@ -39,7 +39,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
 
               return ListView.separated(
                 itemCount: controller.items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = controller.items[index];
                   final expected = item['expected'] ?? 0;
@@ -325,7 +325,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                     ],
                   ),
                 );
-              }).toList(),
+              }),
 
               const SizedBox(height: 20),
 

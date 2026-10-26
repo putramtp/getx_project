@@ -8,8 +8,8 @@ import '../models/receive_order_detail_model.dart';
 class ReceiveOrderProvider extends ApiProvider {
   Future<Map<String, dynamic>> getReceiveOrders({String? cursor, Map<String, String>? params}) {
     return getMap('/receive-order/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 
@@ -29,8 +29,8 @@ class ReceiveOrderProvider extends ApiProvider {
 
   Future<Map<String, dynamic>> getPurchaseOrders({String? cursor, Map<String, String>? params}) {
     return getMap('/purchase-order/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 

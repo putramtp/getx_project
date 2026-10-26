@@ -165,15 +165,15 @@ class _ScannerPageState extends State<ScannerPage> {
               style: AppTextStyle.h5(size, color: Colors.white),
             ),
           ),
-          ValueListenableBuilder<TorchState>(
-            valueListenable: _controller.torchState,
-            builder: (_, state, __) => _circleButton(
+          ValueListenableBuilder<MobileScannerState>(
+            valueListenable: _controller,
+            builder: (_, state, _) => _circleButton(
               size,
-              state == TorchState.on
+              state.torchState == TorchState.on
                   ? Icons.flash_on_rounded
                   : Icons.flash_off_rounded,
               _controller.toggleTorch,
-              active: state == TorchState.on,
+              active: state.torchState == TorchState.on,
             ),
           ),
           SizedBox(width: size * 0.8),
@@ -201,7 +201,7 @@ class _ScannerPageState extends State<ScannerPage> {
       margin: EdgeInsets.only(bottom: size * 3),
       padding: EdgeInsets.symmetric(horizontal: size * 2, vertical: size),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
+        color: Colors.black.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(size * 2),
       ),
       child: Text("Point the camera at a barcode",
@@ -215,7 +215,7 @@ class _ScannerPageState extends State<ScannerPage> {
       margin: EdgeInsets.all(size * 1.2),
       padding: EdgeInsets.all(size * 1.6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(size * 2),
       ),
       child: Column(
@@ -282,7 +282,7 @@ class _ScannerPageState extends State<ScannerPage> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: size * 1.4, vertical: size),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(size * 1.2),
         border: Border.all(color: color, width: size * 0.16),
       ),
@@ -302,7 +302,7 @@ class _ScannerPageState extends State<ScannerPage> {
   Widget _circleButton(double size, IconData icon, VoidCallback onTap,
       {bool active = false}) {
     return Material(
-      color: active ? widget.accent : Colors.black.withOpacity(0.45),
+      color: active ? widget.accent : Colors.black.withValues(alpha: 0.45),
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),

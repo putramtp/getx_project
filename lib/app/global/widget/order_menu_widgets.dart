@@ -46,12 +46,12 @@ Widget orderMenuHero({
               Positioned(
                 top: -size * 4,
                 right: -size * 4,
-                child: _decorCircle(size * 16, Colors.white.withOpacity(0.08)),
+                child: _decorCircle(size * 16, Colors.white.withValues(alpha: 0.08)),
               ),
               Positioned(
                 bottom: -size * 5,
                 left: -size * 4,
-                child: _decorCircle(size * 14, Colors.white.withOpacity(0.06)),
+                child: _decorCircle(size * 14, Colors.white.withValues(alpha: 0.06)),
               ),
               Padding(
                 padding: EdgeInsets.all(size * 2.2),
@@ -60,7 +60,7 @@ Widget orderMenuHero({
                     Container(
                       padding: EdgeInsets.all(size * 1.6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(icon, size: size * 3.6, color: Colors.white),
@@ -85,7 +85,7 @@ Widget orderMenuHero({
                     Container(
                       padding: EdgeInsets.all(size * 0.9),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.arrow_forward_ios_rounded,
@@ -120,7 +120,7 @@ Widget orderMenuSectionHeader(
       Container(
         padding: EdgeInsets.all(size * 0.8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(size),
         ),
         child: Icon(icon, size: size * 2, color: color),
@@ -146,8 +146,8 @@ Widget orderMenuTile({
     child: InkWell(
       borderRadius: BorderRadius.circular(size * 2),
       onTap: onTap,
-      splashColor: color.withOpacity(0.15),
-      highlightColor: color.withOpacity(0.08),
+      splashColor: color.withValues(alpha: 0.15),
+      highlightColor: color.withValues(alpha: 0.08),
       child: Container(
         padding: EdgeInsets.all(size * 1.8),
         decoration: BoxDecoration(
@@ -155,7 +155,7 @@ Widget orderMenuTile({
           borderRadius: BorderRadius.circular(size * 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -175,7 +175,7 @@ Widget orderMenuTile({
                 borderRadius: BorderRadius.circular(size * 1.4),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
+                    color: color.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),

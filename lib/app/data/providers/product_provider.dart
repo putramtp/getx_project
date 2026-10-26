@@ -4,8 +4,8 @@ import '../models/product_detail_model.dart';
 class ProductProvider extends ApiProvider {
   Future<Map<String, dynamic>> getProductSummaries({String? cursor, Map<String, String>? params}) {
     return getMap('/stock-transaction/summary/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 
@@ -38,22 +38,22 @@ class ProductProvider extends ApiProvider {
 
   Future<Map<String, dynamic>> getProductCategories({String? cursor, Map<String, String>? params}) {
     return getMap('/item-category/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 
   Future<Map<String, dynamic>> getProductUnits({String? cursor, Map<String, String>? params}) {
     return getMap('/unit/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 
   Future<Map<String, dynamic>> getProductBrands({String? cursor, Map<String, String>? params}) {
     return getMap('/item-brand/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 }

@@ -41,7 +41,7 @@ class StockTransactionDetailView
 
               return ListView.separated(
                 itemCount: linesCount,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final line = lines[index];
                   final List<SerialNumberModel> serialNumbers =
@@ -56,7 +56,7 @@ class StockTransactionDetailView
                           style: AppTextStyle.body(size, color: Colors.grey)),
                       leading: CircleAvatar(
                         radius: size * 1.6,
-                        backgroundColor: Colors.indigo.withOpacity(0.15),
+                        backgroundColor: Colors.indigo.withValues(alpha: 0.15),
                         child: Icon(Icons.handyman_rounded,
                             color: Colors.indigo, size: size * 1.6),
                       ),
@@ -82,7 +82,7 @@ class StockTransactionDetailView
                                       child: ListView.separated(
                                         shrinkWrap: true,
                                         itemCount: serialNumbers.length,
-                                        separatorBuilder: (_, __) =>
+                                        separatorBuilder: (_, _) =>
                                             const Divider(height: 8),
                                         itemBuilder: (_, snIndex) {
                                           final sn = serialNumbers[snIndex];

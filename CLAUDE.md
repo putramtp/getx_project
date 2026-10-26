@@ -19,7 +19,42 @@ flutter test
 
 # Run a single test file
 flutter test test/widget_test.dart
+
+# Patrol E2E tests (real device/emulator; app starts logged out each test)
+patrol test -t patrol_test/login_test.dart
+patrol test -t patrol_test/login_test.dart --dart-define=TEST_USERNAME=... --dart-define=TEST_PASSWORD=...
 ```
+
+The Flutter SDK is pinned per-project with **FVM** (`.fvmrc` → 3.47.7); it is also the machine-wide default (`fvm global`, user PATH → `C:\Users\Asus\fvm\default\bin`); the old `C:\flutter` 3.10 SDK is no longer on PATH. Android uses the Kotlin-DSL Gradle files (`*.gradle.kts`, AGP 9 / Gradle 9). `kotlin.incremental=false` in `android/gradle.properties` is required because the project (D:) and pub cache (C:) are on different drives.
+
+## Commit Messages
+
+When asked for a commit message, give it in this format — a conventional-commit subject line, a blank line, then a short bullet body (one line per change area). **Do not add a `Co-Authored-By` trailer** or any other attribution line.
+
+```
+chore: upgrade to Flutter 3.47.7 and add Patrol E2E tests
+
+- Pin Flutter 3.47.7 via FVM; bump all deps to latest
+- Fix breaking APIs: mobile_scanner 7 torch state, connectivity_plus 7 list results
+- Add Patrol 4.10 with patrol_test/login_test.dart
+```
+
+Subject: `<type>: <summary>` (`feat`, `fix`, `chore`, `refactor`, `docs`, `test`), imperative, ≤ ~72 chars. Body bullets: what changed and, where non-obvious, why.
+
+## Testing (Patrol E2E)
+
+Unit tests live in `test/` (`flutter test`, no device). End-to-end UI tests use **Patrol** (`patrol` 4.10 dev dependency + `patrol_cli` 4.8, installed via `dart pub global activate patrol_cli`) and run on a **real Android device or emulator** — Patrol drives the actual app, so it can also tap native UI (permission dialogs, notifications) via `$.platform`.
+
+- **Run**: `patrol test -t patrol_test/<name>_test.dart` (one file) or `patrol test` (all of `patrol_test/`). Needs a device visible to `adb devices`. `patrol build android -t ...` compiles the app + instrumentation APKs without a device — use it to verify the test setup builds.
+- **Where tests go**: `patrol_test/*_test.dart` (not `integration_test/`). `patrol_test/test_bundle.dart` is **generated** by `patrol_cli` on every run — it is gitignored and excluded from the analyzer; never edit or commit it.
+- **Booting the app**: tests call `await initServices();` then `await $.pumpWidgetAndSettle(const MyApp());` — **never `app.main()`**. `main()` wraps startup in `CrashReporter.runGuarded` and overrides `FlutterError.onError`, which clashes with the test harness. `initServices()` (in `lib/main.dart`) is the single source of the service registration order, shared by `main()` and the tests — add new permanent services there, not in `main()`.
+- **Clean state per test**: `clearPackageData=true` (in `android/app/build.gradle.kts`) wipes storage before each test, so every test starts **logged out on the login screen**. A test that needs an authenticated screen must log in first.
+- **Credentials**: never hard-code them. Read via `String.fromEnvironment('TEST_USERNAME' / 'TEST_PASSWORD')`, pass with `--dart-define=TEST_USERNAME=... --dart-define=TEST_PASSWORD=...`, and mark backend-dependent tests `skip: _username.isEmpty || _password.isEmpty` so the suite still runs without them. These tests hit the real backend through the current ngrok URL in `ApiProvider`.
+- **Finders**: prefer visible text (`$('Sign In')`) for buttons/labels; for inputs and icon-only widgets add a `Key` in the view and find it with `$(#keyName)` — e.g. the login fields use `Key('loginUsernameField')` / `Key('loginPasswordField')`. Name new keys `<screen><Element>` in camelCase.
+- **Waiting**: screens use Skeletonizer shimmer, which never "settles". Use `$('…').waitUntilVisible(timeout: ...)` for content after an API call rather than relying on `pumpAndSettle`.
+- **Scanner flows**: the camera can't be driven in a test. Exercise serial/scan logic through the **manual-entry** path (keyboard button in `ScannerPage` / the qty+serial dialogs) instead of `mobile_scanner`.
+- **Native setup (already done — keep it intact)**: `testInstrumentationRunner = "pl.leancode.patrol.PatrolJUnitRunner"`, `ANDROIDX_TEST_ORCHESTRATOR` + `androidTestUtil("androidx.test:orchestrator:...")` in `android/app/build.gradle.kts`; `android/app/src/androidTest/java/com/example/getx_project/MainActivityTest.java`; the `patrol:` block (app name, Android package, iOS bundle id) in `pubspec.yaml`. Upgrading `patrol` requires a matching `patrol_cli` — check Patrol's compatibility table.
+- **Known warning**: the build warns that the `patrol` plugin still applies the Kotlin Gradle Plugin (not Built-in Kotlin). It builds fine today; a future Flutter may reject it until Patrol ships an update.
 
 ## Architecture
 
@@ -28,7 +63,7 @@ This is a Flutter warehouse management app using the **GetX** pattern throughout
 ### Layer Responsibilities
 
 - **`data/models/`** — Plain Dart model classes with `fromJson`/`toJson`.
-- **`data/providers/`** — All HTTP calls. Every provider extends `ApiProvider` (which extends `GetConnect`) and inherits the base URL and bearer token injection automatically. Providers call `checkResponse(response)` immediately after every `await get/post/put/delete` call — this throws a descriptive exception for null statusCode or non-2xx responses (preferring the server's `message` field). After `checkResponse`, providers parse and return typed objects. They never catch errors; that is `ApiExecutor`'s job.
+- **`data/providers/`** — All HTTP calls. Every provider extends `ApiProvider` (which extends `GetConnect`) and inherits the base URL and bearer token injection automatically. Providers call `checkResponse(response)` immediately after every `await get/post/put/delete` call — this throws a descriptive exception for null statusCode or non-2xx responses (preferring the server's `message` field, then appending any `error`/`errors` detail). After `checkResponse`, providers parse and return typed objects. They never catch errors; that is `ApiExecutor`'s job. **Prefer the shared `ApiProvider` helpers** for the three common shapes instead of re-writing `get → checkResponse → parse`: `getList<T>(path, Model.fromJson, {query})` for a `{"data":[...]}` list (null-tolerant), `getMap(path, {query})` for a JSON-object body (pagination envelopes), and `postMap(path, body)` for a POST returning a JSON object. Only single-model getters (`Model.fromJson(response.body['data'])`) and custom parses stay inline.
 - **`helpers/api_excecutor.dart`** — `ApiExecutor.run()` is the single wrapper for all controller-level API calls. It checks connectivity, gates on `isLoading` to prevent double-calls, runs the provider task, and shows an `errorAlert` on failure (stripping the `"Exception: "` prefix for clean user-facing messages). Returns `null` on any error so controllers can do a simple `if (data == null) return;`.
 - **`services/`** — Long-lived `GetxService` singletons registered in `main()` as `permanent: true`: `AuthService` (token/username/roles stored in `get_storage`), `ApiProvider` (HTTP client), `NetworkService` (connectivity monitoring).
 - **`middleware/auth_middleware.dart`** — `AuthMiddleware` is applied to protected routes in `AppPages`; it redirects to `/login` if no token is stored.
@@ -50,7 +85,7 @@ This is a Flutter warehouse management app using the **GetX** pattern throughout
 
 **Loading states (Skeletonizer)** — Content/first-load loading uses the **`skeletonizer`** package via shared helpers in `global/widget/skeleton_widgets.dart`, never a plain "Loading…" label. Inside the `Obx`, the loading branch returns a shimmering placeholder that mirrors the real layout: `skeletonOrderList` (lists of `orderListCard`), `skeletonLineList` (`orderSerialLineCard` detail lists), `skeletonSummaryList` (`orderItemSummaryTile` fill/scan lists), or `skeletonGenericList` (product/transaction/master lists). For a screen that shows already-populated/stale data during a refresh, wrap its body in `skeletonize(loading: <flag>, child: <body>)`. Pass the module's accent color (same one its cards use). **Do not** skeletonize button/FAB spinners or infinite-scroll "loading more" footers — those stay as `CircularProgressIndicator`. The legacy `textLoading()` helper is superseded; `textNoData()` is still the empty-state.
 
-**Provider error handling** — Every provider method follows this pattern:
+**Provider error handling** — Use the shared helpers on `ApiProvider` (`getList`/`getMap`/`postMap`) for the common shapes; only single-model / custom parses stay inline, and those still follow this pattern:
 ```dart
 Future<SomeType> getSomething() async {
   final response = await get('/endpoint');
@@ -58,7 +93,7 @@ Future<SomeType> getSomething() async {
   return SomeType.fromJson(response.body['data']);
 }
 ```
-Never return raw `Response` from a provider. POST methods also call `checkResponse` and return `Map<String, dynamic>` (or a typed model). Do not add try/catch in providers — let exceptions propagate to `ApiExecutor`.
+Never return raw `Response` from a provider. POST methods also call `checkResponse` and return `Map<String, dynamic>` (or a typed model). Do not add try/catch in providers — let exceptions propagate to `ApiExecutor`. `checkResponse` surfaces the backend's `message` and then appends any `error` (string) or `errors` (Laravel validation map, flattened) detail on a new line, so the real cause — not just the generic summary — reaches the user.
 
 **Controller API call pattern** — All API calls go through `ApiExecutor.run()`. After the call, a null check is the only error handling needed:
 ```dart
@@ -79,7 +114,7 @@ Never check `response.statusCode`, `response.isOk`, or `response.body?['success'
 
 **Receive fill** (only when `manage_sn`, split by `serial_number_type`): **BATCH** — worker enters a qty per batch via `addFilledSerial`, producing `filled` entries `{serial, qty, expired_date}`; one line can split across several batch entries (5 = 2 + 3), over-fill is guarded and duplicate serials rejected. **UNIQUE / OTHER** — quantity-only via `addFilledQty` `{qty, expired_date}`. Edit/remove by index (`updateFilledAt`/`removeFilledAt`).
 
-**Outflow scan** (`_onScanTap`): `manage_sn == false` → quantity-only via `setScannedQty` (`{qty}`); otherwise by `serial_number_type` — **UNIQUE** scans unit-by-unit (`scanUnique`, camera stays open), **BATCH/OTHER** scan once then enter qty (`addScannedCode`). Serial entries are `{serial_number, qty}` — **the payload key is `serial_number`** (not `code`); non-serial entries are `{qty}`.
+**Outflow scan** (`_onScanTap`): `manage_sn == false` → quantity-only via `setScannedQty` (`{qty}`); otherwise by `serial_number_type` — **UNIQUE** scans unit-by-unit (`scanUnique`, camera stays open), **BATCH/OTHER** scan once then enter qty (`addScannedCode`). Serial entries are `{serial_number, qty}` — **the payload key is `serial_number`** (not `code`); non-serial entries are `{qty}`. On the outflow detail `orderItemSummaryTile`, the action reflects this gate: `manage_sn == true` shows **"Scan"** (`qr_code_scanner_rounded`), `manage_sn == false` shows **"Fill"** (`edit_rounded`) — mirroring the receive tiles, since a quantity-only line just fills a qty rather than scanning a label.
 
 **Serial confirmation** — After `createReceiveData` returns the created RO, `startReceivingItem()` routes to the **Confirm Serials** screen (`RECEIVE_ORDER_CONFIRM`). It loads the RO's actual generated serials (`getReceiveOrderSerials`) and shows the UNIQUE ones — so only `manage_sn` items appear. Scanning a printed SKU label flips it green and POSTs `POST /receive-order/{id}/confirm-serials` (`{codes:[...]}`, one-per-scan or batched), stamping `scanned_at`/`scanned_by` on the `stock_transaction_serials` pivot — persisted and idempotent, so reopening resumes progress.
 

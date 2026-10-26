@@ -50,7 +50,7 @@ class MasterListView<T> extends StatelessWidget {
   final String emptyMessage;
 
   const MasterListView({
-    Key? key,
+    super.key,
     required this.title,
     required this.icon,
     required this.routeBackName,
@@ -71,7 +71,7 @@ class MasterListView<T> extends StatelessWidget {
     required this.onClearFilter,
     required this.itemBuilder,
     this.emptyMessage = 'No data.',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +127,7 @@ class MasterListView<T> extends StatelessWidget {
                       child: ListView.separated(
                         padding: const EdgeInsets.only(bottom: 12),
                         itemCount: items.length + 1,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             SizedBox(height: size * 1.2),
                         itemBuilder: (context, index) {
                           if (index < items.length) {
@@ -181,7 +181,7 @@ class MasterListView<T> extends StatelessWidget {
       barrierLabel: 'Limit Dialog',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, _, _) {
         return Center(
           child: Material(
             borderRadius: BorderRadius.circular(12),
@@ -242,7 +242,7 @@ class MasterListView<T> extends StatelessWidget {
           ),
         );
       },
-      transitionBuilder: (_, animation, __, child) {
+      transitionBuilder: (_, animation, _, child) {
         return ScaleTransition(
           scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
           child: child,
@@ -270,10 +270,10 @@ Widget masterListCard({
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(size * 1.8),
-        border: Border.all(color: accent.withOpacity(0.14)),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.08),
+            color: accent.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -296,7 +296,7 @@ Widget masterListCard({
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.35),
+                    color: accent.withValues(alpha: 0.35),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -334,7 +334,7 @@ Widget masterListCard({
             ),
             SizedBox(width: size * 0.8),
             Icon(Icons.chevron_right_rounded,
-                size: size * 2.4, color: accent.withOpacity(0.55)),
+                size: size * 2.4, color: accent.withValues(alpha: 0.55)),
           ],
         ),
       ),

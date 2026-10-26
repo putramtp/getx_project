@@ -12,7 +12,7 @@ import '../../../global/variables.dart';
 import '../../../global/styles/app_text_style.dart';
 
 class ProductTransactionListView extends GetView<ProductTransactionListController> {
-  const ProductTransactionListView({Key? key}) : super(key: key);
+  const ProductTransactionListView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +61,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                     },
                     child: ListView.separated(
                       itemCount: transactions.length + 1,
-                      separatorBuilder: (_, __) => const Divider(),
+                      separatorBuilder: (_, _) => const Divider(),
                       itemBuilder: (context, index) {
                         if (index < transactions.length) {
                           return _buildOrderCard(transactions[index],size);
@@ -113,7 +113,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
       context: context,
       barrierLabel: "Filter",
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim1, anim2) {
         return Align(
@@ -129,7 +129,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -289,7 +289,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
           width: size * 4,
           height: size * 4,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -337,8 +337,8 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
               ),
               decoration: BoxDecoration(
                 color: isIn
-                    ? Colors.blue.withOpacity(0.1)
-                    : Colors.orange.withOpacity(0.1),
+                    ? Colors.blue.withValues(alpha: 0.1)
+                    : Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

@@ -16,7 +16,7 @@ import 'widgets/indicator.dart';
 import 'widgets/menu_grid.dart';
 
 class HomeView extends GetView<HomeController> {
-  const HomeView({Key? key}) : super(key: key);
+  const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class HomeView extends GetView<HomeController> {
         Padding(
           padding: EdgeInsets.only(right: size * 2),
           child: CircleAvatar(
-            backgroundColor: Colors.white.withOpacity(0.18),
+            backgroundColor: Colors.white.withValues(alpha: 0.18),
             child: IconButton(
               icon: const Icon(Icons.account_circle_rounded, color: Colors.white),
               onPressed: () => controller.showAccountSheet(userName),
@@ -136,7 +136,7 @@ class HomeView extends GetView<HomeController> {
         Container(
           padding: EdgeInsets.all(size * 0.8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(size),
           ),
           child: Icon(icon, size: size * 2, color: color),
@@ -171,7 +171,7 @@ class HomeView extends GetView<HomeController> {
                 height: size * 18,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.07),
+                  color: Colors.white.withValues(alpha: 0.07),
                 ),
               ),
             ),
@@ -183,7 +183,7 @@ class HomeView extends GetView<HomeController> {
                 height: size * 16,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -200,7 +200,7 @@ class HomeView extends GetView<HomeController> {
                           Container(
                             padding: EdgeInsets.all(size * 0.7),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(size),
                             ),
                             child: Icon(Icons.access_time_rounded, color: Colors.white, size: size * 1.8),
@@ -216,18 +216,18 @@ class HomeView extends GetView<HomeController> {
                     ],
                   ),
                   SizedBox(height: size * 2),
-                  Divider(color: Colors.white.withOpacity(0.25), thickness: 0.8),
+                  Divider(color: Colors.white.withValues(alpha: 0.25), thickness: 0.8),
                   SizedBox(height: size * 1.5),
                   Text(controller.getGreeting(), style: AppTextStyle.h2(size, color: Colors.white)),
                   SizedBox(height: size * 0.6),
-                  Text(userName, style: AppTextStyle.h3(size, color: Colors.white.withOpacity(0.9))),
+                  Text(userName, style: AppTextStyle.h3(size, color: Colors.white.withValues(alpha: 0.9))),
                   SizedBox(height: size * 1.2),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: size * 1.2, vertical: size * 0.5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(size * 2),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -292,7 +292,7 @@ class HomeView extends GetView<HomeController> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: size * 1, vertical: size * 0.4),
                 decoration: BoxDecoration(
-                  color: navyDark.withOpacity(0.08),
+                  color: navyDark.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(size * 2),
                 ),
                 child: Row(
@@ -346,7 +346,7 @@ class HomeView extends GetView<HomeController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(size * 2),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -397,7 +397,7 @@ class HomeView extends GetView<HomeController> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: controller.lastTransactions.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, _) => const Divider(),
             itemBuilder: (context, index) {
               final st = controller.lastTransactions[index];
               final isIn = st.flowType == "IN";
@@ -408,7 +408,7 @@ class HomeView extends GetView<HomeController> {
                     width: size * 4,
                     height: size * 4,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(isIn ? Icons.arrow_downward : Icons.arrow_upward, color: color, size: size * 2),
@@ -423,7 +423,7 @@ class HomeView extends GetView<HomeController> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: isIn ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                            color: isIn ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(st.order!.code, style: AppTextStyle.body(size, color: isIn ? Colors.green : Colors.orange)),

@@ -21,7 +21,7 @@ Widget skeletonOrderList(double size, {Color accent = Colors.grey, int count = 7
     child: ListView.builder(
       itemCount: count,
       shrinkWrap: true,
-      itemBuilder: (_, __) => orderListCard(
+      itemBuilder: (_, _) => orderListCard(
         size: size,
         leadingIcon: Icons.inventory_2_rounded,
         accentColor: accent,
@@ -44,8 +44,8 @@ Widget skeletonLineList(double size, {Color accent = Colors.grey, int count = 5}
     child: ListView.separated(
       itemCount: count,
       shrinkWrap: true,
-      separatorBuilder: (_, __) => SizedBox(height: size * 1.2),
-      itemBuilder: (_, __) => orderSerialLineCard(
+      separatorBuilder: (_, _) => SizedBox(height: size * 1.2),
+      itemBuilder: (_, _) => orderSerialLineCard(
         size: size,
         itemName: 'Loading item name placeholder',
         qty: 0,
@@ -63,8 +63,8 @@ Widget skeletonSummaryList(double size, {Color accent = Colors.grey, int count =
     child: ListView.separated(
       itemCount: count,
       shrinkWrap: true,
-      separatorBuilder: (_, __) => SizedBox(height: size * 1.2),
-      itemBuilder: (_, __) => orderItemSummaryTile(
+      separatorBuilder: (_, _) => SizedBox(height: size * 1.2),
+      itemBuilder: (_, _) => orderItemSummaryTile(
         size: size,
         name: 'Loading item name',
         subtitle: 'Loading progress 0 / 0',
@@ -88,7 +88,7 @@ Widget skeletonGenericList(double size, {int count = 8}) {
     child: ListView.builder(
       itemCount: count,
       shrinkWrap: true,
-      itemBuilder: (_, __) => Padding(
+      itemBuilder: (_, _) => Padding(
         padding: EdgeInsets.only(bottom: size * 1.4),
         child: Container(
           padding: EdgeInsets.all(size * 1.4),

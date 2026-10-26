@@ -27,7 +27,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -88,7 +88,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<int>(
-                    value: controller.limit.value,
+                    initialValue: controller.limit.value,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -120,7 +120,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                           style: AppTextStyle.custom(SizeConfig.defaultSize, px: 14, weight: FontWeight.w600),
                         ),
                         Obx(() => Switch(
-                          activeColor: Colors.blue[300],
+                          activeThumbColor: Colors.blue[300],
                           inactiveTrackColor: Colors.white,
                           value: controller.enablePriceRange.value,
                           onChanged: (value) {

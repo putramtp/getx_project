@@ -12,9 +12,11 @@ import 'package:get_storage/get_storage.dart';
 class AuthService extends GetxService {
   // Persistent local storage
   final GetStorage _box = GetStorage();
-  final FlutterSecureStorage _secure = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  // flutter_secure_storage v10 migrates tokens saved by the old
+  // EncryptedSharedPreferences backend on first access (migrateOnAlgorithmChange
+  // defaults to true). Keep v10 shipped before moving to v11, which can't read
+  // the old backend.
+  final FlutterSecureStorage _secure = const FlutterSecureStorage();
 
   // Storage keys
   static const String _tokenKey = 'auth_token';

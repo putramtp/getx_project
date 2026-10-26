@@ -34,10 +34,10 @@ class MenuGrid extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(size * 1.8),
-            border: Border.all(color: color1.withOpacity(0.15)),
+            border: Border.all(color: color1.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: color1.withOpacity(0.10),
+                color: color1.withValues(alpha: 0.10),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),

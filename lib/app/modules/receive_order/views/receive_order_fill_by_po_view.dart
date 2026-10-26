@@ -195,7 +195,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
       child: ListView.separated(
         padding: EdgeInsets.all(size * 1.2),
         itemCount: filled.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final serial = filled[i]['serial'];
           final qty = filled[i]['qty'] ?? 1;
@@ -206,7 +206,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: _accent.withOpacity(0.12),
+              backgroundColor: _accent.withValues(alpha: 0.12),
               child: Icon(
                   isSerial
                       ? Icons.qr_code_rounded

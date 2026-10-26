@@ -8,7 +8,7 @@ import '../../../global/widget/order_menu_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderHomeView extends GetView {
-  const ReceiveOrderHomeView({Key? key}) : super(key: key);
+  const ReceiveOrderHomeView({super.key});
 
   @override
   Widget build(BuildContext context) {

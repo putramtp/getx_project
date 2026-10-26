@@ -11,7 +11,7 @@ import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierController> {
-  const ReceiveOrderBySupplierView({Key? key}) : super(key: key);
+  const ReceiveOrderBySupplierView({super.key});
 
   @override
   Widget build(BuildContext context) {

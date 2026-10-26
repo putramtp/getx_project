@@ -6,7 +6,7 @@ import '../../../routes/app_pages.dart';
 import '../controllers/product_by_category_controller.dart';
 
 class ProductByCategoryView extends GetView<ProductByCategoryController> {
-  const ProductByCategoryView({Key? key}) : super(key: key);
+  const ProductByCategoryView({super.key});
 
   @override
   Widget build(BuildContext context) {

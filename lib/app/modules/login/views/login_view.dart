@@ -6,7 +6,7 @@ import '../../../global/styles/app_text_style.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
-  const LoginView({Key? key}) : super(key: key);
+  const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class LoginView extends GetView<LoginController> {
                       borderRadius: BorderRadius.circular(size * 2),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color.fromARGB(255, 186, 189, 199).withOpacity(0.22),
+                          color: const Color.fromARGB(255, 186, 189, 199).withValues(alpha: 0.22),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -75,7 +75,7 @@ class LoginView extends GetView<LoginController> {
                       borderRadius: BorderRadius.circular(size * 2.5),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.18),
+                          color: Colors.black.withValues(alpha: 0.18),
                           blurRadius: 30,
                           offset: const Offset(0, 12),
                         ),
@@ -93,6 +93,7 @@ class LoginView extends GetView<LoginController> {
                         ),
                         SizedBox(height: size * 0.8),
                         TextField(
+                          key: const Key('loginUsernameField'),
                           controller: controller.emailController,
                           keyboardType: TextInputType.text,
                           autofillHints: const [AutofillHints.username],
@@ -127,6 +128,7 @@ class LoginView extends GetView<LoginController> {
                         ),
                         SizedBox(height: size * 0.8),
                         Obx(() => TextField(
+                              key: const Key('loginPasswordField'),
                               controller: controller.passwordController,
                               obscureText: !controller.isPasswordVisible.value,
                               autofillHints: const [AutofillHints.password],
@@ -197,7 +199,7 @@ class LoginView extends GetView<LoginController> {
                                 onPressed: controller.isLoading.value ? null : controller.authLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xff2D6187),
-                                  disabledBackgroundColor: const Color(0xff2D6187).withOpacity(0.6),
+                                  disabledBackgroundColor: const Color(0xff2D6187).withValues(alpha: 0.6),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(size * 1.2),
                                   ),

@@ -70,9 +70,9 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
       width: double.infinity,
       padding: EdgeInsets.all(size * 1.6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(size * 2),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -103,7 +103,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
         borderRadius: BorderRadius.circular(size * 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -158,7 +158,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     );
   }
 
-  /// One "Mark <status>" button per status other than the current one.
+  /// One "Mark `<status>`" button per status other than the current one.
   Widget _quickActions(BuildContext context, double size, DeliveryModel d) {
     final others =
         controller.statuses.where((s) => s.id != d.statusId).toList();
@@ -258,7 +258,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                     style: AppTextStyle.small(size, color: Colors.grey.shade600)),
                 SizedBox(height: size * 0.6),
                 DropdownButtonFormField<int>(
-                  value: controller.statuses.any((s) => s.id == statusId)
+                  initialValue: controller.statuses.any((s) => s.id == statusId)
                       ? statusId
                       : null,
                   isExpanded: true,

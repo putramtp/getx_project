@@ -23,8 +23,8 @@ class NetworkService extends GetxService {
     // React to interface changes. A dropped interface is definitively offline;
     // a regained interface still needs a real reachability probe (see
     // checkConnection) because "connected to Wi-Fi" ≠ "has internet".
-    connectivity.onConnectivityChanged.listen((status) async {
-      if (status == ConnectivityResult.none) {
+    connectivity.onConnectivityChanged.listen((results) async {
+      if (_noInterface(results)) {
         isConnected.value = false;
         infoAlertBottom(
           title: "No Internet",
@@ -40,13 +40,17 @@ class NetworkService extends GetxService {
   /// interface exists AND that the API host actually resolves — catching the
   /// "connected but no internet" case that `connectivity_plus` alone misses.
   Future<void> checkConnection() async {
-    final status = await connectivity.checkConnectivity();
-    if (status == ConnectivityResult.none) {
+    final results = await connectivity.checkConnectivity();
+    if (_noInterface(results)) {
       isConnected.value = false;
       return;
     }
     isConnected.value = await _hasInternet();
   }
+
+  /// connectivity_plus reports every active interface; offline means none.
+  static bool _noInterface(List<ConnectivityResult> results) =>
+      results.isEmpty || results.every((r) => r == ConnectivityResult.none);
 
   Future<bool> _hasInternet() async {
     try {

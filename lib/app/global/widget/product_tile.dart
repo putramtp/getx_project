@@ -10,12 +10,12 @@ class ProductTile extends StatelessWidget {
   final VoidCallback onViewTransaction;
 
   const ProductTile({
-    Key? key,
+    super.key,
     required this.product,
     required this.size,
     required this.onViewDetail,
     required this.onViewTransaction,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

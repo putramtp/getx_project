@@ -11,7 +11,7 @@ import 'package:getx_project/app/modules/product-unit/controllers/product_unit_c
 import 'package:getx_project/app/routes/app_pages.dart';
 
 class ProductUnitView extends GetView<ProductUnitController> {
-  const ProductUnitView({Key? key}) : super(key: key);
+  const ProductUnitView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class ProductUnitView extends GetView<ProductUnitController> {
       barrierLabel: 'Unit Detail',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, _, _) {
         return Center(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: size * 3),
@@ -102,7 +102,7 @@ class ProductUnitView extends GetView<ProductUnitController> {
                             color: Colors.white,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -123,7 +123,7 @@ class ProductUnitView extends GetView<ProductUnitController> {
                         Text(
                           'Product Unit',
                           style: AppTextStyle.overline(size,
-                              color: Colors.white.withOpacity(0.85)),
+                              color: Colors.white.withValues(alpha: 0.85)),
                         ),
                       ],
                     ),
@@ -178,7 +178,7 @@ class ProductUnitView extends GetView<ProductUnitController> {
           ),
         );
       },
-      transitionBuilder: (_, animation, __, child) {
+      transitionBuilder: (_, animation, _, child) {
         return ScaleTransition(
           scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
           child: child,

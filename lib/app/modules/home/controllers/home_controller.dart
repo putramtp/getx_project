@@ -223,7 +223,7 @@ class HomeController extends GetxController {
                 children: [
                   CircleAvatar(
                     radius: size * 3,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: Text(
                       initials,
                       style: AppTextStyle.h3(size, color: Colors.white, weight: FontWeight.bold),
@@ -239,9 +239,9 @@ class HomeController extends GetxController {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: size * 1, vertical: size * 0.3),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
+                            color: Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(size * 2),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -323,7 +323,7 @@ class HomeController extends GetxController {
                 children: [
                   CircleAvatar(
                     radius: size * 4,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: Text(
                       initials,
                       style: AppTextStyle.custom(size, scale: 2.8, weight: FontWeight.bold, color: Colors.white),
@@ -335,9 +335,9 @@ class HomeController extends GetxController {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: size * 1.2, vertical: size * 0.4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(size * 2),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -394,7 +394,7 @@ class HomeController extends GetxController {
         Container(
           padding: EdgeInsets.all(size * 0.7),
           decoration: BoxDecoration(
-            color: navyDark.withOpacity(0.08),
+            color: navyDark.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(size),
           ),
           child: Icon(icon, size: size * 1.6, color: navyDark),
@@ -429,7 +429,7 @@ class HomeController extends GetxController {
             Container(
               padding: EdgeInsets.all(size * 0.8),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(size * 1),
               ),
               child: Icon(icon, color: iconColor, size: size * 1.8),

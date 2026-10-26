@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
-errorAlert(String message) {
+void errorAlert(String message) {
   Get.snackbar(
     '',
     message,
@@ -13,7 +13,7 @@ errorAlert(String message) {
   );
 }
 
-successAlert(String message) {
+void successAlert(String message) {
   Get.snackbar(
     '',
     message,
@@ -23,7 +23,7 @@ successAlert(String message) {
   );
 }
 
-successAlertBottom(String messageText ,{String? title}) {
+void successAlertBottom(String messageText ,{String? title}) {
    final String titleText = title ?? "Success";
    Get.snackbar(
       titleText,
@@ -35,7 +35,7 @@ successAlertBottom(String messageText ,{String? title}) {
     );
 }
 
-errorAlertBottom(String messageText ,{String? title}) {
+void errorAlertBottom(String messageText ,{String? title}) {
    final String titleText = title ?? "Error";
    Get.snackbar(
       titleText,
@@ -47,7 +47,7 @@ errorAlertBottom(String messageText ,{String? title}) {
     );
 }
 
-warningAlertBottom(String messageText ,{String? title}) {
+void warningAlertBottom(String messageText ,{String? title}) {
    final String titleText = title ?? "Warning";
    Get.snackbar(
     titleText,
@@ -59,7 +59,7 @@ warningAlertBottom(String messageText ,{String? title}) {
   );
 }
 
-infoAlertBottom(String messageText ,{String? title}) {
+void infoAlertBottom(String messageText ,{String? title}) {
    final String titleText = title ?? "";
    Get.snackbar(
     titleText,

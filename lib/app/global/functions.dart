@@ -73,7 +73,7 @@ String formatTime(DateTime dateTime) {
   return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
 }
 
-String getDateString(date) {
+String getDateString(DateTime date) {
   return DateFormat('yyyy-MM-dd').format(date);
 }
 

@@ -42,3 +42,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# FVM per-project SDK
+.fvm/
+
+# Patrol generated test entrypoint
+patrol_test/test_bundle.dart
+# Widget Preview related
+.widget_preview/
+
+# Machine-specific editor/tooling files
+.vscode/settings.json
+devtools_options.yaml

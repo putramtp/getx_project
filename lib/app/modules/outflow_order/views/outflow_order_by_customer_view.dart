@@ -11,7 +11,7 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
 class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerController> {
-  const OutflowOrderByCustomerView({Key? key}) : super(key: key);
+  const OutflowOrderByCustomerView({super.key});
 
   @override
   Widget build(BuildContext context) {

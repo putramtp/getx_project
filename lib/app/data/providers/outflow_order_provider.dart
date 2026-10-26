@@ -6,8 +6,8 @@ import '../models/outflow_request_line_item_model.dart';
 class OutflowOrderProvider extends ApiProvider {
   Future<Map<String, dynamic>> getOutflowOrders({String? cursor, Map<String, String>? params}) {
     return getMap('/outflow-order/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 
@@ -19,8 +19,8 @@ class OutflowOrderProvider extends ApiProvider {
 
   Future<Map<String, dynamic>> getOutflowRequests({String? cursor, Map<String, String>? params}) {
     return getMap('/outflow-request/pagination', query: {
-      if (params != null) ...params,
-      if (cursor != null) 'cursor': cursor,
+      ...?params,
+      'cursor': ?cursor,
     });
   }
 

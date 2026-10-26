@@ -70,7 +70,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
                     controller.receiveOrderDetail.value?.receiveOrderLines ?? [];
                 return ListView.separated(
                   itemCount: lines.length,
-                  separatorBuilder: (_, __) => SizedBox(height: size * 1.2),
+                  separatorBuilder: (_, _) => SizedBox(height: size * 1.2),
                   itemBuilder: (context, index) {
                     final line = lines[index];
                     return orderSerialLineCard(

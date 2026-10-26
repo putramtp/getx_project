@@ -8,7 +8,7 @@ import '../../../global/widget/order_menu_widgets.dart';
 import '../../../routes/app_pages.dart';
 
 class OutflowOrderHomeView extends GetView {
-  const OutflowOrderHomeView({Key? key}) : super(key: key);
+  const OutflowOrderHomeView({super.key});
 
   @override
   Widget build(BuildContext context) {

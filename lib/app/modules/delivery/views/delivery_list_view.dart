@@ -84,7 +84,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
     );
   }
 
-  /// Horizontal "All / <status>" filter chips, colored per status.
+  /// Horizontal "All / `<status>`" filter chips, colored per status.
   Widget _statusChips(double size) {
     return Obx(() {
       final options = controller.statusOptions;
@@ -122,7 +122,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
             decoration: BoxDecoration(
               color: active ? color : Colors.white,
               borderRadius: BorderRadius.circular(size * 2),
-              border: Border.all(color: color.withOpacity(active ? 1 : 0.4)),
+              border: Border.all(color: color.withValues(alpha: active ? 1 : 0.4)),
             ),
             child: Center(
               child: Text(label,

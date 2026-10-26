@@ -195,7 +195,7 @@ class ScanPageByCustomer
       child: ListView.separated(
         padding: EdgeInsets.all(size * 1.2),
         itemCount: scanned.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final code = scanned[i]['serial_number'];
           final qty = scanned[i]['qty'] ?? 1;
@@ -210,7 +210,7 @@ class ScanPageByCustomer
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: amber.withOpacity(0.12),
+              backgroundColor: amber.withValues(alpha: 0.12),
               child: Icon(isQtyOnly ? Icons.tag_rounded : Icons.qr_code,
                   color: amber),
             ),

@@ -29,15 +29,15 @@ class CircleMenuItem extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: size * 1.2),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [iconColor.withOpacity(0.12), iconColor.withOpacity(0.22)],
+              colors: [iconColor.withValues(alpha: 0.12), iconColor.withValues(alpha: 0.22)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(size * 1.6),
-            border: Border.all(color: iconColor.withOpacity(0.25), width: 1),
+            border: Border.all(color: iconColor.withValues(alpha: 0.25), width: 1),
             boxShadow: [
               BoxShadow(
-                color: iconColor.withOpacity(0.12),
+                color: iconColor.withValues(alpha: 0.12),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -49,7 +49,7 @@ class CircleMenuItem extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(size * 0.8),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
+                  color: iconColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: iconColor, size: size * 2.2),
@@ -59,7 +59,7 @@ class CircleMenuItem extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyle.custom(size, scale: 1.1, weight: FontWeight.w600, color: iconColor.withOpacity(0.85)),
+                style: AppTextStyle.custom(size, scale: 1.1, weight: FontWeight.w600, color: iconColor.withValues(alpha: 0.85)),
               ),
             ],
           ),

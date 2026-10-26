@@ -28,17 +28,24 @@ void main() {
     ErrorWidget.builder = CrashReporter.errorWidgetBuilder;
     await CrashReporter.init();
 
-    await GetStorage.init(); // ✅ REQUIRED
-    // AuthService loads the token from secure storage asynchronously; await it so
-    // the token is in memory before any route/middleware/request reads it.
-    await Get.putAsync<AuthService>(() => AuthService().init(), permanent: true);
-    // Durable draft store for in-progress scans/fills — opened async before any
-    // fill/scan screen can read/write a draft.
-    await Get.putAsync<DraftService>(() => DraftService().init(), permanent: true);
-    Get.put(ApiProvider(), permanent: true);
-    Get.put(NetworkService(), permanent: true);
+    await initServices();
     runApp(const MyApp());
   });
+}
+
+/// Registers the permanent services in dependency order. Shared by [main] and
+/// the Patrol E2E tests (patrol_test/), which boot the app without the
+/// CrashReporter zone/error hooks that would clash with the test harness.
+Future<void> initServices() async {
+  await GetStorage.init(); // ✅ REQUIRED
+  // AuthService loads the token from secure storage asynchronously; await it so
+  // the token is in memory before any route/middleware/request reads it.
+  await Get.putAsync<AuthService>(() => AuthService().init(), permanent: true);
+  // Durable draft store for in-progress scans/fills — opened async before any
+  // fill/scan screen can read/write a draft.
+  await Get.putAsync<DraftService>(() => DraftService().init(), permanent: true);
+  Get.put(ApiProvider(), permanent: true);
+  Get.put(NetworkService(), permanent: true);
 }
 
 class MyApp extends StatelessWidget {

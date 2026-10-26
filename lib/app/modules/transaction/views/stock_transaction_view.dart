@@ -12,7 +12,7 @@ import '../../../global/variables.dart';
 import '../../../global/styles/app_text_style.dart';
 
 class StockTransactionView extends GetView<StockTransactionController> {
-  const StockTransactionView({Key? key}) : super(key: key);
+  const StockTransactionView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -115,9 +115,9 @@ class StockTransactionView extends GetView<StockTransactionController> {
       context: context,
       barrierLabel: "Filter",
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, _, _) {
         return TopDateFilterPopup(controller: controller);
       },
       transitionBuilder: (context, anim1, anim2, child) {
@@ -149,7 +149,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
               width: size * 4,
               height: size * 4,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

@@ -34,8 +34,8 @@ Widget orderListCard({
       child: InkWell(
         borderRadius: BorderRadius.circular(size * 2),
         onTap: onTap,
-        splashColor: accentColor.withOpacity(0.12),
-        highlightColor: accentColor.withOpacity(0.06),
+        splashColor: accentColor.withValues(alpha: 0.12),
+        highlightColor: accentColor.withValues(alpha: 0.06),
         child: Container(
           padding: EdgeInsets.all(size * 1.4),
           decoration: BoxDecoration(
@@ -43,7 +43,7 @@ Widget orderListCard({
             borderRadius: BorderRadius.circular(size * 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -56,7 +56,7 @@ Widget orderListCard({
                 width: size * 5,
                 height: size * 5,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.12),
+                  color: accentColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(size * 1.4),
                 ),
                 child: Icon(leadingIcon, color: accentColor, size: size * 2.6),
@@ -120,7 +120,7 @@ Widget orderListCard({
                         padding: EdgeInsets.symmetric(
                             horizontal: size * 1, vertical: size * 0.4),
                         decoration: BoxDecoration(
-                          color: (trailingBottomColor ?? Colors.grey).withOpacity(0.12),
+                          color: (trailingBottomColor ?? Colors.grey).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(size),
                         ),
                         child: Text(trailingBottom,
@@ -192,7 +192,7 @@ Widget orderItemSummaryTile({
       borderRadius: BorderRadius.circular(size * 2),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),
@@ -204,7 +204,7 @@ Widget orderItemSummaryTile({
           width: size * 5,
           height: size * 5,
           decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.12),
+            color: statusColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(size * 1.4),
           ),
           child: Icon(statusIcon, color: statusColor, size: size * 2.8),
@@ -237,7 +237,7 @@ Widget orderItemSummaryTile({
                 padding: EdgeInsets.symmetric(
                     horizontal: size * 1.2, vertical: size * 0.9),
                 decoration: BoxDecoration(
-                  color: actionColor.withOpacity(0.12),
+                  color: actionColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(size * 1.2),
                 ),
                 child: Row(
@@ -279,7 +279,7 @@ Widget orderSerialLineCard({
       borderRadius: BorderRadius.circular(size * 2),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),
@@ -291,7 +291,7 @@ Widget orderSerialLineCard({
           width: size * 5,
           height: size * 5,
           decoration: BoxDecoration(
-            color: accent.withOpacity(0.12),
+            color: accent.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(size * 1.4),
           ),
           child: Icon(Icons.inventory_2_rounded, color: accent, size: size * 2.6),
@@ -345,7 +345,7 @@ Widget orderSerialLineCard({
               padding: EdgeInsets.symmetric(
                   horizontal: size * 1.2, vertical: size * 0.7),
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.1),
+                color: accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(size * 1.2),
               ),
               child: Row(
@@ -395,7 +395,7 @@ void showSerialNumbersDialog(
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: serials.length,
-                separatorBuilder: (_, __) => Divider(height: size * 1.6),
+                separatorBuilder: (_, _) => Divider(height: size * 1.6),
                 itemBuilder: (_, i) {
                   final sn = serials[i];
                   return Column(
@@ -493,7 +493,7 @@ Widget orderDetailHeader({
               height: size * 12,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -504,7 +504,7 @@ Widget orderDetailHeader({
                 Container(
                   padding: EdgeInsets.all(size * 1.2),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: Colors.white, size: size * 2.8),

@@ -12,7 +12,7 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
 class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
-  const ReceiveOrderListView({Key? key}) : super(key: key);
+  const ReceiveOrderListView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -105,9 +105,9 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
       context: context,
       barrierLabel: "Filter",
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, __, ___) => TopDateFilterPopup(controller: controller),
+      pageBuilder: (_, _, _) => TopDateFilterPopup(controller: controller),
       transitionBuilder: (context, anim1, anim2, child) {
         return SlideTransition(
           position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)

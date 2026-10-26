@@ -10,7 +10,7 @@ import 'package:getx_project/app/modules/product-category/controllers/product_ca
 import 'package:getx_project/app/routes/app_pages.dart';
 
 class ProductCategoryView extends GetView<ProductCategoryController> {
-  const ProductCategoryView({Key? key}) : super(key: key);
+  const ProductCategoryView({super.key});
 
   @override
   Widget build(BuildContext context) {
