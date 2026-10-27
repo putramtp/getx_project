@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 String capitalizeFirstofEach(String text) {
@@ -143,4 +144,15 @@ Color getReadableTextColor(Color bg) {
   return bg.computeLuminance() > 0.5
       ? Colors.black
       : Colors.white;
+}
+
+/// Closes the top route (dialog, bottom sheet or page), optionally returning
+/// [result]. Use this instead of `Get.back()`: in GetX 4.7, `Get.back()` only
+/// closes an open snackbar when one is showing, leaving the route up. Snackbars
+/// are overlays, not routes, so popping the root navigator leaves them alone.
+/// Pops synchronously (not `maybePop`, which pops after an await) so a route
+/// opened right after this call isn't the one that gets closed.
+void closeRoute<T>([T? result]) {
+  final navigator = Get.key.currentState;
+  if (navigator != null && navigator.canPop()) navigator.pop<T>(result);
 }

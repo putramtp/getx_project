@@ -10,6 +10,7 @@ import '../../../global/widget/skeleton_widgets.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import '../../../modules/outflow_order/views/scan_page_by_customer.dart';
 import '../../../routes/app_pages.dart';
+import '../../../global/functions.dart';
 
 class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDetailController> {
   const OutflowOrderByCustomerDetailView({super.key});
@@ -46,6 +47,8 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                 itemBuilder: (context, index) {
                   final item = controller.items[index];
                   final expected = item['expected'] ?? 0;
+                  // Outflow is capped at the reserved qty, not the requested one.
+                  final reserved = item['reserved'] ?? 0;
                   // Unified scanned format: [{code, qty}]
                   final List<Map<String, dynamic>> scannedList =
                       List<Map<String, dynamic>>.from(item['scanned'] ?? []);
@@ -60,7 +63,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                             : int.tryParse('${e['qty']}') ?? 0),
                   );
                   final outflowed = item['received'] ?? 0;
-                  final bool isFinished = outflowed >= expected;
+                  final bool isFinished = outflowed >= reserved;
                   final outflowedAndScanned = outflowed + scannedCount;
 
                   // log("${item['name']} - ${item['serialNumberType']}");
@@ -68,11 +71,11 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                   IconData icon;
                   Color bgColor;
 
-                  if (expected > 0 && outflowedAndScanned >= expected) {
+                  if (reserved > 0 && outflowedAndScanned >= reserved) {
                     icon = Icons.check_circle_rounded;
                     bgColor = Colors.green;
                   } else if (outflowedAndScanned > 0 &&
-                      outflowedAndScanned < expected) {
+                      outflowedAndScanned < reserved) {
                     icon = Icons.timelapse_rounded;
                     bgColor = Colors.orange;
                   } else {
@@ -89,7 +92,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                     size: size,
                     name: item['name'] ?? "Unnamed",
                     subtitle:
-                        "Expected: $expected | Outflowed: $outflowed | Outflowing: $scannedCount",
+                        "Reserved: $reserved/$expected | Outflowed: $outflowed | Outflowing: $scannedCount",
                     statusIcon: icon,
                     statusColor: bgColor,
                     showAction: !isFinished,
@@ -297,7 +300,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Get.back(result: false),
+                      onPressed: () => closeRoute(false),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _accent,
                         side: const BorderSide(color: _accent),
@@ -311,7 +314,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Get.back(result: true),
+                      onPressed: () => closeRoute(true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _accent,
                         foregroundColor: Colors.white,

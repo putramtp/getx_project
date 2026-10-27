@@ -110,7 +110,7 @@ class ProductDetailView extends GetView<ProductDetailController> {
     return Row(
       children: [
         IconButton(
-          onPressed: () => Get.back(),
+          onPressed: () => closeRoute(),
           icon:  Icon(Icons.arrow_back_rounded,
               color: Colors.white, size:size * 2),
         ),

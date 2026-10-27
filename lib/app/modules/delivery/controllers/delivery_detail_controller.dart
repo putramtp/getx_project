@@ -99,7 +99,9 @@ class DeliveryDetailController extends GetxController {
   }
 
   /// Full update — used by both the quick status buttons and the edit form.
-  Future<void> submitUpdate({
+  /// Returns true only when the server accepted it (the edit sheet stays open
+  /// otherwise, so the user's input isn't lost).
+  Future<bool> submitUpdate({
     required int statusId,
     required String estimateAt,
     String? estimateTime,
@@ -107,17 +109,17 @@ class DeliveryDetailController extends GetxController {
     String? description,
   }) async {
     final d = delivery.value;
-    if (d == null) return;
+    if (d == null) return false;
 
     if (address.trim().isEmpty) {
       warningAlertBottom("A delivery address is required.", title: "Missing address");
-      return;
+      return false;
     }
 
     final uid = await _ensureUserId();
     if (uid == null) {
       errorAlert("Couldn't determine the current user. Please re-login.");
-      return;
+      return false;
     }
 
     final payload = {
@@ -133,9 +135,10 @@ class DeliveryDetailController extends GetxController {
       isLoading: isUpdating,
       task: () => provider.updateDelivery(d.id, payload),
     );
-    if (updated == null) return;
+    if (updated == null) return false;
 
     delivery.value = updated;
     successAlertBottom("Delivery ${updated.code} updated.");
+    return true;
   }
 }

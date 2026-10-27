@@ -18,6 +18,10 @@ Future<void> openOrderWithAction(
     await tapListCard($, i);
     await expectScreen($, 'Item Summary');
     await waitForList($);
+    // Item Summary has no errorRetry state: a failed load shows "No items
+    // found." plus an error snackbar, which must not read as "nothing open".
+    final error = errorSnackbarText($);
+    if (error != null) fail('Item Summary failed to load: $error');
     if ($(action).exists) return;
 
     await $(#appBarBackButton).tap();

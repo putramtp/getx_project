@@ -7,6 +7,7 @@ import '../../../data/models/purchase_order_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
+import '../../../global/functions.dart';
 
 class ReceiveOrderByPoDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
@@ -291,7 +292,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
     if (nextIndex < items.length) {
       selectedIndex.value = nextIndex;
     } else {
-      Get.back(result: true); // close fill page
+      closeRoute(true); // close fill page
     }
   }
 
@@ -339,7 +340,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
     // the draft is intentionally kept so the worker can retry when back online.)
     await _drafts.remove(_draftScope);
 
-    if (Get.isDialogOpen == true) Get.back();
+    if (Get.isDialogOpen == true) closeRoute();
     successAlertBottom("Receiving process for $poNumber started successfully.");
 
     // The POST returns the created receive order; route straight into the

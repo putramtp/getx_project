@@ -14,6 +14,7 @@ import '../../../routes/app_pages.dart';
 import '../../../global/variables.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
+import '../../../global/functions.dart';
 
 class HomeController extends GetxController {
   final HomeProvider provider = Get.find<HomeProvider>();
@@ -270,7 +271,7 @@ class HomeController extends GetxController {
                     iconColor: navyDark,
                     label: 'Account Info',
                     onTap: () {
-                      Get.back();
+                      closeRoute();
                       _showAccountDetailDialog(userName, roles, size, initials);
                     },
                   ),
@@ -282,7 +283,7 @@ class HomeController extends GetxController {
                     label: 'Logout',
                     labelColor: Colors.red.shade400,
                     onTap: () {
-                      Get.back();
+                      closeRoute();
                       logout();
                       infoAlertBottom(title: "Logout", "You have been logged out");
                     },
@@ -368,7 +369,7 @@ class HomeController extends GetxController {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => Get.back(),
+                      onPressed: () => closeRoute(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: navyDark,
                         foregroundColor: Colors.white,

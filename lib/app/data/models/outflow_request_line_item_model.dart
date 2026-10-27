@@ -5,6 +5,8 @@ class OutflowRequestLineItemModel {
   final bool manageExpired;
   final bool manageSn; // master "is serial-tracked" flag
   final int expected;
+  /// Issuable ceiling: the backend rejects outflows beyond the reserved qty.
+  final int reserved;
   int? received; // nullable if you prefer to derive from scanned
   List<String>? scanned;
 
@@ -15,6 +17,7 @@ class OutflowRequestLineItemModel {
     required this.manageExpired,
     this.manageSn = false,
     required this.expected,
+    required this.reserved,
     this.received,
     List<String>? scanned,
   }) : scanned = scanned ?? [];
@@ -33,6 +36,8 @@ class OutflowRequestLineItemModel {
       manageExpired: json['manage_expired'] ?? false,
       manageSn: json['manage_sn'] ?? false,
       expected: json['expected_qty'] ?? 0,
+      // Older backends don't send reserved_qty; fall back to the full request.
+      reserved: ((json['reserved_qty'] ?? json['expected_qty'] ?? 0) as num).toInt(),
       received: json['received_qty'] ?? 0,
       scanned: (json['scanned'] is List)
           ? List<String>.from(json['scanned'])
@@ -47,6 +52,7 @@ class OutflowRequestLineItemModel {
         'manage_expired': manageExpired,
         'manage_sn': manageSn,
         'expected': expected,
+        'reserved': reserved,
         'received': received,
         'scanned': scanned,
       };

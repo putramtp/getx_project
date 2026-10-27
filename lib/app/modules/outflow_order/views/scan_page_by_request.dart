@@ -10,6 +10,7 @@ import '../../../global/widget/order_fill_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/scanner_page.dart';
 import '../../../global/widget/skeleton_widgets.dart';
+import '../../../global/functions.dart';
 
 class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
   const ScanPageByRequest({super.key});
@@ -33,7 +34,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
             }
 
             final item = controller.items[index];
-            final int expected = (item["expected"] ?? 0) as int;
+            final int reserved = (item["reserved"] ?? 0) as int;
             final int received = (item["received"] ?? 0) as int;
             final List<Map<String, dynamic>> scanned =
                 List<Map<String, dynamic>>.from(item["scanned"] ?? []);
@@ -45,7 +46,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
               return sum + parsedQty;
             });
 
-            final int remaining = expected - (received + scannedQty);
+            final int remaining = reserved - (received + scannedQty);
 
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
@@ -69,7 +70,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
                       size: size, name: item["name"].toString(), accent: mutedPurple),
                   SizedBox(height: size * 1.4),
                   orderFillStatsCard(size: size, stats: [
-                    FillStat("Expected", "$expected", Colors.grey.shade700),
+                    FillStat("Reserved", "$reserved", Colors.grey.shade700),
                     FillStat("Received", "$received", skyBlue),
                     FillStat("Scanned", "$scannedQty", sageTeal),
                     FillStat("Remaining", "$remaining",
@@ -234,7 +235,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
               leading: const Icon(Icons.edit, color: Colors.blueAccent),
               title: Text(isQtyOnly ? "Edit Quantity" : "Edit Code"),
               onTap: () async {
-                Get.back();
+                closeRoute();
                 if (isQtyOnly) {
                   final result = await showOtherItemDialog(
                       initialQty: qty is int ? qty : int.tryParse('$qty'));
@@ -259,7 +260,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
               leading: const Icon(Icons.delete, color: Colors.redAccent),
               title: const Text("Remove"),
               onTap: () {
-                Get.back();
+                closeRoute();
                 if (isQtyOnly) {
                   controller.clearScannedCodes();
                 } else {

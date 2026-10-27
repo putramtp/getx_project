@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/data/providers/api_providers.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/main.dart';
 import 'package:patrol/patrol.dart';
 
@@ -63,15 +65,56 @@ Future<void> launchApp(PatrolIntegrationTester $) async {
   await $.pumpWidgetAndSettle(const MyApp());
 }
 
-/// Launches the app and signs in with the dart-define credentials.
+/// Signs in through the API (no login form) and launches the app straight on
+/// Home. clearPackageData wipes the token before every test, but typing into
+/// the form each time is slow; only login_test needs the real form
+/// ([loginViaForm]).
 ///
-/// The ngrok tunnel occasionally drops a request outright ("Error!" snackbar
-/// on the login screen), so a failed attempt is retried up to [_loginAttempts]
-/// times before the test fails.
+/// The ngrok tunnel occasionally drops a request outright, so a failed attempt
+/// is retried up to [_loginAttempts] times before the test fails.
 Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
+  await initServices();
+  final auth = Get.find<AuthService>();
+  var lastError = '';
+  for (var attempt = 1; attempt <= _loginAttempts; attempt++) {
+    try {
+      final data = (await Get.find<ApiProvider>().postMap('/login', {
+        'username': testUsername,
+        'password': testPassword,
+      }))['data'];
+      final token = data?['token'] as String?;
+      if (token == null || token.isEmpty) fail('Login response has no token');
+      // Same session LoginController.authLogin stores.
+      await auth.setToken(token);
+      auth.setUsername(data['name'] as String?);
+      final roles = (data['roles'] as List?)?.map((r) => r['name'] as String);
+      if (roles != null && roles.isNotEmpty) auth.setRoles(roles.join(', '));
+      break;
+    } on TestFailure {
+      rethrow;
+    } catch (e) {
+      lastError = e.toString().replaceFirst('Exception: ', '');
+      // Wrong credentials won't fix themselves — and retrying could trip a throttle.
+      if (lastError.contains('credentials')) fail('Login rejected: $lastError');
+      if (attempt == _loginAttempts) fail('Login failed after $_loginAttempts attempts: $lastError');
+      // ignore: avoid_print
+      print('loginAsTestUser: attempt $attempt failed ($lastError), retrying');
+    }
+  }
+  // Home's skeleton shimmer never settles, so wait for its content instead.
+  await $.tester.pumpWidget(const MyApp());
+  await $('Quick Access').waitUntilVisible(timeout: apiTimeout);
+  await $.pumpAndTrySettle();
+}
+
+/// Launches the app and signs in by typing the dart-define credentials into
+/// the login form. Retries like [loginAsTestUser] (the "Error!" snackbar shows
+/// when the tunnel drops the request).
+Future<void> loginViaForm(PatrolIntegrationTester $) async {
   await launchApp($);
   await $(#loginUsernameField).enterText(testUsername);
   await $(#loginPasswordField).enterText(testPassword);
+  var lastError = '';
   for (var attempt = 1; attempt <= _loginAttempts; attempt++) {
     await $('Sign In').tap(settlePolicy: SettlePolicy.noSettle);
     final end = DateTime.now().add(apiTimeout);
@@ -83,9 +126,14 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
       }
       if ($('Error!').exists) break;
     }
+    lastError = errorSnackbarText($) ?? 'no response within ${apiTimeout.inSeconds}s';
+    // Wrong credentials won't fix themselves — and retrying could trip a throttle.
+    if (lastError.contains('credentials')) fail('Login rejected: $lastError');
+    // ignore: avoid_print
+    print('loginAsTestUser: attempt $attempt failed ($lastError), retrying');
     await closeSnackbars($);
   }
-  fail('Login failed after $_loginAttempts attempts — check the ngrok tunnel / API_BASE_URL');
+  fail('Login failed after $_loginAttempts attempts: $lastError');
 }
 
 const _loginAttempts = 3;
@@ -104,7 +152,9 @@ Future<void> waitForList(PatrolIntegrationTester $) async {
   for (var retry = 0; retry < _listRetries; retry++) {
     await _waitForListOnce($);
     if (!$('Retry').exists) return;
-    await $('Retry').tap();
+    // ignore: avoid_print
+    print('waitForList: load failed, tapping Retry (${retry + 1}/$_listRetries)');
+    await $('Retry').tap(settlePolicy: SettlePolicy.noSettle);
   }
   await _waitForListOnce($);
   if ($('Retry').exists) fail('List failed to load (errorRetry state shown)');
@@ -168,6 +218,19 @@ Future<bool> appears(
   return finder.exists;
 }
 
+/// Text of the GetX error snackbar on screen ("Error!" from ApiExecutor /
+/// "Error" from errorAlertBottom), or null when none is showing.
+String? errorSnackbarText(PatrolIntegrationTester $) {
+  if (find.byType(GetSnackBar).evaluate().isEmpty) return null;
+  if (!$('Error!').exists && !$('Error').exists) return null;
+  return find
+      .descendant(of: find.byType(GetSnackBar), matching: find.byType(Text))
+      .evaluate()
+      .map((e) => (e.widget as Text).data)
+      .whereType<String>()
+      .join(' | ');
+}
+
 /// Waits for [success] after a write action. If an error snackbar shows
 /// instead ("Error!" from ApiExecutor / "Error" from errorAlertBottom), fails
 /// with the message the app displayed, so a backend rejection is readable.
@@ -175,16 +238,8 @@ Future<void> waitForSuccess(PatrolIntegrationTester $, PatrolFinder success) asy
   final end = DateTime.now().add(apiTimeout);
   while (DateTime.now().isBefore(end)) {
     if (success.exists) return;
-    final snack = find.byType(GetSnackBar).evaluate();
-    if (snack.isNotEmpty && ($('Error!').exists || $('Error').exists)) {
-      final texts = find
-          .descendant(of: find.byType(GetSnackBar), matching: find.byType(Text))
-          .evaluate()
-          .map((e) => (e.widget as Text).data)
-          .whereType<String>()
-          .join(' | ');
-      fail('App showed an error instead of the expected result: $texts');
-    }
+    final error = errorSnackbarText($);
+    if (error != null) fail('App showed an error instead of the expected result: $error');
     await $.pump(const Duration(milliseconds: 200));
   }
   fail('Timed out after ${apiTimeout.inSeconds}s waiting for $success');

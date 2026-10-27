@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../scan_feedback.dart';
 import '../size_config.dart';
 import '../styles/app_text_style.dart';
+import '../functions.dart';
 
 /// Open the scanner in single-shot mode and return the first scanned code
 /// (or null if the worker backed out). For flows that need a follow-up dialog
@@ -86,7 +87,7 @@ class _ScannerPageState extends State<ScannerPage> {
     if (!widget.continuous) {
       if (_popped) return;
       _popped = true;
-      Get.back(result: code);
+      closeRoute(code);
       return;
     }
 
@@ -155,7 +156,7 @@ class _ScannerPageState extends State<ScannerPage> {
       padding: EdgeInsets.all(size * 1.2),
       child: Row(
         children: [
-          _circleButton(size, Icons.close_rounded, () => Get.back()),
+          _circleButton(size, Icons.close_rounded, () => closeRoute()),
           SizedBox(width: size),
           Expanded(
             child: Text(
@@ -240,7 +241,7 @@ class _ScannerPageState extends State<ScannerPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => Get.back(),
+              onPressed: () => closeRoute(),
               icon: const Icon(Icons.done_rounded),
               label: Text("Done", style: AppTextStyle.bodyBold(size, color: Colors.white)),
               style: ElevatedButton.styleFrom(

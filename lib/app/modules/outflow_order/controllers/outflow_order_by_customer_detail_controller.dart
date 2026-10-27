@@ -73,6 +73,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
         "manageExpired": item.manageExpired,
         "manage_sn": item.manageSn,
         "expected": item.expected,
+        "reserved": item.reserved,
         "received": item.received,
         "scanned": scanned,
       };
@@ -97,7 +98,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
 
     final item = items[index];
     final serialType = item["serialNumberType"];
-    final expectedQty = item["expected"];
+    final reservedQty = item["reserved"];
     final received = item["received"] ?? 0;
 
     final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
@@ -114,8 +115,8 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     }
 
     // Cap at the remaining qty: received + scanned must not exceed expected.
-    if (received + totalScanned + qty > expectedQty) {
-      errorAlertBottom("Exceeds remaining qty (${expectedQty - received}).");
+    if (received + totalScanned + qty > reservedQty) {
+      errorAlertBottom("Exceeds remaining qty (${reservedQty - received}).");
       return;
     }
 
@@ -149,7 +150,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
 
     final item = items[index];
     final String itemName = item['name'] ?? 'item';
-    final expectedQty = item["expected"] ?? 0;
+    final reservedQty = item["reserved"] ?? 0;
     final received = item["received"] ?? 0;
 
     final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
@@ -158,16 +159,16 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     }
 
     final total = scanned.fold<int>(0, (sum, e) => sum + safeToInt(e['qty']));
-    if (received + total + 1 > expectedQty) {
+    if (received + total + 1 > reservedQty) {
       return ScanFeedback.error(
-          "Reached expected qty ($expectedQty) for $itemName.");
+          "Reached reserved qty ($reservedQty) for $itemName.");
     }
 
     scanned.add({"serial_number": code, "qty": 1});
     item["scanned"] = scanned;
     items[index] = item;
     items.refresh();
-    return ScanFeedback.ok("Scanned ${received + total + 1}/$expectedQty");
+    return ScanFeedback.ok("Scanned ${received + total + 1}/$reservedQty");
   }
 
   /// Non serial-tracked (manage_sn == false) items don't scan — they hold a
@@ -177,12 +178,12 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     if (index >= items.length) return;
 
     final item = items[index];
-    final expectedQty = item["expected"] ?? 0;
+    final reservedQty = item["reserved"] ?? 0;
     final received = item["received"] ?? 0;
 
     // Cap at the remaining qty: received + this entry must not exceed expected.
-    if (received + qty > expectedQty) {
-      errorAlertBottom("Exceeds remaining qty (${expectedQty - received}).");
+    if (received + qty > reservedQty) {
+      errorAlertBottom("Exceeds remaining qty (${reservedQty - received}).");
       return;
     }
 
@@ -229,7 +230,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     if (next < items.length) {
       selectedIndex.value = next;
     } else {
-      Get.back(result: true);
+      closeRoute(true);
     }
   }
 

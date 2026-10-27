@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../styles/app_text_style.dart';
 import '../../data/models/serial_number_model.dart';
+import '../functions.dart';
 
 /// Shared building blocks for the Receive / Outflow order **list** and
 /// **detail** screens, so every list row, pagination footer and detail
@@ -457,7 +458,7 @@ void showSerialNumbersDialog(
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Get.back(), child: const Text("Close")),
+        TextButton(onPressed: () => closeRoute(), child: const Text("Close")),
       ],
     ),
   );

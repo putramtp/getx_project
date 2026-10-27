@@ -67,7 +67,9 @@ void main() {
 
   e2eTest('search finds a delivery by code', skip: !hasCredentials, ($) async {
     await _openDeliveries($);
-    final code = listCardTitle($, 0);
+    expect(listCards().evaluate().length, greaterThan(1), reason: 'need 2+ deliveries to prove the search narrows');
+    // Search for the second delivery: the first would pass even if search did nothing.
+    final code = listCardTitle($, 1);
 
     // The submit (check) icon only shows while the field is focused.
     await $(#searchBarField).enterText(code, hideKeyboard: false);
@@ -82,6 +84,23 @@ void main() {
 
     await $('Update status').scrollTo();
     expect($('Update status'), findsOneWidget);
+  });
+
+  e2eTest('saving without an address keeps the edit sheet open', skip: !hasCredentials, ($) async {
+    await _openFirstDelivery($);
+
+    await $('Edit details').scrollTo();
+    await $('Edit details').tap();
+    await $('Edit Delivery').waitUntilVisible();
+    await $('ETA date').tap();
+    await $('OK').tap();
+    await $(#deliveryEditAddressField).enterText('');
+    await $('Save changes').scrollTo();
+    await $('Save changes').tap(settlePolicy: SettlePolicy.noSettle);
+
+    await $('A delivery address is required.').waitUntilVisible();
+    await $.pump(const Duration(seconds: 1));
+    expect($('Edit Delivery'), findsOneWidget, reason: 'a failed save must not discard the form');
   });
 
   e2eTest('editing details then marking a status updates the delivery', skip: !hasCredentials, ($) async {

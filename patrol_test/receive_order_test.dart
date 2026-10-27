@@ -30,7 +30,10 @@ Future<void> _fillOneUnit(PatrolIntegrationTester $) async {
   await $(#qtyDialogField).waitUntilVisible();
   await $(#qtyDialogField).enterText('1');
   if ($(#qtyDialogExpiryField).exists) {
-    await $(#qtyDialogExpiryField).tap();
+    // The field sits under AbsorbPointer (its GestureDetector parent opens the
+    // picker), so it is never hit-testable for Patrol's own tap.
+    await $.tester.tap(find.byKey(const Key('qtyDialogExpiryField')), warnIfMissed: false);
+    await $.pumpAndTrySettle();
     await $('OK').tap();
   }
   await $('Save').tap();
@@ -77,7 +80,9 @@ void main() {
 
   e2eTest('purchase order search finds a PO by number', skip: !hasCredentials, ($) async {
     await _openPurchaseOrders($);
-    final poNumber = listCardTitle($, 0);
+    expect(listCards().evaluate().length, greaterThan(1), reason: 'need 2+ POs to prove the search narrows');
+    // Search for the second PO: finding the first one would pass even if search did nothing.
+    final poNumber = listCardTitle($, 1);
 
     // The submit (check) icon only shows while the field is focused, and
     // enterText unfocuses by default.

@@ -19,9 +19,10 @@ void main() {
     'valid credentials sign in and land on home',
     skip: !hasCredentials,
     ($) async {
-      await loginAsTestUser($);
+      await loginViaForm($);
 
       expect($('Sign in to continue'), findsNothing);
+      expect($('Quick Access'), findsOneWidget);
     },
   );
 

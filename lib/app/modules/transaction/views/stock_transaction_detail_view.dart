@@ -8,6 +8,7 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../data/models/serial_number_model.dart';
 import '../../../routes/app_pages.dart';
+import '../../../global/functions.dart';
 
 class StockTransactionDetailView
     extends GetView<StockTransactionDetailController> {
@@ -141,7 +142,7 @@ class StockTransactionDetailView
                                     ),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Get.back(),
+                                        onPressed: () => closeRoute(),
                                         child: const Text("Close"),
                                       ),
                                     ],

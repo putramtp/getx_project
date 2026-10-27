@@ -12,6 +12,7 @@ import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
+import '../../../global/functions.dart';
 
 class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailController> {
   const ReceiveOrderByPoDetailView({super.key});
@@ -333,7 +334,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Get.back(result: false),
+                      onPressed: () => closeRoute(false),
                       child: const Text('Cancel'),
                     ),
                   ),
@@ -343,7 +344,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.teal,
                       ),
-                      onPressed: () => Get.back(result: true),
+                      onPressed: () => closeRoute(true),
                       child: Text(
                         'Continue',
                         style: AppTextStyle.plain(color: Colors.white),

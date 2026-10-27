@@ -4,6 +4,7 @@ import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/scanner_page.dart';
 import 'package:getx_project/app/global/variables.dart';
+import '../functions.dart';
 
 AppBar costumAppbar(String title) {
   return AppBar(
@@ -61,7 +62,7 @@ PreferredSizeWidget appBarOrder(String title, double size,
             key: const Key('appBarBackButton'),
             icon:  Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white,size: size *2),
             onPressed: () =>
-                (routeBackName != null) ? Get.toNamed(routeBackName) : Get.back(),
+                (routeBackName != null) ? Get.toNamed(routeBackName) : closeRoute(),
           ),
           showIcon 
               ? Row(
@@ -167,7 +168,7 @@ Future<void> showRemoveDialog(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => closeRoute(),
                   child: Text(
                     "Cancel",
                     style: AppTextStyle.plain(
@@ -180,7 +181,7 @@ Future<void> showRemoveDialog(
                 TextButton(
                   onPressed: () {
                     onConfirm();
-                    Get.back();
+                    closeRoute();
                   },
                   child: Text(
                     "Remove",
@@ -244,7 +245,7 @@ Future<void> showEditCodeDialog(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => closeRoute(),
                   child: Text(
                     "Cancel",
                     style: AppTextStyle.plain(color: Colors.grey),
@@ -255,7 +256,7 @@ Future<void> showEditCodeDialog(
                     final newCode = controller.text.trim();
                     if (newCode.isNotEmpty) {
                       onSave(newCode);
-                      Get.back();
+                      closeRoute();
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -383,12 +384,12 @@ Future<String?> captureSerialInput({Color accent = Colors.blueAccent}) async {
           ListTile(
             leading: Icon(Icons.qr_code_scanner_rounded, color: accent),
             title: const Text("Scan barcode"),
-            onTap: () => Get.back(result: 'scan'),
+            onTap: () => closeRoute('scan'),
           ),
           ListTile(
             leading: Icon(Icons.keyboard_rounded, color: accent),
             title: const Text("Enter manually"),
-            onTap: () => Get.back(result: 'manual'),
+            onTap: () => closeRoute('manual'),
           ),
         ],
       ),
@@ -413,7 +414,7 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
   final TextEditingController controller = TextEditingController();
   void submit() {
     final value = controller.text.trim();
-    if (value.isNotEmpty) Get.back(result: value);
+    if (value.isNotEmpty) closeRoute(value);
   }
 
   return Get.dialog<String>(
@@ -450,7 +451,7 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => closeRoute(),
                   child: Text("Cancel", style: AppTextStyle.plain(color: Colors.grey)),
                 ),
                 ElevatedButton(

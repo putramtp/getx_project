@@ -22,7 +22,10 @@ void main() {
 
   e2eTest('search narrows the list to the typed product', skip: !hasCredentials, ($) async {
     await _openProducts($);
-    final name = $.tester.widget<ProductTile>($(ProductTile).first).product.itemName;
+    final before = $(ProductTile).evaluate().map((e) => (e.widget as ProductTile).product.itemName).toList();
+    expect(before.length, greaterThan(1), reason: 'need 2+ products to prove the search narrows');
+    // Search for the last visible product: the first would pass even if search did nothing.
+    final name = before.last;
 
     await $.tester.tap(find.byTooltip('Search'));
     await $.pump(const Duration(milliseconds: 300));
@@ -32,8 +35,8 @@ void main() {
     await waitForList($);
 
     final tiles = $(ProductTile).evaluate().map((e) => (e.widget as ProductTile).product.itemName);
-    expect(tiles, isNotEmpty);
     expect(tiles, contains(name));
+    expect(tiles.first, name, reason: 'the searched product should lead the results');
   });
 
   e2eTest('filter popup applies and clears', skip: !hasCredentials, ($) async {

@@ -7,6 +7,7 @@ import '../../../data/models/purchase_order_supplier_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
+import '../../../global/functions.dart';
 
 class ReceiveOrderBySupplierDetailController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
@@ -292,7 +293,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     if (nextIndex < items.length) {
       selectedIndex.value = nextIndex;
     } else {
-      Get.back(result: true); // close fill page
+      closeRoute(true); // close fill page
     }
   }
 
@@ -341,7 +342,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     // the draft is intentionally kept so the worker can retry when back online.)
     await _drafts.remove(_draftScope);
 
-    if (Get.isDialogOpen == true) Get.back();
+    if (Get.isDialogOpen == true) closeRoute();
     successAlertBottom("Receiving process for $supplierName started successfully.");
 
     // Route into the serial-confirmation pass for the created receive order.

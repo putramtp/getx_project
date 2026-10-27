@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../data/providers/delivery_provider.dart';
 import '../../global/alert.dart';
+import '../../global/functions.dart';
 import '../../global/size_config.dart';
 import '../../global/styles/app_text_style.dart';
 import '../../global/variables.dart';
@@ -19,11 +20,8 @@ DeliveryProvider _deliveryProvider() => Get.isRegistered<DeliveryProvider>()
 
 /// Ask whether to create a delivery for the just-completed outflow order.
 Future<bool> confirmCreateDelivery() async {
-  // Buttons pop via the dialog's own Navigator, not Get.back(): this dialog
-  // opens while the "outflow completed" snackbar is still showing, and
-  // Get.back() would only close that snackbar, leaving the dialog up.
   final result = await Get.dialog<bool>(
-    Builder(builder: (context) => AlertDialog(
+    AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       title: Row(
         children: [
@@ -38,17 +36,17 @@ Future<bool> confirmCreateDelivery() async {
           "The outflow is complete. Do you want to create a delivery for it now?"),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
+          onPressed: () => closeRoute(false),
           child: Text("Not now", style: AppTextStyle.plain(color: Colors.grey)),
         ),
         ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () => closeRoute(true),
           style: ElevatedButton.styleFrom(
               backgroundColor: steelBlue, foregroundColor: Colors.white),
           child: const Text("Create"),
         ),
       ],
-    )),
+    ),
   );
   return result ?? false;
 }

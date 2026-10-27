@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/models/delivery_model.dart';
+import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
@@ -341,7 +342,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                                 if (date == null) {
                                   return;
                                 }
-                                await controller.submitUpdate(
+                                final saved = await controller.submitUpdate(
                                   statusId: statusId,
                                   estimateAt:
                                       DateFormat('yyyy-MM-dd').format(date!),
@@ -351,9 +352,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                                   address: addressCtrl.text,
                                   description: descCtrl.text,
                                 );
-                                // Pop the sheet itself: submitUpdate just showed a
-                                // snackbar, and Get.back() would close that instead.
-                                if (context.mounted) Navigator.of(context).pop();
+                                if (saved) closeRoute();
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: steelBlue,

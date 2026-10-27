@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../alert.dart';
 import '../styles/app_text_style.dart';
+import '../functions.dart';
 
 /// Quantity-entry dialogs shared by the outflow scan screens.
 ///
@@ -10,7 +11,7 @@ import '../styles/app_text_style.dart';
 /// disposed in its `dispose()` — i.e. only once the dialog has been fully
 /// removed from the tree after its exit animation. Disposing the controller
 /// straight after `await Get.dialog(...)` (which returns the moment
-/// `Get.back()` fires, before the reverse transition finishes) would leave the
+/// `closeRoute()` fires, before the reverse transition finishes) would leave the
 /// still-mounted `TextField` referencing a disposed controller, throwing
 /// "A TextEditingController was used after being disposed".
 
@@ -86,7 +87,7 @@ class _QtyDialog extends StatefulWidget {
   final String confirmText;
   final String initialText;
 
-  /// Maps the raw field text to the value returned via `Get.back(result: ...)`.
+  /// Maps the raw field text to the value returned via `closeRoute(...)`.
   final int? Function(String text) onConfirm;
 
   @override
@@ -120,9 +121,9 @@ class _QtyDialogState extends State<_QtyDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+        TextButton(onPressed: () => closeRoute(), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () => Get.back(result: widget.onConfirm(_controller.text)),
+          onPressed: () => closeRoute(widget.onConfirm(_controller.text)),
           child: Text(widget.confirmText),
         ),
       ],
@@ -202,7 +203,7 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
       );
       return;
     }
-    Get.back(result: {'qty': qty, 'expired_date': _expController.text});
+    closeRoute({'qty': qty, 'expired_date': _expController.text});
   }
 
   @override
@@ -249,7 +250,7 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+        TextButton(onPressed: () => closeRoute(), child: const Text('Cancel')),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: widget.accent),
           onPressed: _save,
@@ -295,9 +296,9 @@ class _ReceiveNumberDialogState extends State<_ReceiveNumberDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+        TextButton(onPressed: () => closeRoute(), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () => Get.back(result: _controller.text.trim()),
+          onPressed: () => closeRoute(_controller.text.trim()),
           child: const Text('Save'),
         ),
       ],

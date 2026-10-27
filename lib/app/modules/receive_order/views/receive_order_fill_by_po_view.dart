@@ -9,6 +9,7 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
+import '../../../global/functions.dart';
 
 class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController> {
   const ReceiveOrderFillByPoView({super.key});
@@ -244,7 +245,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
               leading: const Icon(Icons.edit, color: Colors.blueAccent),
               title: Text(isSerial ? "Edit Serial" : "Edit Quantity"),
               onTap: () async {
-                Get.back();
+                closeRoute();
                 if (isSerial) {
                   final barcode = await showManualSerialDialog(accent: _accent);
                   if (barcode == null) return;
@@ -291,7 +292,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
               leading: const Icon(Icons.delete, color: Colors.redAccent),
               title: const Text("Remove"),
               onTap: () {
-                Get.back();
+                closeRoute();
                 controller.removeFilledAt(i);
               },
             ),
