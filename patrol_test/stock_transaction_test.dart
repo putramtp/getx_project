@@ -5,8 +5,8 @@ import 'common/harness.dart';
 
 Future<void> _openStockTransactions(PatrolIntegrationTester $) async {
   await loginAsTestUser($);
-  await $('Transaction').scrollTo();
-  await $('Transaction').tap();
+  await $('Transactions').scrollTo();
+  await $('Transactions').tap();
   await expectScreen($, 'Stock Transactions');
   await waitForList($);
 }

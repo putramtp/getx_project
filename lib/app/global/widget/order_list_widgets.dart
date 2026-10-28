@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../accent.dart';
 import '../styles/app_text_style.dart';
+import '../variables.dart';
+import 'accent_header_card.dart';
+import 'accent_pill.dart';
+import 'functions_widget.dart';
 import '../../data/models/serial_number_model.dart';
 import '../functions.dart';
 
@@ -159,14 +164,7 @@ Widget orderListFooter(double size,
     );
   }
   if (showEnd) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: size * 2),
-      child: Center(
-        child: Text("No more data",
-            style: AppTextStyle.small(size, color: Colors.grey.shade500)
-                .copyWith(fontSize: size * 1.2, fontWeight: FontWeight.w500)),
-      ),
-    );
+    return NoMoreDataFooter(size: size);
   }
   return const SizedBox.shrink();
 }
@@ -464,71 +462,113 @@ void showSerialNumbersDialog(
   );
 }
 
-/// Gradient header banner used at the top of detail screens (record detail,
-/// item summary). Shows a small [label] above a bold #[code].
-Widget orderDetailHeader({
+/// Totals over the Item Summary lines: [expected] target (expected qty for
+/// receive, reserved qty for outflow), [done] already received/outflowed,
+/// [pending] filled/scanned in this session, and how many lines are complete.
+class LineTotals {
+  const LineTotals(this.expected, this.done, this.pending, this.lines, this.linesDone);
+  final int expected;
+  final int done;
+  final int pending;
+  final int lines;
+  final int linesDone;
+}
+
+LineTotals lineTotals(List<Map<String, dynamic>> items, {required String expectedKey, required String pendingKey}) {
+  var expected = 0, done = 0, pending = 0, linesDone = 0;
+  for (final item in items) {
+    final e = safeToInt(item[expectedKey]);
+    final d = safeToInt(item['received']);
+    final p = List<Map>.from(item[pendingKey] ?? const []).fold<int>(0, (sum, x) => sum + safeToInt(x['qty']));
+    expected += e;
+    done += d;
+    pending += p;
+    if (e > 0 && d + p >= e) linesDone++;
+  }
+  return LineTotals(expected, done, pending, items.length, linesDone);
+}
+
+/// Item Summary header (receive By-PO/Supplier, outflow By-Request/Customer):
+/// [accentHeaderCard] with target / done / in-progress stats and a two-tone
+/// progress bar. [labels] = (target, done, pending) stat labels, e.g.
+/// ('Expected', 'Received', 'Receiving now'); [doneVerb] ends the caption.
+Widget orderSummaryHeader({
   required double size,
+  required AppAccent accent,
+  required IconData icon,
+  required String label,
+  required String title,
+  required LineTotals totals,
+  required (String, String, String) labels,
+  required String doneVerb,
+  String? code,
+  Widget? badge,
+  String? footer,
+  IconData footerIcon = Icons.info_outline_rounded,
+}) {
+  final target = totals.expected;
+  return accentHeaderCard(
+    size: size,
+    accent: accent,
+    icon: icon,
+    label: label,
+    title: title,
+    code: code,
+    badge: badge,
+    stats: [
+      HeaderStat(labels.$1, '$target'),
+      HeaderStat(labels.$2, '${totals.done}', color: navyMid),
+      HeaderStat(labels.$3, '${totals.pending}', color: accent.text),
+    ],
+    footer: footer,
+    footerIcon: footerIcon,
+    progress: AccentProgress(
+      [
+        ProgressSegment(target > 0 ? totals.done / target : 0, navyMid, legend: labels.$2),
+        ProgressSegment(target > 0 ? totals.pending / target : 0, accent.base, legend: 'Now'),
+      ],
+      caption: '${totals.linesDone} of ${totals.lines} lines $doneVerb',
+      showLegend: true,
+    ),
+  );
+}
+
+/// Receive Order / Outflow Order detail header: record code, `type` badge,
+/// Lines / Total qty (+ in, - out) / Date stats and an optional [progress].
+Widget orderRecordHeader({
+  required double size,
+  required AppAccent accent,
+  required IconData icon,
   required String label,
   required String code,
-  required IconData icon,
-  required List<Color> gradientColors,
+  required AppAccent typeAccent,
+  required bool isIn,
+  String? type,
+  int lines = 0,
+  int totalQty = 0,
+  DateTime? date,
+  String? footer,
+  IconData footerIcon = Icons.info_outline_rounded,
+  AccentProgress? progress,
 }) {
-  return ClipRRect(
-    borderRadius: BorderRadius.circular(size * 2),
-    child: Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+  return accentHeaderCard(
+    size: size,
+    accent: accent,
+    icon: icon,
+    label: label,
+    title: '#$code',
+    badge: type == null || type.isEmpty ? null : accentPill(size, type, accent: typeAccent),
+    stats: [
+      HeaderStat('Lines', '$lines'),
+      HeaderStat(
+        'Total qty',
+        '${isIn ? '+' : '-'}$totalQty',
+        color: isIn ? stockInColor : stockOutColor,
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -size * 3,
-            right: -size * 3,
-            child: Container(
-              width: size * 12,
-              height: size * 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: size * 2, vertical: size * 1.8),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(size * 1.2),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: Colors.white, size: size * 2.8),
-                ),
-                SizedBox(width: size * 1.6),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label, style: AppTextStyle.body(size, color: Colors.white70)),
-                      SizedBox(height: size * 0.3),
-                      Text("#$code",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyle.h3(size, color: Colors.white)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
+      HeaderStat('Date', date == null ? '-' : getDateString(date)),
+    ],
+    footer: footer,
+    footerIcon: footerIcon,
+    progress: progress,
   );
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/receive_order_list_detail_controller.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/accent_header_card.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
@@ -19,9 +22,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Receive Order Detail", size,
-          routeBackName: AppPages.receiveOrderListPage,
-          color1: navyDark, color2: navyMid),
+      appBar: appHeader('Receive Order', accent: AppAccent.navy, icon: Icons.assignment_turned_in_rounded),
       floatingActionButton: Obx(() {
         // Offer a re-open entry into the serial-confirm pass only when this RO
         // actually carries serial numbers.
@@ -31,7 +32,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
             false;
         if (!hasSerials) return const SizedBox.shrink();
         return FloatingActionButton.extended(
-          backgroundColor: skyBlue,
+          backgroundColor: navyDark,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.qr_code_scanner_rounded),
           label: Text("Confirm Serials",
@@ -51,17 +52,41 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
           padding: EdgeInsets.all(size * 1.6),
           child: Column(
             children: [
-              orderDetailHeader(
-                size: size,
-                label: "Receive Order",
-                code: controller.currentReceiveOrder.code,
-                icon: Icons.inventory_rounded,
-                gradientColors: const [navyDark, navyMid, navyLight],
-              ),
+              Obx(() {
+                final detail = controller.receiveOrderDetail.value;
+                final lines = detail?.receiveOrderLines ?? const [];
+                final serials = [for (final l in lines) ...l.serialNumbers];
+                final confirmed = serials.where((s) => s.isScanned).length;
+                final type = detail?.type ?? controller.currentReceiveOrder.type;
+                return skeletonize(
+                  loading: controller.isLoading.value,
+                  child: orderRecordHeader(
+                    size: size,
+                    accent: AppAccent.navy,
+                    icon: Icons.assignment_turned_in_rounded,
+                    label: 'Receive order',
+                    code: controller.currentReceiveOrder.code,
+                    type: type,
+                    typeAccent: type.toUpperCase().contains('PO') ? AppAccent.sky : AppAccent.sage,
+                    isIn: true,
+                    lines: lines.length,
+                    totalQty: lines.fold<int>(0, (sum, l) => sum + l.qty),
+                    date: detail?.date ?? controller.currentReceiveOrder.date,
+                    footer: headerFooterText([detail?.supplierName, detail?.receiveNumber]),
+                    footerIcon: Icons.storefront_rounded,
+                    progress: serials.isEmpty
+                        ? null
+                        : AccentProgress(
+                            [ProgressSegment(confirmed / serials.length, stockInColor)],
+                            caption: '$confirmed of ${serials.length} serials confirmed',
+                          ),
+                  ),
+                );
+              }),
               SizedBox(height: size * 2),
               Expanded(child: Obx(() {
                 if (controller.isLoading.value) {
-                  return skeletonLineList(size, accent: skyBlue);
+                  return skeletonLineList(size, accent: navyDark);
                 }
                 if (controller.receiveOrderDetail.value == null) {
                   return textNoData(size, message: "No items found.");
@@ -77,7 +102,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
                       size: size,
                       itemName: line.itemName,
                       qty: line.qty,
-                      accent: skyBlue,
+                      accent: navyDark,
                       serials: line.serialNumbers,
                       showConfirmation: true,
                     );

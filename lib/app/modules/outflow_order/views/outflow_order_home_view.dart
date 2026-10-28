@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
-import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_menu_widgets.dart';
 import '../../../routes/app_pages.dart';
 
@@ -17,12 +18,7 @@ class OutflowOrderHomeView extends GetView {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder(
-        "Outflow Order Menu", size,
-        icon: Icons.grid_view_outlined,
-        routeBackName: AppPages.homePage,
-        color1: mutedPurple, color2: softPurple,
-      ),
+      appBar: appHeader('Outflow', accent: AppAccent.purple, icon: Icons.outbox_rounded),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(size * 2),
@@ -34,7 +30,7 @@ class OutflowOrderHomeView extends GetView {
                 title: "Outflow Orders",
                 subtitle: "View all outflow history",
                 icon: Icons.outbox_rounded,
-                gradientColors: const [mutedPurple, softPurple, lightPurple],
+                gradientColors: const [navyDark, navyMid],
                 onTap: () => Get.toNamed(AppPages.outflowOrderListPage),
               ),
               SizedBox(height: size * 3),
@@ -75,12 +71,12 @@ class OutflowOrderHomeView extends GetView {
               orderMenuSectionHeader(
                   size, "Logistics", Icons.local_shipping_outlined, steelBlue),
               SizedBox(height: size * 2),
-              orderMenuHero(
+              orderMenuInfoCard(
                 size: size,
                 title: "Deliveries",
                 subtitle: "Track & dispatch deliveries",
                 icon: Icons.local_shipping_rounded,
-                gradientColors: const [steelBlue, lightSteelBlue],
+                accent: AppAccent.steel,
                 onTap: () => Get.toNamed(AppPages.deliveryListPage),
               ),
             ],

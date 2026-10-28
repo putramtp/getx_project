@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../controllers/receive_order_by_po_controller.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
@@ -20,10 +21,7 @@ class ReceiveOrderByPoView extends GetView<ReceiveOrderByPoController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Purchase Order List", size,
-          icon: Icons.list_alt_sharp,
-          routeBackName: AppPages.receiveHomePage,
-          color1: skyBlue, color2: skyBlueLight),
+      appBar: appHeader('Purchase Orders', accent: AppAccent.sky, icon: Icons.request_page_rounded, subtitle: 'Receive · By PO'),
       body: RefreshIndicator(
         onRefresh: controller.loadPurchaseOrders,
         child: SafeArea(

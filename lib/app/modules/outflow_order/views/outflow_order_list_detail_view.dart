@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/accent_header_card.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
@@ -8,7 +11,6 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/outflow_order_list_detail_controller.dart';
-import '../../../routes/app_pages.dart';
 
 class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
   const OutflowOrderDetailView({super.key});
@@ -19,25 +21,38 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Outflow Order Detail", size,
-          routeBackName: AppPages.outflowOrderListPage,
-          color1: mutedPurple, color2: softPurple),
+      appBar: appHeader('Outflow Order', accent: AppAccent.purple, icon: Icons.receipt_long_rounded),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
           child: Column(
             children: [
-              orderDetailHeader(
-                size: size,
-                label: "Outflow Order",
-                code: controller.curretOutflowOrder.code,
-                icon: Icons.inventory_rounded,
-                gradientColors: const [mutedPurple, softPurple, lightPurple],
-              ),
+              Obx(() {
+                final detail = controller.outflowOrderDetail.value;
+                final lines = detail?.outflowOrderLines ?? const [];
+                return skeletonize(
+                  loading: controller.isLoading.value,
+                  child: orderRecordHeader(
+                    size: size,
+                    accent: AppAccent.purple,
+                    icon: Icons.receipt_long_rounded,
+                    label: 'Outflow order',
+                    code: controller.curretOutflowOrder.code,
+                    type: detail?.type ?? controller.curretOutflowOrder.type,
+                    typeAccent: AppAccent.steel,
+                    isIn: false,
+                    lines: lines.length,
+                    totalQty: lines.fold<int>(0, (sum, l) => sum + l.qty),
+                    date: detail?.date,
+                    footer: headerFooterText([detail?.customerName, detail?.billNumber]),
+                    footerIcon: Icons.groups_rounded,
+                  ),
+                );
+              }),
               SizedBox(height: size * 2),
               Expanded(child: Obx(() {
                 if (controller.isLoading.value) {
-                  return skeletonLineList(size, accent: softPurple);
+                  return skeletonLineList(size, accent: mutedPurple);
                 }
                 if (controller.outflowOrderDetail.value == null) {
                   return textNoData(size, message: "No items found.");
@@ -53,7 +68,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                       size: size,
                       itemName: line.itemName,
                       qty: line.qty,
-                      accent: softPurple,
+                      accent: mutedPurple,
                       serials: line.serialNumbers,
                     );
                   },

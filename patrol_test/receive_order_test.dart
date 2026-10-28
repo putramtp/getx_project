@@ -7,14 +7,14 @@ import 'common/order_flow.dart';
 
 Future<void> _openReceiveMenu(PatrolIntegrationTester $) async {
   await loginAsTestUser($);
-  await $('RECEIVE ORDER').tap();
-  await expectScreen($, 'Receive Order Menu');
+  await $(#homeReceiveTask).tap();
+  await expectScreen($, 'Receive');
 }
 
 Future<void> _openPurchaseOrders(PatrolIntegrationTester $) async {
   await _openReceiveMenu($);
   await $('By Purchase-order').tap();
-  await expectScreen($, 'Purchase Order List');
+  await expectScreen($, 'Purchase Orders');
   await waitForList($);
 }
 
@@ -56,6 +56,11 @@ Future<void> _confirmFirstPendingLabel(PatrolIntegrationTester $) async {
   await $(RegExp(r'^Confirmed 1/')).waitUntilVisible(timeout: apiTimeout);
   await $('Done').tap(settlePolicy: SettlePolicy.noSettle);
   await expectScreen($, 'Confirm Serials');
+
+  // Back pops to the PO list, which must reload (not show the stale list).
+  await $(#appBarBackButton).tap();
+  await expectScreen($, 'Purchase Orders');
+  await waitForList($);
 }
 
 void main() {
@@ -70,11 +75,11 @@ void main() {
   e2eTest('receive order list opens a detail', skip: !hasCredentials, ($) async {
     await _openReceiveMenu($);
     await $('Receive Orders').tap();
-    await expectScreen($, 'Receive Order List');
+    await expectScreen($, 'Receive Orders');
     await waitForList($);
 
     await tapListCard($);
-    await expectScreen($, 'Receive Order Detail');
+    await expectScreen($, 'Receive Order');
     await waitForList($);
   });
 
@@ -96,7 +101,7 @@ void main() {
   e2eTest('supplier list loads', skip: !hasCredentials, ($) async {
     await _openReceiveMenu($);
     await $('By Supplier').tap();
-    await expectScreen($, 'Supplier List');
+    await expectScreen($, 'Suppliers');
     await waitForList($);
 
     expect(listCards(), findsWidgets);
@@ -106,7 +111,7 @@ void main() {
     await _openPurchaseOrders($);
     await openOrderWithAction(
       $,
-      listTitle: 'Purchase Order List',
+      listTitle: 'Purchase Orders',
       action: 'Fill',
       noneMessage: 'No open PO with a fillable line — reseed DemoTenantSeeder',
     );
@@ -128,7 +133,7 @@ void main() {
     await waitForList($);
     if ($('Nothing to confirm').exists) {
       await $('Done').tap();
-      await expectScreen($, 'Purchase Order List');
+      await expectScreen($, 'Purchase Orders');
       return;
     }
     await _confirmFirstPendingLabel($);

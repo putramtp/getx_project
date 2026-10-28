@@ -3,6 +3,10 @@ import 'package:get/get.dart';
 
 import '../controllers/receive_order_by_supplier_detail_controller.dart';
 import '../views/receive_order_fill_by_supplier_view.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/app_buttons.dart';
+import '../../../global/widget/accent_pill.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
@@ -11,7 +15,6 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/functions.dart';
 
 class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDetailController> {
@@ -22,8 +25,11 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderBySupplierPage,color1:sageTeal,color2:sageTealLight),
-      body: Padding(
+      appBar: appHeader('Item Summary', accent: AppAccent.sage, icon: Icons.list_alt_rounded, subtitle: 'By Supplier · ${controller.currentSupplier.name}'),
+      body: SafeArea(
+        // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
+        top: false,
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -88,7 +94,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
                     showAction: !isFinished,
                     actionLabel: "Fill",
                     actionIcon: Icons.edit_rounded,
-                    actionColor: sageTeal,
+                    actionColor: AppAccent.sage.text,
                     onAction: () {
                       controller.selectedIndex.value = index;
                       controller.selectedItem.value = item;
@@ -103,6 +109,7 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -112,21 +119,12 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
       child: Obx(() {
         final totalFilled = controller.totalFilled;
         final isLoading = controller.isLoadingReceiving.value;
-        return FilledButton.icon(
-          icon: isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.receipt_long_rounded),
-          label: Text(isLoading
-              ? "Processing..."
-              : "Continue to receiving items ($totalFilled filled)"),
-          onPressed: isLoading ? null  :() async {
+        return navyButton(
+          SizeConfig.defaultSize,
+          isLoading ? "Processing..." : "Continue to receiving items ($totalFilled filled)",
+          icon: Icons.receipt_long_rounded,
+          loading: isLoading,
+          onPressed: () async {
             if (controller.items.isEmpty) return;
             // Use the unified filled data
             final allFilledUnified = controller.getAllFilledUnified();
@@ -160,11 +158,6 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
               controller.startReceivingItem();
             }
           },
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            backgroundColor: const Color(0xFF31694E)
-          ),
         );
       }),
     );
@@ -364,12 +357,24 @@ class ReceiveOrderBySupplierDetailView extends GetView<ReceiveOrderBySupplierDet
   }
 
   Widget _buildHeaderGradient(double size) {
-    return orderDetailHeader(
-      size: size,
-      label: "Supplier / Vendor",
-      code: controller.currentSupplier.name,
-      icon: Icons.store_rounded,
-      gradientColors: const [sageTeal, sageGreen],
+    final supplier = controller.currentSupplier;
+    return Obx(
+      () => skeletonize(
+        loading: controller.isLoading.value,
+        child: orderSummaryHeader(
+          size: size,
+          accent: AppAccent.sage,
+          icon: Icons.storefront_rounded,
+          label: 'Supplier',
+          title: supplier.name,
+          code: supplier.code,
+          badge: accentPill(size, supplier.status, accent: AppAccent.sage),
+          totals: lineTotals(controller.items, expectedKey: 'expected', pendingKey: 'filled'),
+          labels: ('Expected', 'Received', 'Receiving now'),
+          doneVerb: 'complete',
+        ),
+      ),
     );
   }
+
 }

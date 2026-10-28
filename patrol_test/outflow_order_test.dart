@@ -6,8 +6,8 @@ import 'common/order_flow.dart';
 
 Future<void> _openOutflowMenu(PatrolIntegrationTester $) async {
   await loginAsTestUser($);
-  await $('OUTFLOW ORDER').tap();
-  await expectScreen($, 'Outflow Order Menu');
+  await $(#homeOutflowTask).tap();
+  await expectScreen($, 'Outflow');
 }
 
 Future<void> _openFromMenu(PatrolIntegrationTester $, String tile, String title) async {
@@ -30,32 +30,32 @@ void main() {
 
   e2eTest('outflow order list opens a detail', skip: !hasCredentials, ($) async {
     await _openOutflowMenu($);
-    await _openFromMenu($, 'Outflow Orders', 'Outflow Order List');
+    await _openFromMenu($, 'Outflow Orders', 'Outflow Orders');
 
     await tapListCard($);
-    await expectScreen($, 'Outflow Order Detail');
+    await expectScreen($, 'Outflow Order');
     await waitForList($);
   });
 
   e2eTest('request and customer lists load', skip: !hasCredentials, ($) async {
     await _openOutflowMenu($);
-    await _openFromMenu($, 'By Request', 'Outflow Request List');
+    await _openFromMenu($, 'By Request', 'Outflow Requests');
     expect(listCards(), findsWidgets);
 
     await $(#appBarBackButton).tap();
-    await expectScreen($, 'Outflow Order Menu');
-    await _openFromMenu($, 'By Customer', 'Customer List');
+    await expectScreen($, 'Outflow');
+    await _openFromMenu($, 'By Customer', 'Customers');
     expect(listCards(), findsWidgets);
   });
 
   e2eTest('outflowing a request line creates a delivery', skip: !hasCredentials, ($) async {
     await _openOutflowMenu($);
-    await _openFromMenu($, 'By Request', 'Outflow Request List');
+    await _openFromMenu($, 'By Request', 'Outflow Requests');
     // "Fill" = a quantity-only (manage_sn false) line; the "Scan" path needs a
     // serial that is known to be in stock, which can't be picked dynamically.
     await openOrderWithAction(
       $,
-      listTitle: 'Outflow Request List',
+      listTitle: 'Outflow Requests',
       action: 'Fill',
       noneMessage: 'No open request with a quantity-only line — reseed DemoTenantSeeder',
     );
@@ -76,5 +76,11 @@ void main() {
     await $('Create').tap(settlePolicy: SettlePolicy.noSettle);
     await waitForSuccess($, $('Delivery created.'));
     await expectScreen($, 'Deliveries');
+
+    // The finished submit flow is unwound: Back goes to the Outflow menu, not
+    // the submitted Item Summary.
+    await $(#appBarBackButton).tap();
+    await expectScreen($, 'Outflow');
+    expect($('Item Summary'), findsNothing);
   });
 }

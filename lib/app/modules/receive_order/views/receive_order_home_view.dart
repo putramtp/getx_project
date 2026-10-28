@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
-import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_menu_widgets.dart';
 import '../../../routes/app_pages.dart';
 
@@ -17,12 +18,7 @@ class ReceiveOrderHomeView extends GetView {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder(
-        "Receive Order Menu", size,
-        icon: Icons.grid_view_outlined,
-        routeBackName: AppPages.homePage,
-        color1: navyDark, color2: navyMid,
-      ),
+      appBar: appHeader('Receive', accent: AppAccent.navy, icon: Icons.move_to_inbox_rounded),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(size * 2),
@@ -34,12 +30,12 @@ class ReceiveOrderHomeView extends GetView {
                 title: "Receive Orders",
                 subtitle: "View all receiving history",
                 icon: Icons.move_to_inbox_rounded,
-                gradientColors: const [navyDark, navyMid, navyLight],
+                gradientColors: const [navyDark, navyMid],
                 onTap: () => Get.toNamed(AppPages.receiveOrderListPage),
               ),
               SizedBox(height: size * 3),
               orderMenuSectionHeader(
-                  size, "Create Receiving", Icons.add_circle_outline_rounded, steelBlue),
+                  size, "Create Receiving", Icons.add_circle_outline_rounded, navyDark),
               SizedBox(height: size * 2),
               IntrinsicHeight(
                 child: Row(

@@ -2,37 +2,45 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'common/harness.dart';
 
-/// Quick Access tile text → AppBar title of the screen it opens.
-const _quickAccess = {
-  'PRODUCT': 'Product',
-  'RECEIVE ORDER': 'Receive Order Menu',
-  'OUTFLOW ORDER': 'Outflow Order Menu',
-  'Transaction': 'Stock Transactions',
-  'Category': 'Category',
-  'Brand': 'Brand',
-  'Unit': 'Unit',
+/// Home entry point (key or visible text) → AppBar title of the screen it opens.
+const _entryPoints = <Object, String>{
+  #homeStatProducts: 'Products',
+  #homeViewProducts: 'Products',
+  #homeStatReceive: 'Receive',
+  #homeStatOutflow: 'Outflow',
+  #homeReceiveTask: 'Receive',
+  #homeOutflowTask: 'Outflow',
+  #homeDeliveries: 'Deliveries',
+  'Transactions': 'Stock Transactions',
+  'Category': 'Categories',
+  'Brand': 'Brands',
+  'Unit': 'Units',
+  'See all': 'Stock Transactions',
 };
 
 void main() {
   e2eTest('dashboard shows its sections', skip: !hasCredentials, ($) async {
     await loginAsTestUser($);
 
-    expect($('Quick Access'), findsOneWidget);
-    await $('Latest Transactions').scrollTo();
-    expect($('Latest Transactions'), findsOneWidget);
-    await $('Statistic').scrollTo();
-    expect($('Statistic'), findsOneWidget);
+    expect($('Start a task'), findsOneWidget);
+    expect($('Overview'), findsOneWidget);
+    expect($('Inventory'), findsOneWidget);
+    await $('Latest transactions').scrollTo();
+    expect($('Latest transactions'), findsOneWidget);
+    await $('Serial number type').scrollTo();
+    expect($('Serial number type'), findsOneWidget);
   });
 
-  e2eTest('quick access tiles open their screens', skip: !hasCredentials, ($) async {
+  e2eTest('home entry points open their screens', skip: !hasCredentials, ($) async {
     await loginAsTestUser($);
 
-    for (final MapEntry(key: tile, value: title) in _quickAccess.entries) {
+    for (final MapEntry(key: tile, value: title) in _entryPoints.entries) {
       await $(tile).scrollTo();
       await $(tile).tap();
       await expectScreen($, title);
       await $(#appBarBackButton).tap();
-      await $('Quick Access').waitUntilVisible(timeout: apiTimeout);
+      // Home may be scrolled past the section title, so wait for existence.
+      await $('Start a task').waitUntilExists(timeout: apiTimeout);
     }
   });
 

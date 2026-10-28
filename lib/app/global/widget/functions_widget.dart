@@ -6,90 +6,12 @@ import 'package:getx_project/app/global/widget/scanner_page.dart';
 import 'package:getx_project/app/global/variables.dart';
 import '../functions.dart';
 
-AppBar costumAppbar(String title) {
-  return AppBar(
-    title: Text(title),
-    centerTitle: true,
-    excludeHeaderSemantics: true,
-    backgroundColor: Colors.green[100],
-    elevation: 2,
-  );
-}
-
-Widget titleApp(String text, double size) {
-  return Text(
-    text,
-    style: AppTextStyle.custom(size,
-            scale: 1.8,
-            letterSpacing: 0.5,
-            color: Colors.white,
-            weight: FontWeight.w500)
-        .copyWith(wordSpacing: 2),
-    overflow: TextOverflow.ellipsis,
-  );
-}
-
 Widget titleMenu(String text, double size) {
   return Text(text, style: AppTextStyle.custom(size, scale: 1.17));
 }
 
 Widget testContainer(double size) {
   return Container(height: size, width: size, color: Colors.brown);
-}
-
-PreferredSizeWidget appBarOrder(String title, double size,
-    {IconData? icon = Icons.inventory_2,
-    String? routeBackName,
-    bool showIcon = true,
-    Color? color1,
-    Color? color2}) {
-  return PreferredSize(
-    preferredSize: const Size.fromHeight(65),
-    child: AppBar(
-      automaticallyImplyLeading: false,
-      flexibleSpace: Container(
-        decoration:  BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color1 ?? steelBlue, color2 ?? lightSteelBlue],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-      ),
-      title: Row(
-        children: [
-          IconButton(
-            key: const Key('appBarBackButton'),
-            icon:  Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white,size: size *2),
-            onPressed: () =>
-                (routeBackName != null) ? Get.toNamed(routeBackName) : closeRoute(),
-          ),
-          showIcon 
-              ? Row(
-                children: [
-                  const SizedBox(width: 8),
-                  Icon(icon, color: Colors.white, size: size *2),
-                ],
-              )
-              : const SizedBox.shrink(),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: AppTextStyle.custom(size,
-                scale: 2.2,
-                weight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-      elevation: 4,
-      centerTitle: false,
-    ),
-  );
 }
 
 // showRemoveDialog(context, code, onConfirm);
@@ -326,6 +248,24 @@ Widget textWithIcon(double size, String text, IconData icon,Color iconColor) {
 
 Widget textLoading(double size,{color = Colors.black54,message = "Loading..."}) {
   return Center(child: Text(message,style: AppTextStyle.infoBold(size,color: color)));
+}
+
+/// End-of-list "No more data" line for paginated lists, with extra bottom
+/// room (plus the system nav-bar inset) so it isn't flush with the screen edge.
+class NoMoreDataFooter extends StatelessWidget {
+  const NoMoreDataFooter({super.key, required this.size});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: const Key('noMoreDataFooter'),
+      padding: EdgeInsets.only(top: size * 3, bottom: size * 6 + MediaQuery.paddingOf(context).bottom),
+      child: Center(
+        child: Text('No more data', style: AppTextStyle.custom(size, scale: 1.3, color: Colors.grey, weight: FontWeight.w500)),
+      ),
+    );
+  }
 }
 
 Widget textNoData(double size,{color = Colors.black54,message = "No data."})   {

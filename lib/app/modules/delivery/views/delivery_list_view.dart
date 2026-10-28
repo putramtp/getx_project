@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
@@ -8,7 +10,6 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/skeleton_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../controllers/delivery_list_controller.dart';
 
 class DeliveryListView extends GetView<DeliveryListController> {
@@ -20,10 +21,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Deliveries", size,
-          icon: Icons.local_shipping_rounded,
-          routeBackName: AppPages.outflowHomePage,
-          color1: steelBlue, color2: lightSteelBlue),
+      appBar: appHeader('Deliveries', accent: AppAccent.steel, icon: Icons.local_shipping_rounded, subtitle: 'Logistics'),
       body: RefreshIndicator(
         onRefresh: controller.loadDeliveries,
         child: SafeArea(

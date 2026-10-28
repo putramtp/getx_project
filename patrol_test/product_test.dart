@@ -6,7 +6,7 @@ import 'common/harness.dart';
 
 Future<void> _openProducts(PatrolIntegrationTester $) async {
   await loginAsTestUser($);
-  await $('PRODUCT').tap();
+  await $(#homeViewProducts).tap();
   await expectScreen($, 'Products list');
   await waitForList($);
 }
@@ -15,7 +15,7 @@ void main() {
   e2eTest('product list loads', skip: !hasCredentials, ($) async {
     await _openProducts($);
 
-    expect($('Total Products'), findsOneWidget);
+    expect($('TOTAL PRODUCTS'), findsOneWidget);
     expect($(ProductTile), findsWidgets);
     expect($('View details'), findsWidgets);
   });
@@ -68,7 +68,7 @@ void main() {
     await _openProducts($);
 
     await $('View Transactions').first.tap();
-    await expectScreen($, 'Transaction');
+    await expectScreen($, 'Transactions');
     await waitForList($);
   });
 }

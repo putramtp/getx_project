@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../accent.dart';
 import '../styles/app_text_style.dart';
+import '../variables.dart';
 
 /// Shared building blocks for the Receive / Outflow order menus.
 ///
@@ -9,7 +11,8 @@ import '../styles/app_text_style.dart';
 /// cards), so the visuals live here once and each menu just supplies its
 /// own copy, colors and routes.
 
-Widget _decorCircle(double diameter, Color color) => Container(
+/// Translucent decor circle (dashboard greeting-card motif).
+Widget decorCircle(double diameter, Color color) => Container(
       width: diameter,
       height: diameter,
       decoration: BoxDecoration(shape: BoxShape.circle, color: color),
@@ -46,12 +49,12 @@ Widget orderMenuHero({
               Positioned(
                 top: -size * 4,
                 right: -size * 4,
-                child: _decorCircle(size * 16, Colors.white.withValues(alpha: 0.08)),
+                child: decorCircle(size * 16, Colors.white.withValues(alpha: 0.08)),
               ),
               Positioned(
                 bottom: -size * 5,
                 left: -size * 4,
-                child: _decorCircle(size * 14, Colors.white.withValues(alpha: 0.06)),
+                child: decorCircle(size * 14, Colors.white.withValues(alpha: 0.06)),
               ),
               Padding(
                 padding: EdgeInsets.all(size * 2.2),
@@ -210,3 +213,54 @@ Widget orderMenuTile({
     ),
   );
 }
+
+/// White tile-style card linking to another module (e.g. "Deliveries" on the
+/// Outflow menu): gradient icon tile in [accent], title/subtitle and "Open →".
+Widget orderMenuInfoCard({
+  required double size,
+  required String title,
+  required String subtitle,
+  required IconData icon,
+  required AppAccent accent,
+  required VoidCallback onTap,
+}) {
+  final radius = BorderRadius.circular(size * 2);
+  return Material(
+    color: Colors.white,
+    borderRadius: radius,
+    child: InkWell(
+      borderRadius: radius,
+      onTap: onTap,
+      child: Ink(
+        padding: EdgeInsets.all(size * 1.6),
+        decoration: BoxDecoration(borderRadius: radius, border: Border.all(color: accent.tint(0.18))),
+        child: Row(
+          children: [
+            Container(
+              width: size * 4.4,
+              height: size * 4.4,
+              decoration: BoxDecoration(gradient: accent.gradient, borderRadius: BorderRadius.circular(size * 1.3)),
+              child: Icon(icon, color: Colors.white, size: size * 2.2),
+            ),
+            SizedBox(width: size * 1.4),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: AppTextStyle.h5(size, weight: FontWeight.w700, color: navyDark)),
+                  SizedBox(height: size * 0.2),
+                  Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyle.small(size)),
+                ],
+              ),
+            ),
+            SizedBox(width: size * 0.8),
+            Text("Open", style: AppTextStyle.bodyBold(size, color: accent.text)),
+            Icon(Icons.arrow_forward_rounded, size: size * 1.6, color: accent.text),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+

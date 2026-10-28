@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 
 import '../controllers/receive_order_list_controller.dart';
@@ -7,7 +9,6 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
@@ -20,10 +21,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Receive Order List", size,
-          icon: Icons.list_alt_sharp,
-          routeBackName: AppPages.receiveHomePage,
-          color1: navyDark, color2: navyMid),
+      appBar: appHeader('Receive Orders', accent: AppAccent.navy, icon: Icons.history_rounded, subtitle: 'Receiving history'),
       body: RefreshIndicator(
         onRefresh: controller.loadReceiveOrders,
         child: SafeArea(
@@ -45,7 +43,7 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return skeletonOrderList(size, accent: skyBlue);
+                      return skeletonOrderList(size, accent: navyDark);
                     }
                     final orders = controller.orders;
                     if (controller.hasError.value && orders.isEmpty) {
@@ -70,13 +68,13 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                             return orderListCard(
                               size: size,
                               leadingIcon: Icons.receipt_long_rounded,
-                              accentColor: skyBlue,
+                              accentColor: navyDark,
                               title: order.code,
                               subtitle: order.supplier,
                               subtitleIcon: Icons.store_outlined,
                               dateText: controller.formatYmd(order.date),
                               trailingBottom: order.type,
-                              trailingBottomColor: skyBlue,
+                              trailingBottomColor: navyDark,
                               onTap: () => controller.openDetail(order),
                             );
                           }

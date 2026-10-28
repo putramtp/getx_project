@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/outflow_order_by_request_detail_controller.dart';
@@ -22,8 +24,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Scan Item", size,
-          showIcon: false, color1: mutedPurple, color2: lightPurple),
+      appBar: appHeader('Scan Item', accent: AppAccent.purple, icon: Icons.qr_code_scanner_rounded),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
@@ -46,8 +47,6 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
               return sum + parsedQty;
             });
 
-            final int remaining = reserved - (received + scannedQty);
-
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
               switchInCurve: Curves.easeOutCubic,
@@ -66,18 +65,18 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  orderFillHeaderCard(
-                      size: size, name: item["name"].toString(), accent: mutedPurple),
-                  SizedBox(height: size * 1.4),
-                  orderFillStatsCard(size: size, stats: [
-                    FillStat("Reserved", "$reserved", Colors.grey.shade700),
-                    FillStat("Received", "$received", skyBlue),
-                    FillStat("Scanned", "$scannedQty", sageTeal),
-                    FillStat("Remaining", "$remaining",
-                        remaining <= 0 ? Colors.grey : Colors.red),
-                  ]),
+                  orderFillItemHeader(
+                    size,
+                    accent: AppAccent.purple,
+                    name: item["name"].toString(),
+                    targetLabel: "Reserved",
+                    target: reserved,
+                    received: received,
+                    doneLabel: "Scanned",
+                    done: scannedQty,
+                  ),
                   SizedBox(height: size * 2),
-                  Text("Scanned Results", style: AppTextStyle.h5(size)),
+                  orderFillResultsTitle(size, "Scanned Results", count: scanned.length, accent: AppAccent.purple),
                   SizedBox(height: size * 0.8),
                   Expanded(child: _buildScannedList(size, scanned, context)),
                 ],

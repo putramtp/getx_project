@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/data/models/product_category_model.dart';
-import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/master_list_view.dart';
 import 'package:getx_project/app/modules/product-category/controllers/product_category_controller.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
 
 class ProductCategoryView extends GetView<ProductCategoryController> {
   const ProductCategoryView({super.key});
@@ -15,9 +13,8 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
   @override
   Widget build(BuildContext context) {
     return MasterListView<ProductCategoryModel>(
-      title: "Category",
-      icon: Icons.category_outlined,
-      routeBackName: AppPages.homePage,
+      title: "Categories",
+      icon: Icons.category_rounded,
       isLoading: controller.isLoading,
       isSearchFocused: controller.isSearchFocused,
       isAscending: controller.isAscending,
@@ -45,7 +42,7 @@ class ProductCategoryView extends GetView<ProductCategoryController> {
         final hasSlug = category.slug.trim().isNotEmpty;
         return masterListCard(
           size: size,
-          accent: getAccentColor2(category.name),
+          kind: MasterKind.category,
           avatarText: code,
           title: category.name,
           subtitle: hasSlug ? category.slug : 'Tap to view products',

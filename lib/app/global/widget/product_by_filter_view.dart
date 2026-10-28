@@ -11,12 +11,14 @@ import 'package:getx_project/app/global/widget/product_tile.dart';
 import 'package:getx_project/app/global/widget/search_bar.dart';
 import 'package:getx_project/app/global/widget/skeleton_widgets.dart';
 
+import '../accent.dart';
+import 'accent_header_card.dart';
+import 'app_header.dart';
 /// Shared "products filtered by a master entity" list screen — used by both the
 /// by-Category and by-Brand views, which are otherwise identical. Callers pass
 /// the gradient-header identity (icon/label/name/code), the reactive state, and
 /// the row callbacks.
 class ProductByFilterView extends StatelessWidget {
-  final String backRoute;
 
   // Header identity
   final IconData headerIcon;
@@ -51,7 +53,6 @@ class ProductByFilterView extends StatelessWidget {
 
   const ProductByFilterView({
     super.key,
-    required this.backRoute,
     required this.headerIcon,
     required this.headerLabel,
     required this.entityName,
@@ -78,11 +79,7 @@ class ProductByFilterView extends StatelessWidget {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: appBarOrder("Product", size,
-          icon: Icons.shopping_bag_outlined,
-          routeBackName: backRoute,
-          color1: navyDark,
-          color2: sageGreen),
+      appBar: appHeader('Products', accent: AppAccent.slate, icon: headerIcon, subtitle: '${headerLabel.replaceFirst('Product ', '')} · $entityName'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -153,18 +150,7 @@ class ProductByFilterView extends StatelessWidget {
                           );
                         }
                         if (cursorNext.value == null && products.isNotEmpty) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(vertical: size * 3),
-                            child: Center(
-                              child: Text(
-                                "No more data.",
-                                style: AppTextStyle.custom(size,
-                                    scale: 1.4,
-                                    color: Colors.grey,
-                                    weight: FontWeight.w500),
-                              ),
-                            ),
-                          );
+                          return NoMoreDataFooter(size: size);
                         }
                         return const SizedBox.shrink();
                       },
@@ -180,43 +166,13 @@ class ProductByFilterView extends StatelessWidget {
   }
 
   Widget _buildHeaderGradient(double size) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [navyMid, skyBlue],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(headerIcon, color: Colors.white, size: size * 3),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(headerLabel,
-                    style: AppTextStyle.custom(size,
-                        scale: 1.5, color: Colors.white70)),
-                Text(
-                  "$entityName ",
-                  style: AppTextStyle.h4(size,
-                      color: Colors.white, weight: FontWeight.bold),
-                ),
-                Text(
-                  "#$entityCode ",
-                  style: AppTextStyle.h4(size,
-                      color: Colors.white, weight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return accentHeaderCard(
+      size: size,
+      accent: AppAccent.slate,
+      icon: headerIcon,
+      label: headerLabel,
+      title: entityName,
+      code: entityCode,
     );
   }
 }

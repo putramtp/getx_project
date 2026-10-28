@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/data/models/product_brand_model.dart';
-import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/widget/master_list_view.dart';
 import 'package:getx_project/app/modules/product-brand/controllers/product_brand_controller.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
 
 class ProductBrandView extends GetView<ProductBrandController> {
   const ProductBrandView({super.key});
@@ -15,9 +13,8 @@ class ProductBrandView extends GetView<ProductBrandController> {
   @override
   Widget build(BuildContext context) {
     return MasterListView<ProductBrandModel>(
-      title: "Brand",
-      icon: Icons.label_outline,
-      routeBackName: AppPages.homePage,
+      title: "Brands",
+      icon: Icons.sell_rounded,
       isLoading: controller.isLoading,
       isSearchFocused: controller.isSearchFocused,
       isAscending: controller.isAscending,
@@ -45,7 +42,7 @@ class ProductBrandView extends GetView<ProductBrandController> {
         final hasSlug = brand.slug.trim().isNotEmpty;
         return masterListCard(
           size: size,
-          accent: getAccentColor2(brand.name),
+          kind: MasterKind.brand,
           avatarText: code,
           title: brand.name,
           subtitle: hasSlug ? brand.slug : 'Tap to view products',

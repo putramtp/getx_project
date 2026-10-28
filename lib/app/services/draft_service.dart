@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' show databaseFactoryFfi, sqfliteFfiInit;
 
 /// A GetxService providing durable, on-device storage for in-progress work
 /// ("drafts") so a worker never loses a batch of scans/fills to an app kill,
@@ -22,23 +25,37 @@ class DraftService extends GetxService {
   late final Database _db;
 
   /// Opens (creating on first run) the drafts database. Must complete before
-  /// any controller reads/writes a draft.
-  Future<DraftService> init() async {
-    final dbPath = p.join(await getDatabasesPath(), _dbName);
-    _db = await openDatabase(
+  /// any controller reads/writes a draft. [path] overrides the file location
+  /// (tests pass `inMemoryDatabasePath`).
+  Future<DraftService> init({String? path}) async {
+    final factory = _databaseFactory();
+    final dbPath = path ?? p.join(await factory.getDatabasesPath(), _dbName);
+    _db = await factory.openDatabase(
       dbPath,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE $_table (
-            scope TEXT PRIMARY KEY,
-            payload TEXT NOT NULL,
-            updated_at INTEGER NOT NULL
-          )
-        ''');
-      },
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE $_table (
+              scope TEXT PRIMARY KEY,
+              payload TEXT NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+        },
+      ),
     );
     return this;
+  }
+
+  /// Plain sqflite only ships a factory for Android/iOS/macOS; Windows and
+  /// Linux (desktop runs, `flutter test`) go through the FFI one.
+  static DatabaseFactory _databaseFactory() {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+      sqfliteFfiInit();
+      return databaseFactoryFfi;
+    }
+    return databaseFactorySqflitePlugin;
   }
 
   /// Persist [jsonValue] (any JSON-encodable Map/List) under [scope],

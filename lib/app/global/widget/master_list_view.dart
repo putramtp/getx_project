@@ -2,9 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
+import 'package:getx_project/app/global/accent.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/variables.dart';
+import 'package:getx_project/app/global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/global/widget/search_bar.dart';
 import 'package:getx_project/app/global/widget/skeleton_widgets.dart';
@@ -19,7 +21,6 @@ import 'package:getx_project/app/global/widget/skeleton_widgets.dart';
 class MasterListView<T> extends StatelessWidget {
   final String title;
   final IconData icon;
-  final String? routeBackName;
 
   // Reactive state (owned by the caller's controller)
   final RxBool isLoading;
@@ -53,7 +54,6 @@ class MasterListView<T> extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
-    required this.routeBackName,
     required this.isLoading,
     required this.isSearchFocused,
     required this.isAscending,
@@ -79,14 +79,7 @@ class MasterListView<T> extends StatelessWidget {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder(
-        title,
-        size,
-        icon: icon,
-        routeBackName: routeBackName,
-        color1: navyDark,
-        color2: sageGreen,
-      ),
+      appBar: appHeader(title, accent: AppAccent.slate, icon: icon, subtitle: 'Master data'),
       body: RefreshIndicator(
         onRefresh: onRefresh,
         child: SafeArea(
@@ -161,12 +154,7 @@ class MasterListView<T> extends StatelessWidget {
       );
     }
     if (cursorNext.value == null && items.isNotEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        child: Center(
-          child: Text('No more data', style: AppTextStyle.small(size, color: Colors.grey)),
-        ),
-      );
+      return NoMoreDataFooter(size: size);
     }
     return const SizedBox.shrink();
   }
@@ -253,64 +241,82 @@ class MasterListView<T> extends StatelessWidget {
   }
 }
 
-/// A horizontal master-data row: gradient monogram/code avatar + title +
-/// subtitle + chevron. Shared by the Category, Brand and Unit lists.
+/// Which master list a [masterListCard] belongs to (picks its kind badge).
+enum MasterKind {
+  brand(Icons.sell_rounded),
+  category(Icons.category_rounded),
+  unit(Icons.straighten_rounded);
+
+  const MasterKind(this.icon);
+  final IconData icon;
+}
+
+/// A master-data row (Category / Brand / Unit): outlined card, a tinted code
+/// tile with a small kind badge, title + subtitle and a navy chevron. The tile
+/// color comes from [accentFor] on the title, so it is stable per item.
 Widget masterListCard({
   required double size,
-  required Color accent,
+  required MasterKind kind,
   required String avatarText,
   required String title,
   required String subtitle,
   required VoidCallback onTap,
-  Color? subtitleColor,
+  bool subtitleMissing = false,
 }) {
+  final accent = accentFor(title);
+  final radius = BorderRadius.circular(14);
   return InkWell(
-    borderRadius: BorderRadius.circular(size * 1.8),
+    borderRadius: radius,
     onTap: onTap,
     child: Ink(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(size * 1.8),
-        border: Border.all(color: accent.withValues(alpha: 0.14)),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        borderRadius: radius,
+        border: Border.all(color: cardOutline),
       ),
       child: Padding(
-        padding: EdgeInsets.all(size * 1.5),
+        padding: EdgeInsets.all(size * 1.3),
         child: Row(
           children: [
-            Container(
-              width: size * 5.4,
-              height: size * 5.4,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [accent, Color.lerp(accent, Colors.white, 0.35)!],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accent.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            SizedBox(
+              width: 46,
+              height: 46,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    key: const Key('masterListTile'),
+                    width: 40,
+                    height: 40,
+                    padding: const EdgeInsets.all(4),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: accent.tint(.14), borderRadius: BorderRadius.circular(12)),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        avatarText,
+                        maxLines: 1,
+                        style: AppTextStyle.custom(size, scale: 1.4, weight: FontWeight.w800, color: accent.text),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cardOutline),
+                      ),
+                      child: Icon(kind.icon, size: 11, color: accent.text),
+                    ),
                   ),
                 ],
               ),
-              child: Text(
-                avatarText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyle.h4(size, color: Colors.white),
-              ),
             ),
-            SizedBox(width: size * 1.5),
+            SizedBox(width: size * 1.3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,22 +326,27 @@ Widget masterListCard({
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.h5(size, weight: FontWeight.w700),
+                    style: AppTextStyle.h5(size, weight: FontWeight.w700, color: navyDark),
                   ),
-                  SizedBox(height: size * 0.4),
+                  SizedBox(height: size * 0.3),
                   Text(
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.small(
-                        size, color: subtitleColor ?? Colors.blueGrey),
+                    style: subtitleMissing
+                        ? AppTextStyle.small(size, color: Colors.grey.shade400).copyWith(fontStyle: FontStyle.italic)
+                        : AppTextStyle.small(size, color: Colors.blueGrey),
                   ),
                 ],
               ),
             ),
             SizedBox(width: size * 0.8),
-            Icon(Icons.chevron_right_rounded,
-                size: size * 2.4, color: accent.withValues(alpha: 0.55)),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(color: navyMid.withValues(alpha: 0.08), shape: BoxShape.circle),
+              child: const Icon(Icons.chevron_right_rounded, size: 20, color: navyMid),
+            ),
           ],
         ),
       ),

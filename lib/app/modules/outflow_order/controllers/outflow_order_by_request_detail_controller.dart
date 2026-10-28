@@ -309,7 +309,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     }
 
     if (wantsDelivery) {
-      await createDeliveryForOutflow(createdId);
+      await createDeliveryForOutflow(createdId, replace: true);
     } else {
       Get.offAndToNamed(AppPages.outflowOrderByRequestPage);
     }

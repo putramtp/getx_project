@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../controllers/receive_order_by_po_detail_controller.dart';
@@ -22,8 +24,11 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Fill Item", size,
-          icon: Icons.edit_rounded, color1: skyBlue, color2: skyBlueLight),
+      appBar: obxHeader(() {
+        final i = controller.selectedIndex.value;
+        final name = i < controller.items.length ? controller.items[i]['name']?.toString() : null;
+        return appHeader('Fill Item', accent: AppAccent.sky, icon: Icons.edit_note_rounded, subtitle: [controller.currentOrder.poNumber, ?name].join(' · '));
+      }),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
@@ -50,8 +55,6 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
               return sum + parsedQty;
             });
 
-            final int remaining = expected - (received + filledQty);
-
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
               switchInCurve: Curves.easeOutCubic,
@@ -70,19 +73,18 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  orderFillHeaderCard(
-                      size: size, name: item["name"].toString(), accent: _accent),
-                  SizedBox(height: size * 1.4),
-                  orderFillStatsCard(size: size, stats: [
-                    FillStat("Expected", "$expected", Colors.grey.shade700),
-                    FillStat("Received", "$received", skyBlue),
-                    FillStat("Filled", "$filledQty", sageTeal),
-                    FillStat("Remaining", "$remaining",
-                        remaining <= 0 ? Colors.grey : Colors.red),
-                  ]),
+                  orderFillItemHeader(
+                    size,
+                    accent: AppAccent.sky,
+                    name: item["name"].toString(),
+                    targetLabel: "Expected",
+                    target: expected,
+                    received: received,
+                    doneLabel: "Filled",
+                    done: filledQty,
+                  ),
                   SizedBox(height: size * 2),
-                  Text(batchSerial ? "Serials" : "Filled Results",
-                      style: AppTextStyle.h5(size)),
+                  orderFillResultsTitle(size, batchSerial ? "Serials" : "Filled Results", count: filled.length, accent: AppAccent.sky),
                   SizedBox(height: size * 0.8),
                   Expanded(child: _buildFilledList(size, filled, batchSerial)),
                 ],

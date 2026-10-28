@@ -7,6 +7,7 @@ import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/receive_confirm_serial_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../global/scan_feedback.dart';
+import '../../../global/functions.dart';
 import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
 
@@ -173,6 +174,24 @@ class ReceiveOrderConfirmController extends GetxController {
       selectedIndex.value = next;
     } else {
       finish();
+    }
+  }
+
+  /// AppBar back: pop to whatever opened this screen (the PO/Supplier list
+  /// after a receive, or the Receive Order detail) and reload the lists, so the
+  /// just-received order doesn't show stale progress. Blocked while a scan is
+  /// still being saved, like the system back.
+  void leave() {
+    if (isConfirming.value) {
+      warningAlertBottom(title: "Saving…", "Please wait — the last scan is still being confirmed.");
+      return;
+    }
+    closeRoute();
+    if (Get.isRegistered<ReceiveOrderByPoController>()) {
+      Get.find<ReceiveOrderByPoController>().loadPurchaseOrders();
+    }
+    if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
+      Get.find<ReceiveOrderBySupplierController>().loadSuppliers();
     }
   }
 

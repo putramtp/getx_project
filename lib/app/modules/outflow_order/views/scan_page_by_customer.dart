@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../../../global/size_config.dart';
@@ -23,8 +25,7 @@ class ScanPageByCustomer
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Scan Item", size,
-          showIcon: false, color1: amber, color2: amberLight),
+      appBar: appHeader('Scan Item', accent: AppAccent.amber, icon: Icons.qr_code_scanner_rounded),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
@@ -47,8 +48,6 @@ class ScanPageByCustomer
               return sum + parsedQty;
             });
 
-            final int remaining = reserved - (received + scannedQty);
-
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
               switchInCurve: Curves.easeOutCubic,
@@ -67,18 +66,18 @@ class ScanPageByCustomer
                 key: ValueKey(item['id']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  orderFillHeaderCard(
-                      size: size, name: item["name"].toString(), accent: amber),
-                  SizedBox(height: size * 1.4),
-                  orderFillStatsCard(size: size, stats: [
-                    FillStat("Reserved", "$reserved", Colors.grey.shade700),
-                    FillStat("Received", "$received", skyBlue),
-                    FillStat("Scanned", "$scannedQty", sageTeal),
-                    FillStat("Remaining", "$remaining",
-                        remaining <= 0 ? Colors.grey : Colors.red),
-                  ]),
+                  orderFillItemHeader(
+                    size,
+                    accent: AppAccent.amber,
+                    name: item["name"].toString(),
+                    targetLabel: "Reserved",
+                    target: reserved,
+                    received: received,
+                    doneLabel: "Scanned",
+                    done: scannedQty,
+                  ),
                   SizedBox(height: size * 2),
-                  Text("Scanned Results", style: AppTextStyle.h5(size)),
+                  orderFillResultsTitle(size, "Scanned Results", count: scanned.length, accent: AppAccent.amber),
                   SizedBox(height: size * 0.8),
                   Expanded(child: _buildScannedList(size, scanned, context)),
                 ],

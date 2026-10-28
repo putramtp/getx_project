@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/data/models/product_summary_model.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/variables.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
+import 'package:getx_project/app/global/widget/stock_level_tile.dart';
 
 class ProductTile extends StatelessWidget {
   final ProductSummaryModel product;
@@ -35,15 +37,7 @@ class ProductTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: size * 2.8,
-            backgroundColor: const Color.fromARGB(255, 220, 230, 221),
-            child: Icon(
-              Icons.stars_rounded,
-              color: const Color.fromARGB(255, 77, 164, 175),
-              size: size * 2.4,
-            ),
-          ),
+          stockLevelTile(size, product.qtyRemaining),
           const SizedBox(width: 14),
 
           /// CONTENT
@@ -58,7 +52,7 @@ class ProductTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyle.h5(size,
-                    color: const Color.fromARGB(255, 35, 132, 211),
+                    color: navyDark,
                     weight: FontWeight.w600,
                   ),
                 ),
@@ -117,43 +111,9 @@ class ProductTile extends StatelessWidget {
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          textWithIcon(
-                            size,
-                            "${product.qtyRemaining}",
-                            Icons.archive,
-                            Colors.blue,
-                          ),
-                          textWithIcon(
-                            size,
-                            "${product.qtyIn}",
-                            Icons.arrow_drop_down,
-                            Colors.green,
-                          ),
-                          textWithIcon(
-                            size,
-                            "${product.qtyOut}",
-                            Icons.arrow_drop_up,
-                            Colors.red,
-                          ),
-                          if (product.lowStock)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: size * 0.6,
-                                vertical: size * 0.4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                "Low Stock",
-                                style: AppTextStyle.custom(size,
-                                  scale: 1.1,
-                                  color: Colors.orange.shade700,
-                                  weight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                          // Remaining + low-stock status live in the leading tile.
+                          textWithIcon(size, "${product.qtyIn}", Icons.arrow_drop_down, stockInColor),
+                          textWithIcon(size, "${product.qtyOut}", Icons.arrow_drop_up, stockOutColor),
                         ],
                       ),
                     ),

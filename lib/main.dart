@@ -11,6 +11,7 @@ import 'package:getx_project/app/services/draft_service.dart';
 import 'package:getx_project/app/services/network_service.dart';
 
 import 'app/global/size_config.dart';
+import 'app/global/variables.dart';
 import 'app/routes/app_pages.dart';
 
 void main() {
@@ -75,7 +76,8 @@ class MyApp extends StatelessWidget {
             primaryColorLight: const Color(0xffF9F7F7),
             primaryColorDark: const Color(0xff2D6187),
             appBarTheme: const AppBarTheme(
-                backgroundColor: Color.fromARGB(255, 134, 157, 207),
+                backgroundColor: navyDark,
+                foregroundColor: Colors.white,
                 iconTheme: IconThemeData(color: Colors.white)),
             bottomNavigationBarTheme: BottomNavigationBarThemeData(
               elevation: 0.8,

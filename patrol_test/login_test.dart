@@ -22,7 +22,7 @@ void main() {
       await loginViaForm($);
 
       expect($('Sign in to continue'), findsNothing);
-      expect($('Quick Access'), findsOneWidget);
+      expect($('Start a task'), findsOneWidget);
     },
   );
 

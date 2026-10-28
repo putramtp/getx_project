@@ -3,15 +3,19 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/models/delivery_model.dart';
+import '../../../data/models/delivery_status_model.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/accent_header_card.dart';
+import '../../../global/widget/accent_pill.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
-import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/skeleton_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../controllers/delivery_detail_controller.dart';
+import 'delivery_status_panel.dart';
 
 class DeliveryDetailView extends GetView<DeliveryDetailController> {
   const DeliveryDetailView({super.key});
@@ -22,10 +26,10 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Delivery Detail", size,
-          icon: Icons.local_shipping_rounded,
-          routeBackName: AppPages.deliveryListPage,
-          color1: steelBlue, color2: lightSteelBlue),
+      appBar: obxHeader(() {
+        final d = controller.delivery.value;
+        return appHeader('Delivery Detail', accent: AppAccent.steel, icon: Icons.route_rounded, subtitle: d == null ? null : '${d.code} · ${d.statusName}');
+      }),
       body: SafeArea(
         child: Obx(() {
           final d = controller.delivery.value;
@@ -41,21 +45,11 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                orderDetailHeader(
-                  size: size,
-                  label: "Delivery",
-                  code: d.code,
-                  icon: Icons.local_shipping_rounded,
-                  gradientColors: const [steelBlue, lightSteelBlue],
-                ),
-                SizedBox(height: size * 2),
-                _statusBanner(size, d),
+                _header(size, d),
                 SizedBox(height: size * 1.6),
                 _infoCard(size, d),
-                SizedBox(height: size * 2),
-                _quickActions(context, size, d),
                 SizedBox(height: size * 1.6),
-                _editButton(size),
+                _statusPanel(size, d),
               ],
             ),
           ),
@@ -65,31 +59,51 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     );
   }
 
-  Widget _statusBanner(double size, DeliveryModel d) {
-    final color = controller.colorForStatus(d.statusId);
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(size * 1.6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(size * 2),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.flag_rounded, color: color, size: size * 2.6),
-          SizedBox(width: size * 1.2),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Current status",
-                  style: AppTextStyle.small(size, color: Colors.grey.shade600)),
-              SizedBox(height: size * 0.3),
-              Text(d.statusName,
-                  style: AppTextStyle.bodyBold(size, color: color)
-                      .copyWith(fontSize: size * 1.8)),
-            ],
-          ),
+  DeliveryStatusModel _currentStatus(DeliveryModel d) =>
+      controller.statuses.firstWhereOrNull((s) => s.id == d.statusId) ??
+      DeliveryStatusModel(id: d.statusId, name: d.statusName, color: '');
+
+  Widget _header(double size, DeliveryModel d) {
+    return accentHeaderCard(
+      size: size,
+      accent: AppAccent.steel,
+      icon: Icons.route_rounded,
+      label: 'Delivery',
+      title: '#${d.code}',
+      badge: statusPill(size, d.statusName, deliveryStatusColor(_currentStatus(d))),
+      stats: [
+        HeaderStat('ETA', _estimateText(d)),
+        HeaderStat('Customer', d.customer),
+      ],
+    );
+  }
+
+  /// One "Mark `<status>`" per other status plus "Edit details". Cancelling
+  /// asks for confirmation first; a quick change missing ETA/address opens
+  /// the edit form instead.
+  Widget _statusPanel(double size, DeliveryModel d) {
+    return deliveryStatusPanel(
+      size,
+      current: _currentStatus(d),
+      others: controller.statuses.where((s) => s.id != d.statusId).toList(),
+      onEdit: () => _openEditSheet(),
+      onMark: (s) async {
+        if (controller.isUpdating.value) return;
+        if (s.name.toLowerCase().contains('cancel') && await _confirmCancel(s) != true) return;
+        final ok = await controller.quickSetStatus(s.id);
+        if (!ok) _openEditSheet(presetStatusId: s.id);
+      },
+    );
+  }
+
+  Future<bool?> _confirmCancel(DeliveryStatusModel s) {
+    return Get.dialog<bool>(
+      AlertDialog(
+        title: Text("Mark ${s.name}?"),
+        content: const Text("This delivery will be marked as cancelled."),
+        actions: [
+          TextButton(onPressed: () => closeRoute(false), child: const Text("Back")),
+          TextButton(onPressed: () => closeRoute(true), child: Text("Mark ${s.name}")),
         ],
       ),
     );
@@ -159,62 +173,6 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     );
   }
 
-  /// One "Mark `<status>`" button per status other than the current one.
-  Widget _quickActions(BuildContext context, double size, DeliveryModel d) {
-    final others =
-        controller.statuses.where((s) => s.id != d.statusId).toList();
-    if (others.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Update status",
-            style: AppTextStyle.bodyBold(size).copyWith(fontSize: size * 1.5)),
-        SizedBox(height: size * 1.2),
-        Wrap(
-          spacing: size * 1.2,
-          runSpacing: size * 1.2,
-          children: others.map((s) {
-            final color = controller.colorForStatus(s.id);
-            return Obx(() => ElevatedButton.icon(
-                  onPressed: controller.isUpdating.value
-                      ? null
-                      : () async {
-                          final ok = await controller.quickSetStatus(s.id);
-                          if (!ok) _openEditSheet(presetStatusId: s.id);
-                        },
-                  icon: Icon(Icons.check_circle_outline_rounded, size: size * 1.8),
-                  label: Text("Mark ${s.name}"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(size * 1.2)),
-                  ),
-                ));
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _editButton(double size) {
-    return SizedBox(
-      width: double.infinity,
-      height: size * 4.4,
-      child: OutlinedButton.icon(
-        onPressed: () => _openEditSheet(),
-        icon: Icon(Icons.edit_outlined, size: size * 2, color: steelBlue),
-        label: Text("Edit details",
-            style: AppTextStyle.bodyBold(size, color: steelBlue)),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: steelBlue),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(size * 1.2)),
-        ),
-      ),
-    );
-  }
-
   /// Edit form (status / ETA date+time / address / notes). [presetStatusId]
   /// pre-selects a status — used when a quick action needed missing details.
   void _openEditSheet({int? presetStatusId}) {
@@ -232,7 +190,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
       StatefulBuilder(builder: (context, setSheet) {
         return Container(
           padding: EdgeInsets.fromLTRB(size * 2, size * 2, size * 2,
-              MediaQuery.of(context).viewInsets.bottom + size * 2),
+              MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom + size * 2),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(size * 2)),

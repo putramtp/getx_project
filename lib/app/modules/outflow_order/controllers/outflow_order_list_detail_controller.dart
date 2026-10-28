@@ -47,9 +47,12 @@ class OutflowOrderListDetailController extends GetxController {
   bool get isDeliverable => outflowOrderDetail.value?.isDeliverable ?? false;
 
   /// Create a delivery for this outflow order, then route to the delivery list.
+  /// Reloads the detail behind it so Back shows "View Deliveries", not a
+  /// second "Create Delivery".
   Future<void> createDelivery() async {
-    await createDeliveryForOutflow(curretOutflowOrder.id,
+    final created = await createDeliveryForOutflow(curretOutflowOrder.id,
         isLoading: isCreatingDelivery);
+    if (created) loadOutflowOrderDetail();
   }
 
   /// Open the delivery list (used when a delivery already exists).

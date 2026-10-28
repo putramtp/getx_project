@@ -96,7 +96,8 @@ int safeToInt(dynamic value) {
   if (value == null) return 0;
   if (value is int) return value;
   if (value is double) return value.toInt();
-  if (value is String) return int.tryParse(value) ?? 0;
+  // num.tryParse: MySQL SUM()/DECIMAL values arrive as "320.000000".
+  if (value is String) return num.tryParse(value.trim())?.toInt() ?? 0;
   return 0;
 }
 
@@ -126,19 +127,6 @@ Color getAccentColor(String code) {
 
   return colors[code.hashCode.abs() % colors.length];
 }
-
-
-Color getAccentColor2(String code) {
-  final hash = code.hashCode;
-  final hue = (hash % 360).toDouble(); // 0–360
-  return HSLColor.fromAHSL(
-    1.0,
-    hue,
-    0.55, // saturation
-    0.45, // lightness
-  ).toColor();
-}
-
 
 Color getReadableTextColor(Color bg) {
   return bg.computeLuminance() > 0.5

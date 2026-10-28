@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
@@ -19,10 +20,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Customer List", size,
-          icon: Icons.group_rounded,
-          routeBackName: AppPages.outflowHomePage,
-          color1: amber, color2: amberLight),
+      appBar: appHeader('Customers', accent: AppAccent.amber, icon: Icons.groups_rounded),
       body: RefreshIndicator(
         onRefresh: controller.loadCustomers,
         child: SafeArea(

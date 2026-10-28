@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/data/models/stock_transaction_model.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/stock_direction_icon.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:getx_project/app/modules/transaction/controllers/stock_transaction_controller.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../global/variables.dart';
@@ -20,7 +22,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Stock Transactions",size,icon: Icons.currency_exchange, routeBackName: AppPages.homePage,color1: navyDark,color2: sageGreen),
+      appBar: appHeader('Stock Transactions', accent: AppAccent.slate, icon: Icons.swap_vert_rounded, subtitle: 'Inventory'),
       body: RefreshIndicator(
         onRefresh:  controller.loadstockTransactions,
         child: SafeArea(
@@ -82,17 +84,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                           }
                           
                           if (controller.cursorNext.value == null && trans.isNotEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 18),
-                              child: Center(
-                                child: Text(
-                                  "No more data",
-                                  style: AppTextStyle.bodyBold(size,
-                                      color: Colors.grey,
-                                      weight: FontWeight.w500),
-                                ),
-                              ),
-                            );
+                            return NoMoreDataFooter(size: size);
                           }
                           
                           return const SizedBox.shrink();
@@ -137,7 +129,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
 
   Widget _buildOrderCard(StockTransactionModel st, double size) {
     final isIn = st.flowType == "IN";
-    final color = isIn ? Colors.green : Colors.red;
+    final color = isIn ? stockInColor : stockOutColor;
 
     return Card(
       child: Padding(
@@ -145,19 +137,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: size * 4,
-              height: size * 4,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isIn ? Icons.arrow_downward : Icons.arrow_upward,
-                color: color,
-                size: size * 2,
-              ),
-            ),
+            stockDirectionIcon(size, isIn: isIn),
             const SizedBox(width: 12),
             Expanded(
               child: Row(

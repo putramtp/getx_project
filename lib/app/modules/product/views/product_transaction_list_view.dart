@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/product_transaction_list_controller.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/stock_direction_icon.dart';
 import '../../../global/size_config.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../data/models/stock_transaction_model.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../global/variables.dart';
@@ -19,8 +21,8 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
     SizeConfig.init(context);
     final size = SizeConfig.defaultSize;
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Transaction",size,icon: Icons.list_alt_sharp,routeBackName: AppPages.productPage,color1: navyDark,color2: sageGreen),
+      backgroundColor: Colors.white,
+      appBar: appHeader('Transactions', accent: AppAccent.slate, icon: Icons.history_rounded, subtitle: controller.currentProduct.itemName),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -82,16 +84,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                         }
                   
                         if (controller.cursorNext.value == null &&  transactions.isNotEmpty) {
-                          return  Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            child: Center(
-                              child: Text(
-                                "No more data",
-                                style: AppTextStyle.bodyBold(size,
-                                    color: Colors.grey, weight: FontWeight.w500),
-                              ),
-                            ),
-                          );
+                          return NoMoreDataFooter(size: size);
                         }
                   
                         return const SizedBox.shrink();
@@ -280,24 +273,11 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
   Widget _buildOrderCard(StockTransactionModel transaction, double size) {
     final String orderCode = transaction.order?.code ?? "";
     final isIn = transaction.flowType == "IN";
-    final color = isIn ? Colors.green : Colors.red;
+    final color = isIn ? stockInColor : stockOutColor;
 
     return Row(
       children: [
-        /// Status Icon
-        Container(
-          width: size * 4,
-          height: size * 4,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            isIn ? Icons.arrow_downward : Icons.arrow_upward,
-            color: color,
-            size: size *2,
-          ),
-        ),
+        stockDirectionIcon(size, isIn: isIn),
 
         const SizedBox(width: 12),
 

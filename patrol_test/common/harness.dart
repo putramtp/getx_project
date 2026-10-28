@@ -103,7 +103,7 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
   }
   // Home's skeleton shimmer never settles, so wait for its content instead.
   await $.tester.pumpWidget(const MyApp());
-  await $('Quick Access').waitUntilVisible(timeout: apiTimeout);
+  await $('Start a task').waitUntilVisible(timeout: apiTimeout);
   await $.pumpAndTrySettle();
 }
 
@@ -120,7 +120,7 @@ Future<void> loginViaForm(PatrolIntegrationTester $) async {
     final end = DateTime.now().add(apiTimeout);
     while (DateTime.now().isBefore(end)) {
       await $.pump(const Duration(milliseconds: 250));
-      if ($('Quick Access').exists) {
+      if ($('Start a task').exists) {
         await $.pumpAndTrySettle();
         return;
       }

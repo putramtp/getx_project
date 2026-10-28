@@ -53,8 +53,10 @@ Future<bool> confirmCreateDelivery() async {
 
 /// POST `createDelivery` for [outflowOrderId], then route to the delivery list
 /// (the backend returns no delivery id, so the list is where it surfaces).
-/// Returns true on success.
-Future<bool> createDeliveryForOutflow(int outflowOrderId, {RxBool? isLoading}) async {
+/// [replace] (post-submit prompt) unwinds the finished submit flow back to the
+/// Outflow menu first — its list controllers were just deleted — so Back from
+/// the deliveries never lands on a stale Item Summary. Returns true on success.
+Future<bool> createDeliveryForOutflow(int outflowOrderId, {RxBool? isLoading, bool replace = false}) async {
   final provider = _deliveryProvider();
   final result = await ApiExecutor.run(
     isLoading: isLoading ?? false.obs,
@@ -62,6 +64,13 @@ Future<bool> createDeliveryForOutflow(int outflowOrderId, {RxBool? isLoading}) a
   );
   if (result == null) return false; // error already shown by ApiExecutor
   successAlertBottom("Delivery created.");
-  Get.toNamed(AppPages.deliveryListPage);
+  if (replace) {
+    Get.offNamedUntil(
+      AppPages.deliveryListPage,
+      (route) => route.settings.name == AppPages.outflowHomePage || route.isFirst,
+    );
+  } else {
+    Get.toNamed(AppPages.deliveryListPage);
+  }
   return true;
 }

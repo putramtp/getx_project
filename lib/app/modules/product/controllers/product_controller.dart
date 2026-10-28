@@ -31,6 +31,8 @@ class ProductController extends GetxController  implements TopFilterController{
   var isSearchFocused = false.obs;
   var totalProducts = 0.obs;
   var stockInHand = 0.obs;
+  var lowStock = 0.obs; // whole catalogue, from the API (not just the loaded page)
+  final lastUpdated = Rxn<DateTime>();
   var isSearching = false.obs;
   var isStillSearch = false.obs;
   final RxString searchQuery = ''.obs;
@@ -105,6 +107,8 @@ class ProductController extends GetxController  implements TopFilterController{
     final List rawList = res['data'] ?? [];
     totalProducts.value = res['total'] ?? 0;
     stockInHand.value = safeToInt(res['stock_in_hand']);
+    lowStock.value = safeToInt(res['low_stock']);
+    lastUpdated.value = DateTime.now();
 
       // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];

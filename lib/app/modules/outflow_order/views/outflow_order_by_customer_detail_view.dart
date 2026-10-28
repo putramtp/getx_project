@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/app_buttons.dart';
+import '../../../global/widget/accent_pill.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
@@ -9,7 +13,6 @@ import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_detail_controller.dart';
 import '../../../modules/outflow_order/views/scan_page_by_customer.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/functions.dart';
 
 class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDetailController> {
@@ -23,10 +26,11 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary", size,
-          routeBackName: AppPages.outflowOrderByCustomerPage,
-          color1: amber, color2: amberLight),
-      body: Padding(
+      appBar: appHeader('Item Summary', accent: AppAccent.amber, icon: Icons.list_alt_rounded, subtitle: 'By Customer · ${controller.currentOrCustomer.name}'),
+      body: SafeArea(
+        // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
+        top: false,
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -100,7 +104,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                     actionIcon: manageSn
                         ? Icons.qr_code_scanner_rounded
                         : Icons.edit_rounded,
-                    actionColor: amber,
+                    actionColor: AppAccent.amber.text,
                     onAction: () {
                       controller.selectedIndex.value = index;
                       controller.selectedItem.value = item;
@@ -115,6 +119,7 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -124,14 +129,12 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
       child: Obx(() {
         final totalScanned = controller.totalScanned;
         final isLoading = controller.isLoadingOutflowing.value;
-        return FilledButton.icon(
-          icon: const Icon(Icons.receipt_long_rounded),
-          label: Text(isLoading
-              ? "Processing..."
-              : "Continue to outflowing items ($totalScanned scanned)"),
-          onPressed: isLoading
-              ? null
-              : () async {
+        return navyButton(
+          SizeConfig.defaultSize,
+          isLoading ? "Processing..." : "Continue to outflowing items ($totalScanned scanned)",
+          icon: Icons.receipt_long_rounded,
+          loading: isLoading,
+          onPressed: () async {
                   if (controller.items.isEmpty) return;
                   // Use the unified scanned data
                   final allScannedUnified = controller.getAllScannedUnified();
@@ -144,11 +147,6 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
                     controller.startOutflowingItem();
                   }
                 },
-          style: FilledButton.styleFrom(
-            backgroundColor: _accent,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
         );
       }),
     );
@@ -335,12 +333,24 @@ class OutflowOrderByCustomerDetailView extends GetView<OutflowOrderByCustomerDet
   }
 
   Widget _buildHeader(double size) {
-    return orderDetailHeader(
-      size: size,
-      label: "Customer",
-      code: controller.currentOrCustomer.name,
-      icon: Icons.groups_rounded,
-      gradientColors: [amber, Color.lerp(amber, Colors.white, 0.35)!],
+    final customer = controller.currentOrCustomer;
+    return Obx(
+      () => skeletonize(
+        loading: controller.isLoading.value,
+        child: orderSummaryHeader(
+          size: size,
+          accent: AppAccent.amber,
+          icon: Icons.groups_rounded,
+          label: 'Customer',
+          title: customer.name,
+          code: customer.customerCode,
+          badge: accentPill(size, customer.status, accent: AppAccent.amber),
+          totals: lineTotals(controller.items, expectedKey: 'reserved', pendingKey: 'scanned'),
+          labels: ('Reserved', 'Outflowed', 'Outflowing'),
+          doneVerb: 'outflowed',
+        ),
+      ),
     );
   }
+
 }

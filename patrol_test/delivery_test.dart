@@ -6,8 +6,8 @@ import 'common/harness.dart';
 
 Future<void> _openDeliveries(PatrolIntegrationTester $) async {
   await loginAsTestUser($);
-  await $('OUTFLOW ORDER').tap();
-  await expectScreen($, 'Outflow Order Menu');
+  await $(#homeOutflowTask).tap();
+  await expectScreen($, 'Outflow');
   await $('Deliveries').scrollTo();
   await $('Deliveries').tap();
   // 'Deliveries' is also the menu tile's text; the search hint is unique to
@@ -23,18 +23,17 @@ Finder _statusChips() => find.descendant(
       matching: find.byType(InkWell),
     );
 
-/// The value under the "Current status" label on Delivery Detail.
+/// The current status, read from the "Now: `<status>`" hint on the status panel.
 String _currentStatus(PatrolIntegrationTester $) {
-  final column = find.ancestor(of: find.text('Current status'), matching: find.byType(Column)).first;
-  final texts = find.descendant(of: column, matching: find.byType(Text)).evaluate();
-  return (texts.elementAt(1).widget as Text).data!;
+  final hint = $.tester.widget<Text>(find.textContaining(RegExp(r'^Now: '))).data!;
+  return hint.substring('Now: '.length);
 }
 
 Future<void> _openFirstDelivery(PatrolIntegrationTester $) async {
   await _openDeliveries($);
   await tapListCard($);
   await expectScreen($, 'Delivery Detail');
-  await $('Current status').waitUntilVisible(timeout: apiTimeout);
+  await $(RegExp(r'^Now: ')).waitUntilExists(timeout: apiTimeout);
 }
 
 final _updated = RegExp(r'updated\.$');
@@ -123,8 +122,47 @@ void main() {
 
     await $(RegExp('^Mark ')).scrollTo();
     await $(RegExp('^Mark ')).first.tap(settlePolicy: SettlePolicy.noSettle);
+    // A "cancel" status asks for confirmation first; the dialog's button is last in the tree.
+    if (await appears($, $('This delivery will be marked as cancelled.'))) {
+      await $(RegExp('^Mark ')).last.tap(settlePolicy: SettlePolicy.noSettle);
+    }
     await waitForSuccess($, $(_updated));
     await $.pumpAndTrySettle();
     expect(_currentStatus($), isNot(before));
+  });
+
+  e2eTest('creating a delivery from an outflow order refreshes the detail', skip: !hasCredentials, ($) async {
+    await loginAsTestUser($);
+    await $(#homeOutflowTask).tap();
+    await expectScreen($, 'Outflow');
+    await $('Outflow Orders').tap();
+    await expectScreen($, 'Outflow Orders');
+    await waitForList($);
+
+    // First order (top-down) that still offers "Create Delivery".
+    final count = listCards().evaluate().length;
+    var found = false;
+    for (var i = 0; i < count && i < 8 && !found; i++) {
+      await tapListCard($, i);
+      await expectScreen($, 'Outflow Order');
+      await waitForList($);
+      found = await appears($, $('Create Delivery'));
+      if (!found) {
+        await $(#appBarBackButton).tap();
+        await expectScreen($, 'Outflow Orders');
+        await waitForList($);
+      }
+    }
+    if (!found) fail('No outflow order without a delivery — reseed DemoTenantSeeder');
+
+    await $('Create Delivery').scrollTo();
+    await $('Create Delivery').tap(settlePolicy: SettlePolicy.noSettle);
+    await waitForSuccess($, $('Delivery created.'));
+    await $('Search code / customer...').waitUntilExists(timeout: apiTimeout);
+
+    // Back lands on the refreshed detail, not a stale "Create Delivery".
+    await $(#appBarBackButton).tap();
+    await $('View Deliveries').waitUntilVisible(timeout: apiTimeout);
+    expect($('Create Delivery'), findsNothing);
   });
 }

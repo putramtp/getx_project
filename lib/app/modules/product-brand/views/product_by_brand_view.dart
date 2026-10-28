@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/global/widget/product_by_filter_view.dart';
 import 'package:getx_project/app/modules/product-brand/controllers/product_by_brand_controller.dart';
-import '../../../routes/app_pages.dart';
 
 class ProductByBrandView extends GetView<ProductByBrandController> {
   const ProductByBrandView({super.key});
@@ -11,8 +10,7 @@ class ProductByBrandView extends GetView<ProductByBrandController> {
   @override
   Widget build(BuildContext context) {
     return ProductByFilterView(
-      backRoute: AppPages.productBrand,
-      headerIcon: Icons.label_outline,
+      headerIcon: Icons.sell_rounded,
       headerLabel: "Product Brand",
       entityName: controller.currentBrand.name,
       entityCode: controller.currentBrand.initialCode,

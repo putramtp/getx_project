@@ -1,9 +1,14 @@
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hexcolor/hexcolor.dart';
+
 import '../../../data/models/product_detail_model.dart';
 import '../../../data/models/product_summary_model.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/accent_header_card.dart';
+import '../../../global/widget/accent_pill.dart';
+import '../../../global/variables.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
@@ -20,266 +25,169 @@ class ProductDetailView extends GetView<ProductDetailController> {
     final product = controller.currentProduct;
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      body: Stack(children: [
-        _buildHeaderGradient(size),
-        // MAIN CONTENT
-        Obx(() {
-          final detail = controller.productDetail.value;
-          final loading = controller.isLoading.value;
-
-          return FadeTransition(
-            opacity: controller.fadeAnim,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 30, 16, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildAppBar(size),
-                  const SizedBox(height: 20),
-                  _buildProductCard(product, detail,size),
-                  const SizedBox(height: 28),
-                  skeletonize(
-                    loading: loading,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // SECTION: BASIC INFO
-                        _sectionCard(
-                          title: "Basic Information",
-                          size: size,
-                          children: [
-                            _infoRow("UPC", detail?.upc, size, loading),
-                            _infoRow("Product Type", detail?.type, size, loading),
-                            _infoRow("Category", detail?.categoryName, size, loading),
-                            _infoRow("Brand", detail?.brandName, size, loading),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // SECTION: PRICING
-                        _sectionCard(
-                          title: "Pricing",
-                          size: size,
-                          children: [
-                            _infoRow("Selling Price", "Rp ${formatPrice(detail?.priceSell)}",size, loading,isPrice: true),
-                            _infoRow("Serial Number", detail?.serialNumberType, size,loading),
-                            _infoRow("Expired",detail?.manageExpired == true ? "Yes" : "No",size,loading),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // SECTION: DESCRIPTION
-                        _sectionCard(title: "Description",size: size,children: [_buildDescription(detail, size, loading)],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-                ],
-              ),
-            ),
-          );
-        }),
-      ]),
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // HEADER
-  // --------------------------------------------------------------------------
-  Widget _buildHeaderGradient(double size) {
-    return Container(
-      height: size *23,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [HexColor('#124076'), HexColor('#7F9F80')],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      appBar: appHeader(
+        'Product Detail',
+        accent: AppAccent.slate,
+        icon: Icons.info_outline_rounded,
+        subtitle: product.itemCode,
       ),
+      body: Obx(() {
+        final detail = controller.productDetail.value;
+        final loading = controller.isLoading.value;
+
+        return FadeTransition(
+          opacity: controller.fadeAnim,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 10 + MediaQuery.paddingOf(context).bottom),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProductCard(product, detail, size),
+                const SizedBox(height: 28),
+                skeletonize(
+                  loading: loading,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // SECTION: BASIC INFO
+                      _sectionCard(
+                        title: "Basic Information",
+                        size: size,
+                        children: [
+                          _infoRow("UPC", detail?.upc, size, loading),
+                          _infoRow("Product Type", detail?.type, size, loading),
+                          _infoRow("Category", detail?.categoryName, size, loading),
+                          _infoRow("Brand", detail?.brandName, size, loading),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // SECTION: PRICING
+                      _sectionCard(
+                        title: "Pricing",
+                        size: size,
+                        children: [
+                          _infoRow(
+                            "Selling Price",
+                            "Rp ${formatPrice(detail?.priceSell)}",
+                            size,
+                            loading,
+                            isPrice: true,
+                          ),
+                          _infoRow("Serial Number", detail?.serialNumberType, size, loading),
+                          _infoRow("Expired", detail?.manageExpired == true ? "Yes" : "No", size, loading),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // SECTION: DESCRIPTION
+                      _sectionCard(
+                        title: "Description",
+                        size: size,
+                        children: [_buildDescription(detail, size, loading)],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 
   // --------------------------------------------------------------------------
-  // APP BAR
-  // --------------------------------------------------------------------------
-  Widget _buildAppBar(double size) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => closeRoute(),
-          icon:  Icon(Icons.arrow_back_rounded,
-              color: Colors.white, size:size * 2),
-        ),
-         Text(
-          "Product Detail",
-          style: AppTextStyle.h3(size, color: Colors.white),
-        ),
-      ],
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // PRODUCT CARD (Glassmorphism)
+  // PRODUCT CARD
   // --------------------------------------------------------------------------
   Widget _buildProductCard(ProductSummaryModel product, ProductDetailModel? detail, double size) {
+    final low = product.lowStock;
+    final unit = detail?.unitName ?? '';
     return Hero(
       tag: "product_${product.itemId}",
       child: Material(
         color: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.65),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                    color: Colors.black.withValues(alpha: 0.10),
-                  )
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.itemName,style:  AppTextStyle.custom(size, scale: 2.2, weight: FontWeight.w700)),
-                  const SizedBox(height: 10),
-
-                  // ITEM CODE TAG
-                  _buildTag("Code: ${product.itemCode}",size),
-
-                  const SizedBox(height: 16),
-                  _buildStockRow(product, detail,size),
-                ],
-              ),
-            ),
+        child: accentHeaderCard(
+          size: size,
+          accent: AppAccent.slate,
+          icon: Icons.inventory_2_rounded,
+          label: 'Product',
+          title: product.itemName,
+          code: product.itemCode,
+          badge: statusPill(
+            size,
+            low ? "Low Stock" : "Available",
+            low ? amber : stockInColor,
+            icon: low ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+          ),
+          stats: [
+            HeaderStat('Stock in hand', '${product.qtyRemaining} $unit'.trim(),
+                color: product.qtyRemaining > 0 ? navyDark : stockOutColor),
+            HeaderStat('In', '${product.qtyIn}', color: stockInColor),
+            HeaderStat('Out', '${product.qtyOut}', color: stockOutColor),
+          ],
+          progress: AccentProgress(
+            [ProgressSegment(product.qtyIn > 0 ? product.qtyRemaining / product.qtyIn : 0, navyMid)],
+            caption: '${product.qtyRemaining} of ${product.qtyIn} received still in stock',
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTag(String text,size) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        text,
-        style: AppTextStyle.custom(size,
-            scale: 1.4, weight: FontWeight.w600, color: Colors.blue.shade800),
-      ),
-    );
-  }
-
-  Widget _buildStockRow(ProductSummaryModel product, ProductDetailModel? detail, double size) {
-    final low = product.lowStock;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Icon(
-          low ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
-          size: size *2.4,
-          color: low ? Colors.orange.shade700 : Colors.green.shade600,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          low ? "Low Stock" : "Available",
-          style: AppTextStyle.h3(size,
-              color: low ? Colors.orange.shade700 : Colors.green.shade700),
-        ),
-        const Spacer(),
-        // QTY TAG
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            gradient: LinearGradient(
-              colors: product.qtyRemaining > 0
-                  ? [Colors.green.shade400, Colors.green.shade600]
-                  : [Colors.red.shade400, Colors.red.shade600],
-            ),
-          ),
-          child: Text(
-            "${product.qtyRemaining} ${detail?.unitName ?? ''}",
-            style: AppTextStyle.h4(size, color: Colors.white, weight: FontWeight.bold),
-          ),
-        ),
-      ],
     );
   }
 
   // --------------------------------------------------------------------------
   // SECTION CARD
   // --------------------------------------------------------------------------
-  Widget _sectionCard({
-    required String title,
-    required List<Widget> children,
-    required double size,
-  }) {
+  Widget _sectionCard({required String title, required List<Widget> children, required double size}) {
     return Container(
       padding: EdgeInsets.all(size * 2),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(size * 2.1),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-            color: Colors.black.withValues(alpha: 0.05),
-          )
+        boxShadow: [BoxShadow(blurRadius: 18, offset: const Offset(0, 8), color: Colors.black.withValues(alpha: 0.05))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTextStyle.h4(size, weight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          const Divider(),
+          ...children,
         ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title,
-            style: AppTextStyle.h4(size, weight: FontWeight.w700)),
-        const SizedBox(height: 8),
-        const Divider(),
-        ...children,
-      ]),
     );
   }
 
   // --------------------------------------------------------------------------
   // INFO ROW
   // --------------------------------------------------------------------------
-  Widget _infoRow(String label, String? value, double size, bool loading,
-      {bool isPrice = false}) {
+  Widget _infoRow(String label, String? value, double size, bool loading, {bool isPrice = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: size * 0.9),
       child: Row(
         children: [
           SizedBox(
             width: size * 12,
-            child: Text(label,
-                style: AppTextStyle.custom(size,
-                    scale: 1.4,
-                    color: Colors.grey.shade600,
-                    weight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey.shade600, weight: FontWeight.w500),
+            ),
           ),
           Expanded(
             child: Text(
-              loading
-                  ? "  ..."
-                  : (value?.isNotEmpty == true ? value! : "-"),
-              style: AppTextStyle.custom(size,
+              loading ? "  ..." : (value?.isNotEmpty == true ? value! : "-"),
+              style: AppTextStyle.custom(
+                size,
                 scale: 1.4,
                 weight: isPrice ? FontWeight.bold : FontWeight.w600,
                 color: isPrice ? Colors.indigo.shade700 : Colors.black87,
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -290,26 +198,24 @@ class ProductDetailView extends GetView<ProductDetailController> {
   // --------------------------------------------------------------------------
   Widget _buildDescription(ProductDetailModel? detail, double size, bool loading) {
     if (loading) {
-      return Text("  ...",
-          style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
+      return Text("  ...", style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
     }
 
     final descriptions = detail?.descriptions;
     if (descriptions == null || descriptions.isEmpty) {
-      return Text("No Descriptions",
-          style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
+      return Text("No Descriptions", style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: descriptions
-          .map<Widget>((d) => Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text("• $d",
-                    style: AppTextStyle.custom(size, px: 15, height: 1.4)),
-              ))
+          .map<Widget>(
+            (d) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text("• $d", style: AppTextStyle.custom(size, px: 15, height: 1.4)),
+            ),
+          )
           .toList(),
     );
   }
-
 }

@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/data/models/product_unit_model.dart';
-import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/master_list_view.dart';
 import 'package:getx_project/app/modules/product-unit/controllers/product_unit_controller.dart';
-import 'package:getx_project/app/routes/app_pages.dart';
+import 'package:getx_project/app/global/accent.dart';
 
 class ProductUnitView extends GetView<ProductUnitController> {
   const ProductUnitView({super.key});
@@ -16,9 +15,8 @@ class ProductUnitView extends GetView<ProductUnitController> {
   @override
   Widget build(BuildContext context) {
     return MasterListView<ProductUnitModel>(
-      title: "Unit",
-      icon: Icons.thermostat_auto,
-      routeBackName: AppPages.homePage,
+      title: "Units",
+      icon: Icons.straighten_rounded,
       isLoading: controller.isLoading,
       isSearchFocused: controller.isSearchFocused,
       isAscending: controller.isAscending,
@@ -43,20 +41,24 @@ class ProductUnitView extends GetView<ProductUnitController> {
         final hasDescription = unit.description.trim().isNotEmpty;
         return masterListCard(
           size: size,
-          accent: getAccentColor2(unit.name),
-          avatarText: masterMonogram(unit.name),
-          title: unit.name,
-          subtitle: hasDescription ? unit.description : 'No description',
-          subtitleColor: hasDescription ? null : Colors.grey[400],
+          kind: MasterKind.unit,
+          avatarText: unit.name,
+          title: _title(unit),
+          subtitle: hasDescription ? unit.name : 'No description',
+          subtitleMissing: !hasDescription,
           onTap: () => _showUnitDetail(context, unit, size),
         );
       },
     );
   }
 
+  /// The description reads better than the short unit code as the row title.
+  String _title(ProductUnitModel unit) =>
+      unit.description.trim().isNotEmpty ? unit.description : unit.name;
+
   // ── Unit detail popup ────────────────────────────────────────────
   void _showUnitDetail(BuildContext context, ProductUnitModel unit, double size) {
-    final accent = getAccentColor2(unit.name);
+    final accent = accentFor(_title(unit)).base;
     final hasDescription = unit.description.trim().isNotEmpty;
 
     showGeneralDialog(

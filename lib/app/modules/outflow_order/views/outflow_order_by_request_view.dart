@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 
 import '../controllers/outflow_order_by_request_controller.dart';
@@ -7,7 +9,6 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
@@ -20,10 +21,7 @@ class OutflowOrderByRequestView extends GetView<OutflowOrderByRequestController>
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Outflow Request List", size,
-          icon: Icons.list_alt_sharp,
-          routeBackName: AppPages.outflowHomePage,
-          color1: mutedPurple, color2: lightPurple),
+      appBar: appHeader('Outflow Requests', accent: AppAccent.purple, icon: Icons.assignment_rounded),
       body: RefreshIndicator(
         onRefresh: controller.loadRequestOrders,
         child: SafeArea(

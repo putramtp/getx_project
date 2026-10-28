@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'scan_page_by_request.dart';
 import '../controllers/outflow_order_by_request_detail_controller.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/accent_header_card.dart';
+import '../../../global/widget/app_buttons.dart';
+import '../../../global/widget/accent_pill.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/skeleton_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/functions.dart';
 
 class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetailController> {
@@ -22,10 +26,11 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary", size,
-          routeBackName: AppPages.outflowOrderByRequestPage,
-          color1: mutedPurple, color2: softPurple),
-      body: Padding(
+      appBar: appHeader('Item Summary', accent: AppAccent.purple, icon: Icons.list_alt_rounded, subtitle: 'By Request · ${controller.currentOr.code}'),
+      body: SafeArea(
+        // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
+        top: false,
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -98,7 +103,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
                     actionIcon: manageSn
                         ? Icons.qr_code_scanner_rounded
                         : Icons.edit_rounded,
-                    actionColor: mutedPurple,
+                    actionColor: AppAccent.purple.text,
                     onAction: () {
                       controller.selectedIndex.value = index;
                       controller.selectedItem.value = item;
@@ -113,6 +118,7 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -122,12 +128,12 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
       child: Obx(() {
         final totalScanned = controller.totalScanned;
         final isLoading = controller.isLoadingOutflowing.value;
-        return FilledButton.icon(
-          icon: const Icon(Icons.receipt_long_rounded),
-          label: Text(isLoading
-              ? "Processing..." 
-              : "Continue to outflowing items ($totalScanned scanned)"),
-          onPressed: isLoading ? null  : () async {
+        return navyButton(
+          SizeConfig.defaultSize,
+          isLoading ? "Processing..." : "Continue to outflowing items ($totalScanned scanned)",
+          icon: Icons.receipt_long_rounded,
+          loading: isLoading,
+          onPressed: () async {
             if (controller.items.isEmpty) return;
             // Use the unified scanned data
             final allScannedUnified = controller.getAllScannedUnified();
@@ -140,12 +146,6 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
               controller.startOutflowingItem();
             }
           },
-          style: FilledButton.styleFrom(
-            backgroundColor: _accent,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-          ),
         );
       }),
     );
@@ -332,12 +332,25 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
   }
 
   Widget _buildHeader(double size) {
-    return orderDetailHeader(
-      size: size,
-      label: "Outflow Request",
-      code: controller.currentOr.code,
-      icon: Icons.assignment_rounded,
-      gradientColors: const [mutedPurple, softPurple, lightPurple],
+    final request = controller.currentOr;
+    return Obx(
+      () => skeletonize(
+        loading: controller.isLoading.value,
+        child: orderSummaryHeader(
+          size: size,
+          accent: AppAccent.purple,
+          icon: Icons.assignment_rounded,
+          label: 'Outflow request',
+          title: '#${request.code}',
+          badge: accentPill(size, request.status, accent: AppAccent.purple),
+          footer: headerFooterText([request.customer, getDateString(request.date)]),
+          footerIcon: Icons.groups_rounded,
+          totals: lineTotals(controller.items, expectedKey: 'reserved', pendingKey: 'scanned'),
+          labels: ('Reserved', 'Outflowed', 'Outflowing'),
+          doneVerb: 'outflowed',
+        ),
+      ),
     );
   }
+
 }

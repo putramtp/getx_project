@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -22,10 +21,11 @@ class HomeController extends GetxController {
   final Rx<DateTime> currentTime = DateTime.now().obs;
   static final DashboardModel defaultDashboard = DashboardModel(product: 0,receiveOrder: 0,outflowOrder: 0,productOther: 0,productUnique: 0);
   final Rx<DashboardModel> dashboard = defaultDashboard.obs;
-  final touchedIndex = (-1).obs;
   final isLoading = false.obs;
   final isLatestLoading = false.obs;
   final lastTransactions = <StockTransactionModel>[].obs;
+  final isDeliveryLoading = false.obs;
+  final pendingDeliveries = RxnInt(); // null until loaded (or when the call fails)
 
   Timer? _timer;
 
@@ -36,7 +36,8 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     reloadDashboard();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    // Header shows the date + greeting only, so a minute tick is enough.
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       currentTime.value = DateTime.now();
     });
   }
@@ -58,10 +59,8 @@ class HomeController extends GetxController {
       task: () => provider.getDashboard(year: thisYear),
     );
 
-    if (data == null) {
-      dashboard.value = defaultDashboard;
-      return;
-    }
+    // Failed or skipped (already loading): keep the cached counts on screen.
+    if (data == null) return;
 
     dashboard.value = data; // ✅ TYPE SAFE
     _box.write(_dashboardKey, data.toJson());// ✅ SAVE TO STORAGE
@@ -90,10 +89,20 @@ class HomeController extends GetxController {
     lastTransactions.assignAll(data); // ✅ CORRECT RX UPDATE
   }
 
+  Future<void> loadPendingDeliveries() async {
+    final count = await ApiExecutor.run<int>(
+      isLoading: isDeliveryLoading,
+      task: () => provider.getPendingDeliveryCount(),
+    );
+    if (count == null) return;
+    pendingDeliveries.value = count;
+  }
+
  Future <void>  reloadDashboard() async {
     _loadDataFromStorage();
     await loadDashboard();
     await loadLatest();
+    await loadPendingDeliveries();
   }
 
   // ================= NAVIGATION =================
@@ -104,6 +113,7 @@ class HomeController extends GetxController {
   void goToCategoryPage() => Get.toNamed(AppPages.productCategory);
   void goToBrandPage() => Get.toNamed(AppPages.productBrand);
   void goToUnitPage() => Get.toNamed(AppPages.productUnit);
+  void goToDeliveryPage() => Get.toNamed(AppPages.deliveryListPage);
   // ================= USER INFO =================   
 
   String getName() {
@@ -122,71 +132,29 @@ class HomeController extends GetxController {
   // ================= GREETING =================
 
   String getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) return "Good Morning 🌅";
-    if (hour >= 12 && hour < 17) return "Good Afternoon ☀️";
-    if (hour >= 17 && hour < 21) return "Good Evening 🌇";
-    return "Good Night 🌙";
+    final hour = currentTime.value.hour;
+    if (hour >= 5 && hour < 12) return "Good morning";
+    if (hour >= 12 && hour < 17) return "Good afternoon";
+    if (hour >= 17 && hour < 21) return "Good evening";
+    return "Good night";
   }
 
-  // ================= PIE CHART =================
-
-  void onTouch(int index) {
-    touchedIndex.value = index;
+  /// Up to two initials for the avatar ("Putra Pardede" → "PP").
+  String getInitials(String userName) {
+    final words = userName.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+    if (words.isEmpty) return '?';
+    return words.take(2).map((w) => w[0].toUpperCase()).join();
   }
 
-  void resetTouch() {
-    touchedIndex.value = -1;
-  }
+  // ================= SERIAL NUMBER TYPE =================
 
   int get productUnique => dashboard.value.productUnique;
   int get productOther => dashboard.value.productOther;
 
-  List<PieChartSectionData> showingSections(double size) {
-    final int index = touchedIndex.value;
-
-    final double unique = productUnique.toDouble();
-    final double other = productOther.toDouble();
-    final double total = unique + other;
-
-    final double uniquePercent = total == 0 ? 0 : (unique / total) * 100;
-    final double otherPercent = total == 0 ? 0 : (other / total) * 100;
-
-    return List.generate(2, (i) {
-      final isTouched = i == index;
-      final fontSize = isTouched ? size * 1.5 : size * 0.9;
-      final radius = isTouched ? size * 5 : size * 3;
-
-      const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
-
-      if (i == 0) {
-        return PieChartSectionData(
-          color: navyDark,
-          value: uniquePercent,
-          title: '${uniquePercent.toStringAsFixed(1)}%',
-          radius: radius,
-          titleStyle: AppTextStyle.custom(size, px: fontSize, weight: FontWeight.bold, color: Colors.white)
-              .copyWith(shadows: shadows),
-        );
-      } else {
-        return PieChartSectionData(
-          color: hex1,
-          value: otherPercent,
-          title: '${otherPercent.toStringAsFixed(1)}%',
-          radius: radius,
-          titleStyle: AppTextStyle.custom(size, px: fontSize, weight: FontWeight.bold, color: Colors.white)
-              .copyWith(shadows: shadows),
-        );
-      }
-    });
-  }
-
   void showAccountSheet(String userName) {
     final size = SizeConfig.defaultSize;
     final roles = getRoles();
-    final initials = userName.trim().isEmpty
-        ? '?'
-        : userName.trim().split(' ').take(2).map((w) => w[0].toUpperCase()).join();
+    final initials = getInitials(userName);
 
     Get.bottomSheet(
       Container(
@@ -194,7 +162,10 @@ class HomeController extends GetxController {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        child: Column(
+        // SafeArea: keep Logout above Android's 3-button navigation bar.
+        child: SafeArea(
+          top: false,
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // handle
@@ -294,6 +265,7 @@ class HomeController extends GetxController {
 
             SizedBox(height: size * 2),
           ],
+        ),
         ),
       ),
       isScrollControlled: true,

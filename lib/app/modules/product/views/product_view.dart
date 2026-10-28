@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
 // ============ INTERNAL IMPORTS ============
+import '../../../global/accent.dart';
+import '../../../global/widget/accent_header_card.dart';
+import '../../../global/widget/accent_pill.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/product_tile.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
-import '../../../global/widget/animated_counter.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../global/variables.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/size_config.dart';
 import '../controllers/product_controller.dart';
 
@@ -21,7 +25,7 @@ class ProductView extends GetView<ProductController> {
     final double size = SizeConfig.defaultSize;
     return Scaffold(
         backgroundColor: Colors.white,
-        appBar: appBarOrder("Product",size,icon: Icons.shopping_bag_outlined,routeBackName: AppPages.homePage,color1: navyDark,color2: sageGreen),
+        appBar: appHeader('Products', accent: AppAccent.slate, icon: Icons.inventory_2_rounded),
         body: RefreshIndicator(
           onRefresh: controller.loadProducts,
           child: NotificationListener(
@@ -37,13 +41,18 @@ class ProductView extends GetView<ProductController> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Expanded(child: Obx(() => _metricBox('Total Products',controller.totalProducts.value,size))),
-                        SizedBox(width: size *2),
-                        Expanded(child: Obx(() => _metricBox('Stock in Hand',controller.stockInHand.value,size))),
-                      ],
+                    child: Obx(
+                      () => accentMetricCard(
+                        size: size,
+                        accent: AppAccent.slate,
+                        metrics: [
+                          HeaderMetric('Total products', '${controller.totalProducts.value}',
+                              icon: Icons.inventory_2_rounded, accent: AppAccent.navy),
+                          HeaderMetric('Stock in hand', '${controller.stockInHand.value}',
+                              icon: Icons.layers_rounded, accent: AppAccent.sage),
+                        ],
+                        footer: _summaryFooter(size),
+                      ),
                     ),
                   ),
                 ),
@@ -116,11 +125,7 @@ class ProductView extends GetView<ProductController> {
                           );
                         }
                         if (controller.cursorNext.value == null && products.isNotEmpty) {
-                          return  Padding(
-                            padding:  EdgeInsets.symmetric(vertical: size * 3),
-                            child: Center(child: Text("No more data.",style: AppTextStyle.custom(size, scale: 1.4, color: Colors.grey, weight: FontWeight.w500)),
-                            ),
-                          );
+                          return NoMoreDataFooter(size: size);
                         }
                         return const SizedBox.shrink();
                       },
@@ -133,30 +138,20 @@ class ProductView extends GetView<ProductController> {
         ));
   }
 
-  Widget _metricBox(String title, int value, size) {
-    return Container(
-      width: size * 18,
-      padding: EdgeInsets.all(size * 2),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 234, 239, 245),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,style: AppTextStyle.custom(size, scale: 1.5, weight: FontWeight.w400, color: Colors.black87)),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              CircleAvatar(radius: size *2.7,backgroundColor: Colors.green.shade50,child: Icon(Icons.layers_outlined , size: size *3,color: Colors.green,)),
-              SizedBox(width: size * 0.5),
-              Expanded(child: AnimatedCounter(value: value,style: AppTextStyle.h4(size, weight: FontWeight.bold))),
-            ],
-          ),
-          const SizedBox(height: 6),
-        ],
-      ),
+  /// "● N low stock" (orange when any) and the time the summary was loaded.
+  Widget _summaryFooter(double size) {
+    final low = controller.lowStock.value;
+    final updated = controller.lastUpdated.value;
+    final color = low > 0 ? Colors.orange.shade800 : Colors.grey.shade600;
+    return Row(
+      children: [
+        Container(width: size * 0.7, height: size * 0.7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        SizedBox(width: size * 0.5),
+        Text(low > 0 ? '$low low stock' : 'No low stock', style: AppTextStyle.custom(size, scale: 1.0, color: color, weight: FontWeight.w700)),
+        const Spacer(),
+        if (updated != null)
+          Text('Updated ${DateFormat('HH:mm').format(updated)}', style: AppTextStyle.small(size, color: Colors.grey.shade600)),
+      ],
     );
   }
 
@@ -165,7 +160,13 @@ class ProductView extends GetView<ProductController> {
       key: const ValueKey('title'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Products list', style: AppTextStyle.h3(size)),
+        Row(
+          children: [
+            Text('Products list', style: AppTextStyle.h5(size, weight: FontWeight.w700, color: navyDark)),
+            SizedBox(width: size * 0.8),
+            accentPill(size, '${controller.totalProducts.value}', accent: AppAccent.slate),
+          ],
+        ),
         Padding(
           padding:  EdgeInsets.only(right: size * 0.5),
           child: Row(
@@ -176,21 +177,21 @@ class ProductView extends GetView<ProductController> {
                 padding: EdgeInsets.symmetric(horizontal: size *1),
                 constraints: const BoxConstraints(),
                 onPressed: controller.toggleSort,  
-                icon: Icon(controller.isAscending.value ? Icons.arrow_drop_down : Icons.arrow_drop_up, size: size *3),
+                icon: Icon(controller.isAscending.value ? Icons.arrow_drop_down : Icons.arrow_drop_up, size: size *3, color: navyMid),
               ),
               IconButton(
                 tooltip: 'Search',
                 padding: EdgeInsets.symmetric(horizontal: size *1),
                 constraints: const BoxConstraints(),
                 onPressed: controller.startSearch,   // ← Tap to search
-                icon: Icon(Icons.search, size: size * 2),
+                icon: Icon(Icons.search, size: size * 2, color: navyMid),
               ),
               IconButton(
                 tooltip: 'Filter',
                 padding: EdgeInsets.symmetric(horizontal: size *1),
                 constraints: const BoxConstraints(),
                 onPressed:  () => _openTopFilterSheet(context),   // ← Tap to search
-                icon: Icon(Icons.tune_rounded, size: size * 2),
+                icon: Icon(Icons.tune_rounded, size: size * 2, color: navyMid),
               ),
             ],
           ),

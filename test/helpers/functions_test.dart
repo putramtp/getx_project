@@ -10,6 +10,10 @@ void main() {
       expect(safeToInt(3.9), 3);
       expect(safeToInt('5'), 5);
       expect(safeToInt('abc'), 0);
+      // MySQL SUM()/DECIMAL columns arrive as decimal strings.
+      expect(safeToInt('320.000000'), 320);
+      expect(safeToInt('-4.000000'), -4);
+      expect(safeToInt('2.5'), 2);
       expect(safeToInt(true), 0);
     });
   });

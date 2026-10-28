@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/receive_order_by_supplier_controller.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
-import '../../../routes/app_pages.dart';
 
 class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierController> {
   const ReceiveOrderBySupplierView({super.key});
@@ -19,10 +20,7 @@ class ReceiveOrderBySupplierView extends GetView<ReceiveOrderBySupplierControlle
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Supplier List", size,
-          icon: Icons.group_rounded,
-          routeBackName: AppPages.receiveHomePage,
-          color1: sageTeal, color2: sageTealLight),
+      appBar: appHeader('Suppliers', accent: AppAccent.sage, icon: Icons.storefront_rounded),
       body: RefreshIndicator(
         onRefresh: controller.loadSuppliers,
         child: SafeArea(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 
 import '../controllers/outflow_order_list_controller.dart';
@@ -7,7 +9,6 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/search_bar.dart';
 import '../../../global/widget/order_list_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 
@@ -20,10 +21,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appBarOrder("Outflow Order List", size,
-          icon: Icons.list_alt_sharp,
-          routeBackName: AppPages.outflowHomePage,
-          color1: mutedPurple, color2: softPurple),
+      appBar: appHeader('Outflow Orders', accent: AppAccent.purple, icon: Icons.history_rounded),
       body: RefreshIndicator(
         onRefresh: controller.loadOutflowOrders,
         child: SafeArea(
@@ -45,7 +43,7 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return skeletonOrderList(size, accent: softPurple);
+                      return skeletonOrderList(size, accent: mutedPurple);
                     }
                     final orders = controller.orders;
                     if (controller.hasError.value && orders.isEmpty) {
@@ -70,13 +68,13 @@ class OutflowOrderListView extends GetView<OutflowOrderListController> {
                             return orderListCard(
                               size: size,
                               leadingIcon: Icons.receipt_long_rounded,
-                              accentColor: softPurple,
+                              accentColor: mutedPurple,
                               title: order.code,
                               subtitle: order.customer,
                               subtitleIcon: Icons.person_outline_rounded,
                               dateText: controller.formatYmd(order.date),
                               trailingBottom: order.type,
-                              trailingBottomColor: softPurple,
+                              trailingBottomColor: mutedPurple,
                               onTap: () => controller.openDetail(order),
                             );
                           }

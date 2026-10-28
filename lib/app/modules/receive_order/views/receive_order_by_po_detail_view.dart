@@ -3,6 +3,11 @@ import 'package:get/get.dart';
 
 import '../controllers/receive_order_by_po_detail_controller.dart';
 import '../views/receive_order_fill_by_po_view.dart';
+import '../../../global/accent.dart';
+import '../../../global/widget/app_header.dart';
+import '../../../global/widget/accent_header_card.dart';
+import '../../../global/widget/app_buttons.dart';
+import '../../../global/widget/accent_pill.dart';
 import '../../../global/alert.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
@@ -11,7 +16,6 @@ import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
-import '../../../routes/app_pages.dart';
 import '../../../global/functions.dart';
 
 class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailController> {
@@ -22,8 +26,11 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appBarOrder("Item Summary",size,routeBackName:AppPages.receiveOrderByPoPage),
-      body: Padding(
+      appBar: appHeader('Item Summary', accent: AppAccent.sky, icon: Icons.list_alt_rounded, subtitle: 'By PO · ${controller.currentOrder.poNumber}'),
+      body: SafeArea(
+        // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
+        top: false,
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -88,7 +95,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
                     showAction: !isFinished,
                     actionLabel: "Fill",
                     actionIcon: Icons.edit_rounded,
-                    actionColor: skyBlue,
+                    actionColor: AppAccent.sky.text,
                     onAction: () {
                       controller.selectedIndex.value = index;
                       controller.selectedItem.value = item;
@@ -103,6 +110,7 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -112,21 +120,12 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
       child: Obx(() {
         final totalFilled = controller.totalFilled;
         final isLoading = controller.isLoadingReceiving.value;
-        return FilledButton.icon(
-          icon: isLoading
-              ?  SizedBox(
-                  height: size * 2,
-                  width: size * 2,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.receipt_long_rounded),
-          label: Text(isLoading
-              ? "Processing..."
-              : "Continue to receiving items ($totalFilled filled)",style: AppTextStyle.custom(size, scale: 1.4),),
-          onPressed: isLoading ? null  :() async {
+        return navyButton(
+          SizeConfig.defaultSize,
+          isLoading ? "Processing..." : "Continue to receiving items ($totalFilled filled)",
+          icon: Icons.receipt_long_rounded,
+          loading: isLoading,
+          onPressed: () async {
             if (controller.items.isEmpty) return;
             // Use the unified filled data
             final allFilledUnified = controller.getAllFilledUnified();
@@ -157,11 +156,6 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
               controller.startReceivingItem();
             }
           },
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            backgroundColor: const Color(0xff4A70A9)
-          ),
         );
       }),
     );
@@ -361,12 +355,25 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
   }
 
   Widget _buildHeader(double size) {
-    return orderDetailHeader(
-      size: size,
-      label: "Purchase Order",
-      code: controller.currentOrder.poNumber,
-      icon: Icons.description_rounded,
-      gradientColors: const [navyDark, navyMid, navyLight],
+    final po = controller.currentOrder;
+    return Obx(
+      () => skeletonize(
+        loading: controller.isLoading.value,
+        child: orderSummaryHeader(
+          size: size,
+          accent: AppAccent.sky,
+          icon: Icons.request_page_rounded,
+          label: 'Purchase order',
+          title: '#${po.poNumber}',
+          badge: accentPill(size, po.status, accent: AppAccent.sky),
+          footer: headerFooterText([po.supplier, getDateString(po.date)]),
+          footerIcon: Icons.storefront_rounded,
+          totals: lineTotals(controller.items, expectedKey: 'expected', pendingKey: 'filled'),
+          labels: ('Expected', 'Received', 'Receiving now'),
+          doneVerb: 'complete',
+        ),
+      ),
     );
   }
+
 }

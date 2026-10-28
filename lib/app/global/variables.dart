@@ -32,3 +32,19 @@ const Color softPurple  = Color(0xFF7C73C0);
 // ── Warm accent ───────────────────────────────────────────────────
 const Color amber      = Color(0xFFC4882A);
 const Color amberLight = Color(0xFFD6A24E); // gradient end for amber
+
+// ── Text-safe dark shades (small accent text on white, ≥ 4.5:1) ───
+const Color skyBlueDark  = Color(0xFF3D78B4);
+const Color amberDark    = Color(0xFF9B6B21);
+const Color sageTealDark = Color(0xFF517D6D);
+
+// ── Stock direction ───────────────────────────────────────────────
+const Color stockInColor  = Color(0xFF2E9B5F);
+const Color stockOutColor = Color(0xFFD2453B);
+
+// ── On-navy accents ───────────────────────────────────────────────
+const Color clearOnNavy = Color(0xFFFF9C94); // "Clear" icon on the navy bottom bar
+
+// ── Neutrals ──────────────────────────────────────────────────────
+const Color cardOutline = Color(0xFFE1E6EE); // 1 dp outline on white list cards
+const Color pageBackground = Color(0xFFF3F5F9); // Home page ground (also the header wave fill)
