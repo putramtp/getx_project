@@ -98,11 +98,11 @@ class HomeController extends GetxController {
     pendingDeliveries.value = count;
   }
 
- Future <void>  reloadDashboard() async {
+  Future<void> reloadDashboard() async {
     _loadDataFromStorage();
-    await loadDashboard();
-    await loadLatest();
-    await loadPendingDeliveries();
+    // Independent calls with their own loading flags: run them side by side
+    // so Home waits for the slowest one, not the sum of all three.
+    await Future.wait([loadDashboard(), loadLatest(), loadPendingDeliveries()]);
   }
 
   // ================= NAVIGATION =================
