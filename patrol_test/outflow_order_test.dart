@@ -50,30 +50,7 @@ void main() {
 
   e2eTest('outflowing a request line creates a delivery', skip: !hasCredentials, ($) async {
     await _openOutflowMenu($);
-    await _openFromMenu($, 'By Request', 'Outflow Requests');
-    // "Fill" = a quantity-only (manage_sn false) line; the "Scan" path needs a
-    // serial that is known to be in stock, which can't be picked dynamically.
-    await openOrderWithAction(
-      $,
-      listTitle: 'Outflow Requests',
-      action: 'Fill',
-      noneMessage: 'No open request with a quantity-only line — reseed DemoTenantSeeder',
-    );
-
-    await $('Fill').first.tap();
-    await expectScreen($, 'Scan Item');
-    await $(#orderFillFab).tap();
-    await $(#qtyDialogField).enterText('1');
-    await $('Save').tap();
-    await $('Qty: 1').waitUntilVisible();
-    await continueBackToSummary($, 'Scan Item');
-
-    await $(RegExp('^Continue to outflowing items')).tap();
-    await $('Continue to Outflowing Items?').waitUntilVisible();
-    await $('Continue').tap(settlePolicy: SettlePolicy.noSettle);
-
-    await waitForSuccess($, $('Create delivery?'));
-    await $('Create').tap(settlePolicy: SettlePolicy.noSettle);
+    await outflowOneRequestLine($, createDelivery: true);
     await waitForSuccess($, $('Delivery created.'));
     await expectScreen($, 'Deliveries');
 

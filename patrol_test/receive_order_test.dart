@@ -107,6 +107,32 @@ void main() {
     expect(listCards(), findsWidgets);
   });
 
+  e2eTest('filled quantities survive leaving and reopening the PO', skip: !hasCredentials, ($) async {
+    Future<void> openPoWithFill() => openOrderWithAction(
+          $,
+          listTitle: 'Purchase Orders',
+          action: 'Fill',
+          noneMessage: 'No open PO with a fillable line — reseed DemoTenantSeeder',
+        );
+    await _openPurchaseOrders($);
+    await openPoWithFill();
+    expect($(RegExp(r'receiving: [1-9]')), findsNothing, reason: 'storage is wiped per test');
+
+    await $('Fill').first.tap();
+    await expectScreen($, 'Fill Item');
+    await _fillOneUnit($);
+    await continueBackToSummary($, 'Fill Item');
+    await $(RegExp(r'receiving: [1-9]')).waitUntilVisible();
+
+    // Leave the PO (nothing is submitted) and open it again: the draft in the
+    // local sqflite DB restores the filled line.
+    await $(#appBarBackButton).tap();
+    await expectScreen($, 'Purchase Orders');
+    await waitForList($);
+    await openPoWithFill();
+    await $(RegExp(r'receiving: [1-9]')).waitUntilVisible();
+  });
+
   e2eTest('receiving a PO line reaches confirm serials', skip: !hasCredentials, ($) async {
     await _openPurchaseOrders($);
     await openOrderWithAction(
@@ -119,8 +145,10 @@ void main() {
     await $('Fill').first.tap();
     await expectScreen($, 'Fill Item');
     await _fillOneUnit($);
+    expectAboveSystemNavBar($, find.text('Continue'));
     await continueBackToSummary($, 'Fill Item');
 
+    expectAboveSystemNavBar($, find.textContaining(RegExp('^Continue to receiving items')));
     await $(RegExp('^Continue to receiving items')).tap();
     if (await appears($, $(#receiveNumberField))) {
       await $(#receiveNumberField).enterText('E2E-${uniqueSuffix()}');

@@ -153,11 +153,14 @@ Future<void> waitForList(PatrolIntegrationTester $) async {
     await _waitForListOnce($);
     if (!$('Retry').exists) return;
     // ignore: avoid_print
-    print('waitForList: load failed, tapping Retry (${retry + 1}/$_listRetries)');
+    print('waitForList: load failed (${errorSnackbarText($) ?? 'no error snackbar'}), '
+        'tapping Retry (${retry + 1}/$_listRetries)');
     await $('Retry').tap(settlePolicy: SettlePolicy.noSettle);
   }
   await _waitForListOnce($);
-  if ($('Retry').exists) fail('List failed to load (errorRetry state shown)');
+  if ($('Retry').exists) {
+    fail('List failed to load (errorRetry state shown): ${errorSnackbarText($) ?? 'no error snackbar'}');
+  }
 }
 
 const _listRetries = 2;
@@ -201,6 +204,67 @@ Future<void> tapListCard(PatrolIntegrationTester $, [int index = 0]) async {
   await $.tester.ensureVisible(cards.at(index));
   await $.tester.tap(cards.at(index));
   await $.pumpAndTrySettle();
+}
+
+/// Opens list cards top-down until [matches] returns true on the opened
+/// screen; after each miss, Back must return to [listTitle]. Returns false
+/// when none of the first [maxCards] matches.
+///
+/// Cards are tracked by title, not index: the list only builds the cards on
+/// screen and reloads from the top after Back, so an index counted once goes
+/// stale. The list is scrolled to build the cards not tried yet.
+Future<bool> openFirstCardWhere(
+  PatrolIntegrationTester $, {
+  required String listTitle,
+  required Future<bool> Function() matches,
+  int maxCards = 8,
+}) async {
+  final tried = <String>{};
+  while (tried.length < maxCards) {
+    final title = await _nextUntriedCard($, tried);
+    if (title == null) return false;
+    tried.add(title);
+
+    final card = find.ancestor(of: find.text(title), matching: listCards()).first;
+    await $.tester.ensureVisible(card);
+    await $.tester.tap(card);
+    await $.pumpAndTrySettle();
+    if (await matches()) return true;
+
+    await $(#appBarBackButton).tap();
+    await expectScreen($, listTitle);
+    await waitForList($);
+  }
+  return false;
+}
+
+/// Title of the first built card not in [tried], scrolling the list down to
+/// build more; null once a scroll shows nothing new (end of the list).
+Future<String?> _nextUntriedCard(PatrolIntegrationTester $, Set<String> tried) async {
+  List<String> titles() => [
+        for (var i = 0; i < listCards().evaluate().length; i++) listCardTitle($, i),
+      ];
+
+  var seen = titles();
+  for (var scroll = 0; scroll < 10; scroll++) {
+    for (final t in seen) {
+      if (t.isNotEmpty && !tried.contains(t)) return t;
+    }
+    if (seen.isEmpty) return null;
+
+    await $.tester.drag(
+      find.byWidgetPredicate((w) => w is ScrollView && w.scrollDirection == Axis.vertical).first,
+      const Offset(0, -400),
+    );
+    await $.pumpAndTrySettle();
+    // Room for an infinite-scroll page to arrive.
+    await $.pump(const Duration(seconds: 1));
+
+    final next = titles();
+    if (next.every(seen.contains)) return null;
+    seen = next;
+  }
+  return null;
 }
 
 /// Pumps until [finder] exists or [timeout] passes; returns whether it showed.
@@ -256,6 +320,33 @@ Future<void> grantCameraIfAsked(PatrolIntegrationTester $) async {
 
 /// Timestamp suffix so write tests never collide on receive numbers etc.
 String uniqueSuffix() => DateTime.now().millisecondsSinceEpoch.toString();
+
+/// Pumps until [condition] holds; fails with [reason] after [apiTimeout].
+Future<void> waitUntilTrue(
+  PatrolIntegrationTester $,
+  bool Function() condition, {
+  required String reason,
+}) async {
+  final end = DateTime.now().add(apiTimeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(end)) fail('Timed out after ${apiTimeout.inSeconds}s: $reason');
+    await $.pump(const Duration(milliseconds: 200));
+  }
+}
+
+/// Fails when [finder] reaches under the system navigation bar. The app runs
+/// edge-to-edge, so the Android 3-button bar overlaps anything not inset by
+/// SafeArea / MediaQuery padding.
+void expectAboveSystemNavBar(PatrolIntegrationTester $, Finder finder) {
+  final view = $.tester.view;
+  final screenBottom = view.physicalSize.height / view.devicePixelRatio;
+  final navBar = view.viewPadding.bottom / view.devicePixelRatio;
+  expect(
+    $.tester.getRect(finder.first).bottom,
+    lessThanOrEqualTo(screenBottom - navBar + 0.5),
+    reason: '$finder is covered by the system navigation bar (${navBar.toStringAsFixed(0)} dp)',
+  );
+}
 
 /// Waits for a screen identified by its AppBar title.
 Future<void> expectScreen(PatrolIntegrationTester $, String appBarTitle) =>

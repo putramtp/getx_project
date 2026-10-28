@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 import 'common/harness.dart';
+import 'common/order_flow.dart';
 
 Future<void> _openDeliveries(PatrolIntegrationTester $) async {
   await loginAsTestUser($);
@@ -37,6 +38,23 @@ Future<void> _openFirstDelivery(PatrolIntegrationTester $) async {
 }
 
 final _updated = RegExp(r'updated\.$');
+
+/// From the Outflow menu: opens the first outflow order that still offers
+/// "Create Delivery"; false when none of the recent ones does.
+Future<bool> _openOrderWithoutDelivery(PatrolIntegrationTester $) async {
+  await $('Outflow Orders').tap();
+  await expectScreen($, 'Outflow Orders');
+  await waitForList($);
+  return openFirstCardWhere(
+    $,
+    listTitle: 'Outflow Orders',
+    matches: () async {
+      await expectScreen($, 'Outflow Order');
+      await waitForList($);
+      return appears($, $('Create Delivery'));
+    },
+  );
+}
 
 void main() {
   e2eTest('delivery list loads', skip: !hasCredentials, ($) async {
@@ -135,25 +153,22 @@ void main() {
     await loginAsTestUser($);
     await $(#homeOutflowTask).tap();
     await expectScreen($, 'Outflow');
-    await $('Outflow Orders').tap();
-    await expectScreen($, 'Outflow Orders');
-    await waitForList($);
 
-    // First order (top-down) that still offers "Create Delivery".
-    final count = listCards().evaluate().length;
-    var found = false;
-    for (var i = 0; i < count && i < 8 && !found; i++) {
-      await tapListCard($, i);
-      await expectScreen($, 'Outflow Order');
-      await waitForList($);
-      found = await appears($, $('Create Delivery'));
-      if (!found) {
+    if (!await _openOrderWithoutDelivery($)) {
+      // Every recent order already has a delivery: make one that doesn't by
+      // outflowing a request line and answering "Not now" to the prompt.
+      await $(#appBarBackButton).tap();
+      await expectScreen($, 'Outflow');
+      await outflowOneRequestLine($, createDelivery: false);
+      await expectScreen($, 'Outflow Requests');
+      for (var i = 0; i < 3 && !$('By Request').exists; i++) {
         await $(#appBarBackButton).tap();
-        await expectScreen($, 'Outflow Orders');
-        await waitForList($);
+      }
+      await expectScreen($, 'Outflow');
+      if (!await _openOrderWithoutDelivery($)) {
+        fail('The outflow order just created (delivery skipped) offers no "Create Delivery"');
       }
     }
-    if (!found) fail('No outflow order without a delivery — reseed DemoTenantSeeder');
 
     await $('Create Delivery').scrollTo();
     await $('Create Delivery').tap(settlePolicy: SettlePolicy.noSettle);

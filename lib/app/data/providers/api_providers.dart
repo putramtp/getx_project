@@ -34,10 +34,44 @@ class ApiProvider extends GetConnect {
 
   }
 
+  /// GETs are resent once when they died on a stale keep-alive socket: the
+  /// tunnel closes idle connections, and the next request reusing one fails
+  /// ("Broken pipe") before it ever reaches the server. Writes are never
+  /// resent — the server may have applied them.
+  @override
+  Future<Response<T>> get<T>(
+    String url, {
+    Map<String, String>? headers,
+    String? contentType,
+    Map<String, dynamic>? query,
+    Decoder<T>? decoder,
+  }) async {
+    Future<Response<T>> send() => super.get<T>(url,
+        headers: headers, contentType: contentType, query: query, decoder: decoder);
+    final response = await send();
+    if (response.statusCode == null && isStaleConnection(response.statusText)) {
+      return send();
+    }
+    return response;
+  }
+
+  /// True for transport errors caused by reusing a connection the other end
+  /// already closed (safe to retry on a fresh one) — not timeouts or DNS.
+  static bool isStaleConnection(String? statusText) {
+    final text = (statusText ?? '').toLowerCase();
+    return text.contains('broken pipe') ||
+        text.contains('connection reset') ||
+        text.contains('connection closed before');
+  }
+
   void checkResponse(Response response) {
     final code = response.statusCode;
     if (code == null) {
-      throw Exception('No response from server. Check the API URL or network.');
+      // GetConnect swallows the transport error and keeps it in statusText
+      // ("Can not connect to server. Reason: ..."); show it rather than lose it.
+      final reason = response.statusText;
+      throw Exception('No response from server. Check the API URL or network.'
+          '${reason != null && reason.isNotEmpty ? '\n$reason' : ''}');
     }
     if (code < 200 || code >= 300) {
       // Session expired: a 401 while we still hold a token means the stored

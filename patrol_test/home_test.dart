@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
+import 'package:getx_project/app/modules/home/controllers/home_controller.dart';
 
 import 'common/harness.dart';
 
@@ -29,6 +32,20 @@ void main() {
     expect($('Latest transactions'), findsOneWidget);
     await $('Serial number type').scrollTo();
     expect($('Serial number type'), findsOneWidget);
+  });
+
+  e2eTest('pull to refresh keeps real dashboard counts', skip: !hasCredentials, ($) async {
+    await loginAsTestUser($);
+    final home = Get.find<HomeController>();
+    await waitUntilTrue($, () => home.dashboard.value.product > 0,
+        reason: 'dashboard product count stayed 0 (GET /dashboard-inventory)');
+
+    await $.tester.fling(find.byType(RefreshIndicator), const Offset(0, 400), 1000);
+    await $.pump(const Duration(milliseconds: 300));
+    await waitUntilTrue($, () => !home.isLoading.value, reason: 'dashboard reload never finished');
+
+    expect(errorSnackbarText($), isNull, reason: 'reloading the dashboard showed an error');
+    expect(home.dashboard.value.product, greaterThan(0), reason: 'reload reset the counts to 0');
   });
 
   e2eTest('home entry points open their screens', skip: !hasCredentials, ($) async {

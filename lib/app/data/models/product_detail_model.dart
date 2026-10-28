@@ -1,3 +1,5 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class ProductDetailModel {
   final int id;
   final String type;
@@ -52,7 +54,7 @@ class ProductDetailModel {
       unitId: json["unit_id"],
       unitName: json["unit_name"] ?? "",
       name: json["name"] ?? "",
-      priceSell: json["price_sell"] ?? 0,
+      priceSell: safeToInt(json["price_sell"]), // DECIMAL: "180000000"
       serialNumberType: json["serial_number_type"] ?? "",
       manageExpired: json["manage_expired"] ?? false,
       descriptions: json["descriptions"],

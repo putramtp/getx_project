@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:getx_project/app/global/widget/product_tile.dart';
+import 'package:getx_project/app/modules/product/controllers/product_controller.dart';
 import 'package:patrol/patrol.dart';
 
 import 'common/harness.dart';
@@ -18,6 +21,38 @@ void main() {
     expect($('TOTAL PRODUCTS'), findsOneWidget);
     expect($(ProductTile), findsWidgets);
     expect($('View details'), findsWidgets);
+  });
+
+  e2eTest('summary numbers are parsed, not zero', skip: !hasCredentials, ($) async {
+    await _openProducts($);
+    final c = Get.find<ProductController>();
+
+    // The API sends DECIMAL sums as strings ("320.000000"); a parse that
+    // can't read them silently shows 0 everywhere.
+    expect(c.totalProducts.value, greaterThan(0));
+    expect(c.stockInHand.value, greaterThan(0), reason: 'Stock in hand parsed as 0');
+    expect(c.productSummaries.any((p) => p.qtyRemaining != 0), isTrue,
+        reason: 'every loaded product shows 0 remaining');
+  });
+
+  e2eTest('scrolling to the end loads every page', skip: !hasCredentials, ($) async {
+    await _openProducts($);
+    final c = Get.find<ProductController>();
+    final list = find.byWidgetPredicate((w) => w is ScrollView && w.scrollDirection == Axis.vertical).first;
+
+    // Each fling near the end triggers loadMore (the next cursor page).
+    for (var i = 0; i < 40 && !$(#noMoreDataFooter).exists; i++) {
+      final error = errorSnackbarText($);
+      if (error != null) fail('Loading the next page failed: $error');
+      await $.tester.drag(list, const Offset(0, -800));
+      await $.pump(const Duration(milliseconds: 800));
+    }
+
+    expect($(#noMoreDataFooter), findsOneWidget, reason: 'never reached "No more data"');
+    expect(errorSnackbarText($), isNull);
+    if (c.totalProducts.value > c.limit.value) {
+      expect(c.productSummaries.length, greaterThan(c.limit.value), reason: 'page 2 never loaded');
+    }
   });
 
   e2eTest('search narrows the list to the typed product', skip: !hasCredentials, ($) async {
@@ -60,6 +95,9 @@ void main() {
 
     await $('View details').first.tap();
     await $('Basic Information').waitUntilVisible(timeout: apiTimeout);
+    // The section titles render even when GET /item/{id} fails to parse.
+    await $.pump(const Duration(seconds: 1));
+    expect(errorSnackbarText($), isNull, reason: 'product detail failed to load');
     await $('Pricing').scrollTo();
     expect($('Pricing'), findsOneWidget);
   });
