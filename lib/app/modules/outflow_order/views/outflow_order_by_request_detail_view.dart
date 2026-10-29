@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'scan_page_by_request.dart';
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/accent.dart';
@@ -15,109 +16,117 @@ import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../global/functions.dart';
 
-class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetailController> {
+class OutflowOrderByRequestDetailView
+    extends GetView<OutflowOrderByRequestDetailController> {
   const OutflowOrderByRequestDetailView({super.key});
-
-  // By-Request flow accent (matches the header gradient + scan action).
-  static const Color _accent = mutedPurple;
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appHeader('Item Summary', accent: AppAccent.purple, icon: Icons.list_alt_rounded, subtitle: 'By Request · ${controller.currentOr.code}'),
+      appBar: appHeader(
+        'Item Summary',
+        accent: AppAccent.purple,
+        icon: Icons.list_alt_rounded,
+        subtitle: 'By Request · ${controller.currentOr.code}',
+      ),
       body: SafeArea(
         // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
         top: false,
         child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildHeader(size),
-            const SizedBox(height: 16),
-            Expanded(child: Obx(() {
-              if (controller.isLoading.value) {
-                return skeletonSummaryList(size, accent: mutedPurple);
-              }
-
-              if (controller.items.isEmpty) {
-                 return textNoData(size,message: "No items found.");
-              }
-
-              return ListView.separated(
-                itemCount: controller.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = controller.items[index];
-                  final expected = item['expected'] ?? 0;
-                  // Outflow is capped at the reserved qty, not the requested one.
-                  final reserved = item['reserved'] ?? 0;
-                  // Unified scanned format: [{code, qty}]
-                  final List<Map<String, dynamic>> scannedList = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
-
-                  // Sum up total scanned qty
-                  final scannedCount = scannedList.fold<int>(
-                    0,
-                    (sum, e) =>
-                        sum +
-                        ((e['qty'] is int)
-                            ? e['qty'] as int
-                            : int.tryParse('${e['qty']}') ?? 0),
-                  );
-                  final outflowed = item['received'] ?? 0;
-                  final bool isFinished = outflowed >= reserved;
-                  final outflowedAndScanned = outflowed + scannedCount;
-
-                  // log("${item['name']} - ${item['serialNumberType']}");
-
-                  IconData icon;
-                  Color bgColor;
-
-                  if (reserved > 0 && outflowedAndScanned >= reserved) {
-                    icon = Icons.check_circle_rounded;
-                    bgColor = Colors.green;
-                  } else if (outflowedAndScanned > 0 &&
-                      outflowedAndScanned < reserved) {
-                    icon = Icons.timelapse_rounded;
-                    bgColor = Colors.orange;
-                  } else {
-                    icon = Icons.cancel_rounded;
-                    bgColor = Colors.red;
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildHeader(size),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return skeletonSummaryList(size, accent: mutedPurple);
                   }
 
-                  // Serial-tracked (manage_sn) items scan a printed label;
-                  // quantity-only items just fill a qty, so mirror receive's
-                  // "Fill" action instead of showing a scanner.
-                  final bool manageSn = item['manage_sn'] == true;
+                  if (controller.items.isEmpty) {
+                    return textNoData(size, message: "No items found.");
+                  }
 
-                  return orderItemSummaryTile(
-                    size: size,
-                    name: item['name'] ?? "Unnamed",
-                    subtitle:
-                        "Reserved: $reserved/$expected | Outflowed: $outflowed | Outflowing: $scannedCount",
-                    statusIcon: icon,
-                    statusColor: bgColor,
-                    showAction: !isFinished,
-                    actionLabel: manageSn ? "Scan" : "Fill",
-                    actionIcon: manageSn
-                        ? Icons.qr_code_scanner_rounded
-                        : Icons.edit_rounded,
-                    actionColor: AppAccent.purple.text,
-                    onAction: () {
-                      controller.selectedIndex.value = index;
-                      controller.selectedItem.value = item;
-                      Get.to(() => const ScanPageByRequest());
+                  return ListView.separated(
+                    itemCount: controller.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = controller.items[index];
+                      final expected = item['expected'] ?? 0;
+                      // Outflow is capped at the reserved qty, not the requested one.
+                      final reserved = item['reserved'] ?? 0;
+                      // Unified scanned format: [{code, qty}]
+                      final List<Map<String, dynamic>> scannedList =
+                          List<Map<String, dynamic>>.from(
+                            item['scanned'] ?? [],
+                          );
+
+                      // Sum up total scanned qty
+                      final scannedCount = scannedList.fold<int>(
+                        0,
+                        (sum, e) =>
+                            sum +
+                            ((e['qty'] is int)
+                                ? e['qty'] as int
+                                : int.tryParse('${e['qty']}') ?? 0),
+                      );
+                      final outflowed = item['received'] ?? 0;
+                      final bool isFinished = outflowed >= reserved;
+                      final outflowedAndScanned = outflowed + scannedCount;
+
+                      // log("${item['name']} - ${item['serialNumberType']}");
+
+                      IconData icon;
+                      Color bgColor;
+
+                      if (reserved > 0 && outflowedAndScanned >= reserved) {
+                        icon = Icons.check_circle_rounded;
+                        bgColor = Colors.green;
+                      } else if (outflowedAndScanned > 0 &&
+                          outflowedAndScanned < reserved) {
+                        icon = Icons.timelapse_rounded;
+                        bgColor = Colors.orange;
+                      } else {
+                        icon = Icons.cancel_rounded;
+                        bgColor = Colors.red;
+                      }
+
+                      // Serial-tracked (manage_sn) items scan a printed label;
+                      // quantity-only items just fill a qty, so mirror receive's
+                      // "Fill" action instead of showing a scanner.
+                      final bool manageSn = item['manage_sn'] == true;
+
+                      return orderItemSummaryTile(
+                        size: size,
+                        name: item['name'] ?? "Unnamed",
+                        subtitle:
+                            "Reserved: $reserved/$expected | Outflowed: $outflowed | Outflowing: $scannedCount",
+                        statusIcon: icon,
+                        statusColor: bgColor,
+                        showAction: !isFinished,
+                        actionLabel: manageSn ? "Scan" : "Fill",
+                        actionIcon: manageSn
+                            ? Icons.qr_code_scanner_rounded
+                            : Icons.edit_rounded,
+                        actionColor: AppAccent.purple.text,
+                        onAction: () {
+                          controller.selectedIndex.value = index;
+                          controller.selectedItem.value = item;
+                          Get.to(() => const ScanPageByRequest());
+                        },
+                      );
                     },
                   );
-                },
-              );
-            })),
-            const SizedBox(height: 16),
-            _buildContinueButton(),
-          ],
+                }),
+              ),
+              const SizedBox(height: 16),
+              _buildContinueButton(),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -130,7 +139,9 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
         final isLoading = controller.isLoadingOutflowing.value;
         return navyButton(
           SizeConfig.defaultSize,
-          isLoading ? "Processing..." : "Continue to outflowing items ($totalScanned scanned)",
+          isLoading
+              ? "Processing..."
+              : "Continue to outflowing items ($totalScanned scanned)",
           icon: Icons.receipt_long_rounded,
           loading: isLoading,
           onPressed: () async {
@@ -155,179 +166,32 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
     Map<dynamic, List<Map<String, dynamic>>> allScanned,
     int totalScanned,
   ) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: _accent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(16),
-                child: const Icon(
-                  Icons.receipt_long_rounded,
-                  color: _accent,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Continue to Outflowing Items?',
-                style: AppTextStyle.custom(SizeConfig.defaultSize,
-                    px: 20, weight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Total Outflowing quantity: $totalScanned',
-                style: AppTextStyle.custom(SizeConfig.defaultSize,
-                    px: 16, weight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-
-              // 🔹 Loop through each item and show scanned codes + total qty
-              ...controller.items.map((item) {
-                final id = item['line_id'];
-                final name = item['name'] ?? 'Unnamed';
-                final scannedList = allScanned[id] ?? [];
-
-                // Calculate total qty for this item
-                final itemQty = scannedList.fold<int>(
-                  0,
-                  (sum, entry) =>
-                      sum +
-                      (entry['qty'] is int
-                          ? entry['qty'] as int
-                          : int.tryParse('${entry['qty']}') ?? 0),
-                );
-
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.inventory_2_rounded,
-                              size: 20, color: Colors.blueGrey),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: AppTextStyle.custom(SizeConfig.defaultSize,
-                                  px: 15,
-                                  weight: FontWeight.w600,
-                                  color: Colors.black87),
-                            ),
-                          ),
-                          Text(
-                            'Total: $itemQty',
-                            style: AppTextStyle.plain(
-                                weight: FontWeight.w500,
-                                color: Colors.black54),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      if (scannedList.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, top: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: scannedList.map((entry) {
-                              final code = entry['serial_number'];
-                              final qty = entry['qty'];
-                              final displayText = (qty == 1) ? code : "$code (qty: $qty)";
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.qr_code_2,
-                                        size: 16, color: Colors.grey),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        code != null
-                                            ? displayText
-                                            : "scanned: $qty",
-                                        style: AppTextStyle.custom(
-                                            SizeConfig.defaultSize,
-                                            px: 13,
-                                            color: Colors.black54),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, top: 4),
-                          child: Text(
-                            "No scanned codes yet.",
-                            style: AppTextStyle.custom(SizeConfig.defaultSize,
-                                    px: 13, color: Colors.black45)
-                                .copyWith(fontStyle: FontStyle.italic),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-
-              const SizedBox(height: 20),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => closeRoute(false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _accent,
-                        side: const BorderSide(color: _accent),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => closeRoute(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _accent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Continue'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+    final size = SizeConfig.defaultSize;
+    return orderSubmitConfirmDialog(
+      size: size,
+      accent: AppAccent.purple,
+      title: Text(
+        'Continue to Outflowing Items?',
+        style: AppTextStyle.custom(size, px: 20, weight: FontWeight.bold),
+        textAlign: TextAlign.center,
       ),
+      summary: 'Total Outflowing quantity: $totalScanned',
+      entryIcon: Icons.qr_code_2,
+      lines: [
+        for (final item in controller.items)
+          if (allScanned[item['line_id']]?.isNotEmpty ?? false)
+            SubmitConfirmLine(
+              name: item['name'] ?? 'Unnamed',
+              total: allScanned[item['line_id']]!.fold<int>(
+                0,
+                (sum, e) => sum + safeToInt(e['qty']),
+              ),
+              entries: [
+                for (final e in allScanned[item['line_id']]!)
+                  scannedEntryLabel(e),
+              ],
+            ),
+      ],
     );
   }
 
@@ -343,14 +207,20 @@ class OutflowOrderByRequestDetailView extends GetView<OutflowOrderByRequestDetai
           label: 'Outflow request',
           title: '#${request.code}',
           badge: accentPill(size, request.status, accent: AppAccent.purple),
-          footer: headerFooterText([request.customer, getDateString(request.date)]),
+          footer: headerFooterText([
+            request.customer,
+            getDateString(request.date),
+          ]),
           footerIcon: Icons.groups_rounded,
-          totals: lineTotals(controller.items, expectedKey: 'reserved', pendingKey: 'scanned'),
+          totals: lineTotals(
+            controller.items,
+            expectedKey: 'reserved',
+            pendingKey: 'scanned',
+          ),
           labels: ('Reserved', 'Outflowed', 'Outflowing'),
           doneVerb: 'outflowed',
         ),
       ),
     );
   }
-
 }

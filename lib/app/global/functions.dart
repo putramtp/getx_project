@@ -101,6 +101,16 @@ int safeToInt(dynamic value) {
   return 0;
 }
 
+/// The receive/outflow lines worth submitting: those with at least one entry
+/// under [entriesKey] ("filled" on receive, "scanned" on outflow) whose qty is
+/// above 0. The backend saves every line it is sent, so an unfilled one would
+/// become a qty-0 document line and stock transaction.
+List<Map<String, dynamic>> linesToSubmit(Iterable<Map<String, dynamic>> items, String entriesKey) => [
+      for (final item in items)
+        if (((item[entriesKey] as List?) ?? const []).any((e) => (num.tryParse('${e['qty']}') ?? 0) > 0))
+          item,
+    ];
+
 String formatPrice(dynamic value) {
   if (value == null) return "-";
 

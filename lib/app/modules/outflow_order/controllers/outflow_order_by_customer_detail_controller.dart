@@ -257,7 +257,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
 
     final payload = {
       "customer_id": customer.id,
-      "items": items.toList(),
+      "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
     };
     final data = await ApiExecutor.run(
       isLoading: isLoadingOutflowing,

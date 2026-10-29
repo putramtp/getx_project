@@ -287,7 +287,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     final or = currentOr;
     final payload = {
       "or_id": or.id,
-      "items": items.toList(),
+      "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
     };
     final data = await ApiExecutor.run(
       isLoading: isLoadingOutflowing,

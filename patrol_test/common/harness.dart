@@ -218,9 +218,11 @@ Future<bool> openFirstCardWhere(
   required String listTitle,
   required Future<bool> Function() matches,
   int maxCards = 8,
+  Set<String> skipTitles = const {},
 }) async {
-  final tried = <String>{};
-  while (tried.length < maxCards) {
+  // Cards in [skipTitles] count as already tried, so they are never opened.
+  final tried = <String>{...skipTitles};
+  while (tried.length < maxCards + skipTitles.length) {
     final title = await _nextUntriedCard($, tried);
     if (title == null) return false;
     tried.add(title);

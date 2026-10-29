@@ -6,6 +6,7 @@ import '../styles/app_text_style.dart';
 import '../variables.dart';
 import 'accent_header_card.dart';
 import 'accent_pill.dart';
+import 'app_buttons.dart';
 import 'functions_widget.dart';
 import '../../data/models/serial_number_model.dart';
 import '../functions.dart';
@@ -571,4 +572,128 @@ Widget orderRecordHeader({
     footerIcon: footerIcon,
     progress: progress,
   );
+}
+
+/// One line of [orderSubmitConfirmDialog]: an item and the entries about to be
+/// submitted for it ("Filled: 2", a scanned label, ...).
+class SubmitConfirmLine {
+  const SubmitConfirmLine({required this.name, required this.entries, this.total});
+
+  final String name;
+  final List<String> entries;
+
+  /// Shown as "Total: n" next to the name when set.
+  final int? total;
+}
+
+/// Confirmation before submitting a receive / outflow (By PO, By Supplier,
+/// By Request, By Customer). Pass only the lines that have something filled or
+/// scanned — the ones being submitted. The list scrolls when it is long while
+/// Cancel / Continue stay pinned under it, so Continue is never pushed off
+/// screen. Pops `true` on Continue, `false` on Cancel.
+Widget orderSubmitConfirmDialog({
+  required double size,
+  required AppAccent accent,
+  required Widget title,
+  required String summary,
+  required List<SubmitConfirmLine> lines,
+  IconData entryIcon = Icons.list_rounded,
+}) {
+  return Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: accent.tint(), shape: BoxShape.circle),
+              child: Icon(Icons.receipt_long_rounded, color: accent.base, size: 40),
+            ),
+          ),
+          const SizedBox(height: 18),
+          title,
+          const SizedBox(height: 12),
+          Text(
+            summary,
+            style: AppTextStyle.custom(size, px: 16, weight: FontWeight.w600),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: [for (final line in lines) _submitConfirmLineCard(size, line, entryIcon)],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: accentOutlineButton(size, 'Cancel',
+                    color: accent.base, onPressed: () => closeRoute(false)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: navyButton(size, 'Continue', onPressed: () => closeRoute(true))),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _submitConfirmLineCard(double size, SubmitConfirmLine line, IconData entryIcon) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.inventory_2_rounded, size: 20, color: Colors.blueGrey),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(line.name,
+                  style: AppTextStyle.custom(size, px: 15, weight: FontWeight.w600, color: Colors.black87)),
+            ),
+            if (line.total != null)
+              Text('Total: ${line.total}',
+                  style: AppTextStyle.plain(weight: FontWeight.w500, color: Colors.black54)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        for (final entry in line.entries)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, top: 2, bottom: 2),
+            child: Row(
+              children: [
+                Icon(entryIcon, size: 16, color: Colors.grey),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(entry, style: AppTextStyle.custom(size, px: 13, color: Colors.black54)),
+                ),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// Outflow entry as listed in [orderSubmitConfirmDialog]: the scanned label
+/// (with its qty when more than 1), or just the qty for a quantity-only line.
+String scannedEntryLabel(Map<String, dynamic> entry) {
+  final code = entry['serial_number'];
+  final qty = entry['qty'];
+  if (code == null) return 'scanned: $qty';
+  return qty == 1 ? '$code' : '$code (qty: $qty)';
 }

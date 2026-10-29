@@ -18,7 +18,8 @@ import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../global/functions.dart';
 
-class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailController> {
+class ReceiveOrderByPoDetailView
+    extends GetView<ReceiveOrderByPoDetailController> {
   const ReceiveOrderByPoDetailView({super.key});
 
   @override
@@ -26,90 +27,97 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
     return Scaffold(
-      appBar: appHeader('Item Summary', accent: AppAccent.sky, icon: Icons.list_alt_rounded, subtitle: 'By PO · ${controller.currentOrder.poNumber}'),
+      appBar: appHeader(
+        'Item Summary',
+        accent: AppAccent.sky,
+        icon: Icons.list_alt_rounded,
+        subtitle: 'By PO · ${controller.currentOrder.poNumber}',
+      ),
       body: SafeArea(
         // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
         top: false,
         child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildHeader(size),
-            const SizedBox(height: 16),
-            Expanded(child: Obx(() {
-              if (controller.isLoading.value) {
-                return skeletonSummaryList(size, accent: skyBlue);
-              }
-
-              if (controller.items.isEmpty) {
-                return textNoData(size,message: "No items found.");
-              }
-
-              return ListView.separated(
-                itemCount: controller.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = controller.items[index];
-                  final expected = item['expected'] ?? 0;
-                  // Unified filled format: [{code, qty}]
-                  final List<Map<String, dynamic>> filledList =
-                      List<Map<String, dynamic>>.from(item['filled'] ?? []);
-
-                  // Sum up total filled qty
-                  final filledCount = filledList.fold<int>(
-                    0,
-                    (sum, e) =>
-                        sum +
-                        ((e['qty'] is int)
-                            ? e['qty'] as int
-                            : int.tryParse('${e['qty']}') ?? 0),
-                  );
-                  final received = item['received'] ?? 0;
-                  final bool isFinished = received >= expected;
-                  final receivedAndFilled = received + filledCount;
-
-                  // log("${item['name']} - ${item['serialNumberType']}");
-
-                  IconData icon;
-                  Color bgColor;
-
-                  if (expected > 0 && receivedAndFilled >= expected) {
-                    icon = Icons.check_circle_rounded;
-                    bgColor = Colors.green;
-                  } else if (receivedAndFilled > 0 &&
-                      receivedAndFilled < expected) {
-                    icon = Icons.timelapse_rounded;
-                    bgColor = Colors.orange;
-                  } else {
-                    icon = Icons.cancel_rounded;
-                    bgColor = Colors.red;
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildHeader(size),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return skeletonSummaryList(size, accent: skyBlue);
                   }
 
-                  return orderItemSummaryTile(
-                    size: size,
-                    name: item['name'] ?? "Unnamed",
-                    subtitle:
-                        "Expected: $expected | Received: $received | receiving: $filledCount",
-                    statusIcon: icon,
-                    statusColor: bgColor,
-                    showAction: !isFinished,
-                    actionLabel: "Fill",
-                    actionIcon: Icons.edit_rounded,
-                    actionColor: AppAccent.sky.text,
-                    onAction: () {
-                      controller.selectedIndex.value = index;
-                      controller.selectedItem.value = item;
-                      Get.to(() => const ReceiveOrderFillByPoView());
+                  if (controller.items.isEmpty) {
+                    return textNoData(size, message: "No items found.");
+                  }
+
+                  return ListView.separated(
+                    itemCount: controller.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = controller.items[index];
+                      final expected = item['expected'] ?? 0;
+                      // Unified filled format: [{code, qty}]
+                      final List<Map<String, dynamic>> filledList =
+                          List<Map<String, dynamic>>.from(item['filled'] ?? []);
+
+                      // Sum up total filled qty
+                      final filledCount = filledList.fold<int>(
+                        0,
+                        (sum, e) =>
+                            sum +
+                            ((e['qty'] is int)
+                                ? e['qty'] as int
+                                : int.tryParse('${e['qty']}') ?? 0),
+                      );
+                      final received = item['received'] ?? 0;
+                      final bool isFinished = received >= expected;
+                      final receivedAndFilled = received + filledCount;
+
+                      // log("${item['name']} - ${item['serialNumberType']}");
+
+                      IconData icon;
+                      Color bgColor;
+
+                      if (expected > 0 && receivedAndFilled >= expected) {
+                        icon = Icons.check_circle_rounded;
+                        bgColor = Colors.green;
+                      } else if (receivedAndFilled > 0 &&
+                          receivedAndFilled < expected) {
+                        icon = Icons.timelapse_rounded;
+                        bgColor = Colors.orange;
+                      } else {
+                        icon = Icons.cancel_rounded;
+                        bgColor = Colors.red;
+                      }
+
+                      return orderItemSummaryTile(
+                        size: size,
+                        name: item['name'] ?? "Unnamed",
+                        subtitle:
+                            "Expected: $expected | Received: $received | receiving: $filledCount",
+                        statusIcon: icon,
+                        statusColor: bgColor,
+                        showAction: !isFinished,
+                        actionLabel: "Fill",
+                        actionIcon: Icons.edit_rounded,
+                        actionColor: AppAccent.sky.text,
+                        onAction: () {
+                          controller.selectedIndex.value = index;
+                          controller.selectedItem.value = item;
+                          Get.to(() => const ReceiveOrderFillByPoView());
+                        },
+                      );
                     },
                   );
-                },
-              );
-            })),
-            const SizedBox(height: 16),
-            _buildContinueButton(size),
-          ],
+                }),
+              ),
+              const SizedBox(height: 16),
+              _buildContinueButton(size),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -122,7 +130,9 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
         final isLoading = controller.isLoadingReceiving.value;
         return navyButton(
           SizeConfig.defaultSize,
-          isLoading ? "Processing..." : "Continue to receiving items ($totalFilled filled)",
+          isLoading
+              ? "Processing..."
+              : "Continue to receiving items ($totalFilled filled)",
           icon: Icons.receipt_long_rounded,
           loading: isLoading,
           onPressed: () async {
@@ -132,7 +142,10 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
             final totalFilled = controller.totalFilled;
 
             if (totalFilled == 0) {
-              warningAlertBottom(title:"No Items Filled","Please fill at least one item before continuing.");
+              warningAlertBottom(
+                title: "No Items Filled",
+                "Please fill at least one item before continuing.",
+              );
               return;
             }
 
@@ -165,192 +178,65 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
     Map<dynamic, List<Map<String, dynamic>>> allFilled,
     int totalFilled,
   ) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE3F2FD),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(16),
-                child: const Icon(
-                  Icons.receipt_long_rounded,
-                  color: Colors.teal,
-                  size: 40,
-                ),
+    final size = SizeConfig.defaultSize;
+    return orderSubmitConfirmDialog(
+      size: size,
+      accent: AppAccent.sky,
+      // Tap the title to change the receive number before confirming.
+      title: TextButton(
+        onPressed: () async {
+          final newNumber = await showReceiveNumberDialog(
+            initialValue: controller.receiveNumber.value,
+          );
+          if (newNumber != null && newNumber.trim().isNotEmpty) {
+            controller.receiveNumber.value = newNumber.trim();
+          }
+        },
+        child: Column(
+          children: [
+            Text(
+              'Continue to Receiving ',
+              style: AppTextStyle.custom(
+                size,
+                px: 20,
+                weight: FontWeight.bold,
+                color: navyDark,
               ),
-              const SizedBox(height: 18),
-              TextButton(
-                onPressed: () async {
-                  final newNumber = await showReceiveNumberDialog(
-                    initialValue: controller.receiveNumber.value,
-                  );
-                  if (newNumber != null && newNumber.trim().isNotEmpty) {
-                    controller.receiveNumber.value = newNumber.trim();
-                  }
-                },
-                child: Column(
-                  children: [
-                    Text(
-                      'Continue to Receiving ',
-                      style: AppTextStyle.custom(SizeConfig.defaultSize,
-                          px: 20, weight: FontWeight.bold, color: Colors.black),
-                      textAlign: TextAlign.center,
-                    ),
-                    Obx(() => Text(
-                          '#${controller.receiveNumber.value}?',
-                          style: AppTextStyle.custom(SizeConfig.defaultSize,
-                              px: 20,
-                              weight: FontWeight.bold,
-                              color: Colors.blue),
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
+              textAlign: TextAlign.center,
+            ),
+            Obx(
+              () => Text(
+                '#${controller.receiveNumber.value}?',
+                style: AppTextStyle.custom(
+                  size,
+                  px: 20,
+                  weight: FontWeight.bold,
+                  color: AppAccent.sky.text,
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Total receiving quantity: $totalFilled',
-                style: AppTextStyle.custom(SizeConfig.defaultSize,
-                    px: 16, weight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
-
-              // 🔹 Loop through each item and show filled  + total qty
-              ...controller.items.map((item) {
-                final lineId = item['line_id'];
-                final name = item['name'] ?? 'Unnamed';
-                final serialNumberType = item['serialNumberType'] ?? 'other';
-                final filledList = allFilled[lineId] ?? [];
-
-                // Calculate total qty for this item
-                final itemQty = filledList.fold<int>(
-                  0,
-                  (sum, entry) =>
-                      sum +
-                      (entry['qty'] is int
-                          ? entry['qty'] as int
-                          : int.tryParse('${entry['qty']}') ?? 0),
-                );
-
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.inventory_2_rounded,
-                              size: 20, color: Colors.blueGrey),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: AppTextStyle.custom(SizeConfig.defaultSize,
-                                  px: 15,
-                                  weight: FontWeight.w600,
-                                  color: Colors.black87),
-                            ),
-                          ),
-                          serialNumberType == 'BATCH'
-                              ? Text(
-                                  'Total: $itemQty',
-                                  style: AppTextStyle.plain(
-                                      weight: FontWeight.w500,
-                                      color: Colors.black54),
-                                )
-                              : const SizedBox.shrink(),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      if (filledList.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, top: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: filledList.map((entry) {
-                              final qty = entry['qty'];
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.list_rounded,
-                                        size: 16, color: Colors.grey),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        "Filled: $qty",
-                                        style: AppTextStyle.custom(
-                                            SizeConfig.defaultSize,
-                                            px: 13,
-                                            color: Colors.black54),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, top: 4),
-                          child: Text(
-                            "No filled quantities yet.",
-                            style: AppTextStyle.custom(SizeConfig.defaultSize,
-                                    px: 13, color: Colors.black45)
-                                .copyWith(fontStyle: FontStyle.italic),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-
-              const SizedBox(height: 20),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => closeRoute(false),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                      ),
-                      onPressed: () => closeRoute(true),
-                      child: Text(
-                        'Continue',
-                        style: AppTextStyle.plain(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+      summary: 'Total receiving quantity: $totalFilled',
+      lines: [
+        for (final item in controller.items)
+          if (allFilled[item['line_id']]?.isNotEmpty ?? false)
+            SubmitConfirmLine(
+              name: item['name'] ?? 'Unnamed',
+              total: item['serialNumberType'] == 'BATCH'
+                  ? allFilled[item['line_id']]!.fold<int>(
+                      0,
+                      (sum, e) => sum + safeToInt(e['qty']),
+                    )
+                  : null,
+              entries: [
+                for (final e in allFilled[item['line_id']]!)
+                  'Filled: ${e['qty']}',
+              ],
+            ),
+      ],
     );
   }
 
@@ -368,12 +254,15 @@ class ReceiveOrderByPoDetailView extends GetView<ReceiveOrderByPoDetailControlle
           badge: accentPill(size, po.status, accent: AppAccent.sky),
           footer: headerFooterText([po.supplier, getDateString(po.date)]),
           footerIcon: Icons.storefront_rounded,
-          totals: lineTotals(controller.items, expectedKey: 'expected', pendingKey: 'filled'),
+          totals: lineTotals(
+            controller.items,
+            expectedKey: 'expected',
+            pendingKey: 'filled',
+          ),
           labels: ('Expected', 'Received', 'Receiving now'),
           doneVerb: 'complete',
         ),
       ),
     );
   }
-
 }

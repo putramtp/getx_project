@@ -41,7 +41,7 @@ Future<void> _fillOneUnit(PatrolIntegrationTester $) async {
 
 /// Confirm Serials: confirms the first pending label through the scanner's
 /// manual-entry button (the camera itself can't be driven in a test).
-Future<void> _confirmFirstPendingLabel(PatrolIntegrationTester $) async {
+Future<void> _confirmFirstPendingLabel(PatrolIntegrationTester $, String listTitle) async {
   final row = find.ancestor(of: find.text('Pending').first, matching: find.byType(ListTile));
   final code = ($.tester.widget<ListTile>(row).title! as Text).data!;
 
@@ -57,11 +57,69 @@ Future<void> _confirmFirstPendingLabel(PatrolIntegrationTester $) async {
   await $('Done').tap(settlePolicy: SettlePolicy.noSettle);
   await expectScreen($, 'Confirm Serials');
 
-  // Back pops to the PO list, which must reload (not show the stale list).
+  // Back pops to the order list, which must reload (not show the stale list).
   await $(#appBarBackButton).tap();
-  await expectScreen($, 'Purchase Orders');
+  await expectScreen($, listTitle);
   await waitForList($);
 }
+
+/// On an order list ("Purchase Orders" / "Suppliers"): receives 1 unit of
+/// the first fillable line, submits it and finishes Confirm Serials, which
+/// returns to [listTitle]. With [poNumber] it searches for that PO instead,
+/// and then requires labels to confirm (a serial-tracked line).
+Future<void> _receiveOneLine(PatrolIntegrationTester $, {required String listTitle, String? poNumber}) async {
+  if (poNumber == null) {
+    await openOrderWithAction(
+      $,
+      listTitle: listTitle,
+      action: 'Fill',
+      noneMessage: 'No open line to fill under "$listTitle" — reseed DemoTenantSeeder',
+      // Leave the serial-tracked PO's few units to its own test.
+      skipTitles: const {_serialPo},
+    );
+  } else {
+    await $(#searchBarField).enterText(poNumber, hideKeyboard: false);
+    await $(#searchBarSubmit).tap();
+    await waitForList($);
+    expect(listCardTitle($, 0), poNumber, reason: '$poNumber not found — run SerialTrackedFlowSampleSeeder');
+    await tapListCard($);
+    await expectScreen($, 'Item Summary');
+    await waitForList($);
+    if (!$('Fill').exists) fail('$poNumber has nothing left to receive — rerun SerialTrackedFlowSampleSeeder');
+  }
+
+  await $('Fill').first.tap();
+  await expectScreen($, 'Fill Item');
+  await _fillOneUnit($);
+  expectAboveSystemNavBar($, find.text('Continue'));
+  await continueBackToSummary($, 'Fill Item');
+
+  expectAboveSystemNavBar($, find.textContaining(RegExp('^Continue to receiving items')));
+  await $(RegExp('^Continue to receiving items')).tap();
+  if (await appears($, $(#receiveNumberField))) {
+    await $(#receiveNumberField).enterText('E2E-${uniqueSuffix()}');
+    await $('Save').tap();
+  }
+  await $(RegExp('^Continue to Receiving')).waitUntilVisible();
+  await $('Continue').tap(settlePolicy: SettlePolicy.noSettle);
+
+  await expectScreen($, 'Confirm Serials');
+  await waitForList($);
+  // A failed load also lands on "Nothing to confirm" — it must not pass for one.
+  final error = errorSnackbarText($);
+  if (error != null) fail('Confirm Serials failed to load: $error');
+  if ($('Nothing to confirm').exists) {
+    if (poNumber != null) fail('Receiving serial-tracked $poNumber minted no labels to confirm');
+    await $('Done').tap();
+    await expectScreen($, listTitle);
+    return;
+  }
+  await _confirmFirstPendingLabel($, listTitle);
+}
+
+/// Seeded by the backend's SerialTrackedFlowSampleSeeder: a PO line for a
+/// serial-tracked (manage_sn, UNIQUE) item, still open to receive.
+const _serialPo = 'PO-SMP-SN-OPEN';
 
 void main() {
   e2eTest('menu shows the receiving entries', skip: !hasCredentials, ($) async {
@@ -135,35 +193,20 @@ void main() {
 
   e2eTest('receiving a PO line reaches confirm serials', skip: !hasCredentials, ($) async {
     await _openPurchaseOrders($);
-    await openOrderWithAction(
-      $,
-      listTitle: 'Purchase Orders',
-      action: 'Fill',
-      noneMessage: 'No open PO with a fillable line — reseed DemoTenantSeeder',
-    );
+    await _receiveOneLine($, listTitle: 'Purchase Orders');
+  });
 
-    await $('Fill').first.tap();
-    await expectScreen($, 'Fill Item');
-    await _fillOneUnit($);
-    expectAboveSystemNavBar($, find.text('Continue'));
-    await continueBackToSummary($, 'Fill Item');
+  e2eTest('receiving a serial-tracked line mints labels to confirm', skip: !hasCredentials, ($) async {
+    await _openPurchaseOrders($);
+    // Seeded by the backend's SerialTrackedFlowSampleSeeder (manage_sn, UNIQUE).
+    await _receiveOneLine($, listTitle: 'Purchase Orders', poNumber: _serialPo);
+  });
 
-    expectAboveSystemNavBar($, find.textContaining(RegExp('^Continue to receiving items')));
-    await $(RegExp('^Continue to receiving items')).tap();
-    if (await appears($, $(#receiveNumberField))) {
-      await $(#receiveNumberField).enterText('E2E-${uniqueSuffix()}');
-      await $('Save').tap();
-    }
-    await $(RegExp('^Continue to Receiving')).waitUntilVisible();
-    await $('Continue').tap(settlePolicy: SettlePolicy.noSettle);
-
-    await expectScreen($, 'Confirm Serials');
+  e2eTest('receiving a supplier line reaches confirm serials', skip: !hasCredentials, ($) async {
+    await _openReceiveMenu($);
+    await $('By Supplier').tap();
+    await expectScreen($, 'Suppliers');
     await waitForList($);
-    if ($('Nothing to confirm').exists) {
-      await $('Done').tap();
-      await expectScreen($, 'Purchase Orders');
-      return;
-    }
-    await _confirmFirstPendingLabel($);
+    await _receiveOneLine($, listTitle: 'Suppliers');
   });
 }

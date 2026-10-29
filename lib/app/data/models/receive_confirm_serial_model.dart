@@ -1,3 +1,5 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class ReceiveConfirmSerialModel {
   final int id;
   final String serialNumber;
@@ -32,7 +34,7 @@ class ReceiveConfirmSerialModel {
       itemId: json['item_id'] ?? 0,
       itemName: json['item_name'] ?? '-',
       serialNumberType: json['serial_number_type'] ?? 'OTHER',
-      qty: json['qty'] ?? 0,
+      qty: safeToInt(json['qty']), // DECIMAL pivot qty: "1.000000"
       isScanned: json['is_scanned'] ?? false,
       scannedByName: (json['scanned_by_name'] as String?)?.isEmpty ?? true
           ? null

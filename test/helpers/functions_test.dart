@@ -70,4 +70,25 @@ void main() {
       expect(formatPrice(1000), '1.000');
     });
   });
+
+  group('linesToSubmit', () {
+    test('keeps only lines with a positive qty entry', () {
+      final items = [
+        {'line_id': 1, 'filled': [{'qty': 2}]},
+        {'line_id': 2, 'filled': []},
+        {'line_id': 3}, // never opened
+        {'line_id': 4, 'filled': [{'qty': 0}]},
+        {'line_id': 5, 'filled': [{'qty': '0.5'}]}, // fractional still counts
+      ];
+      expect(linesToSubmit(items, 'filled').map((e) => e['line_id']), [1, 5]);
+    });
+
+    test('reads the outflow "scanned" entries the same way', () {
+      final items = [
+        {'line_id': 7, 'scanned': [{'serial_number': 'SKU-1', 'qty': 1}]},
+        {'line_id': 8, 'scanned': []},
+      ];
+      expect(linesToSubmit(items, 'scanned').map((e) => e['line_id']), [7]);
+    });
+  });
 }

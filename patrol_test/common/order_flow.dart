@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
+import 'package:getx_project/app/data/providers/api_providers.dart';
 import 'package:patrol/patrol.dart';
 
 import 'harness.dart';
@@ -12,11 +14,13 @@ Future<void> openOrderWithAction(
   required String action,
   required String noneMessage,
   int maxCards = 8,
+  Set<String> skipTitles = const {},
 }) async {
   final found = await openFirstCardWhere(
     $,
     listTitle: listTitle,
     maxCards: maxCards,
+    skipTitles: skipTitles,
     matches: () async {
       await expectScreen($, 'Item Summary');
       await waitForList($);
@@ -30,24 +34,26 @@ Future<void> openOrderWithAction(
   if (!found) fail(noneMessage);
 }
 
-/// From the Outflow menu: outflows 1 unit of the first open quantity-only
-/// request line, then answers the "Create delivery?" prompt with
+/// From the Outflow menu: opens [menuTile] ("By Request" → "Outflow
+/// Requests", "By Customer" → "Customers"), outflows 1 unit of the first
+/// open quantity-only line, then answers the "Create delivery?" prompt with
 /// [createDelivery]. "Fill" = a quantity-only (manage_sn false) line; the
-/// "Scan" path needs a serial known to be in stock, which can't be picked
-/// dynamically.
-Future<void> outflowOneRequestLine(
+/// "Scan" path needs a serial-tracked line plus a serial known to be in stock.
+Future<void> outflowOneLine(
   PatrolIntegrationTester $, {
+  String menuTile = 'By Request',
+  String listTitle = 'Outflow Requests',
   required bool createDelivery,
 }) async {
-  await $('By Request').scrollTo();
-  await $('By Request').tap();
-  await expectScreen($, 'Outflow Requests');
+  await $(menuTile).scrollTo();
+  await $(menuTile).tap();
+  await expectScreen($, listTitle);
   await waitForList($);
   await openOrderWithAction(
     $,
-    listTitle: 'Outflow Requests',
+    listTitle: listTitle,
     action: 'Fill',
-    noneMessage: 'No open request with a quantity-only line — reseed DemoTenantSeeder',
+    noneMessage: 'No open quantity-only line under "$listTitle" — reseed DemoTenantSeeder',
   );
 
   await $('Fill').first.tap();
@@ -58,7 +64,12 @@ Future<void> outflowOneRequestLine(
   await $('Qty: 1').waitUntilVisible();
   expectAboveSystemNavBar($, find.text('Continue'));
   await continueBackToSummary($, 'Scan Item');
+  await submitOutflow($, createDelivery: createDelivery);
+}
 
+/// On an outflow Item Summary with something scanned/filled: submits it and
+/// answers the "Create delivery?" prompt with [createDelivery].
+Future<void> submitOutflow(PatrolIntegrationTester $, {required bool createDelivery}) async {
   expectAboveSystemNavBar($, find.textContaining(RegExp('^Continue to outflowing items')));
   await $(RegExp('^Continue to outflowing items')).tap();
   await $('Continue to Outflowing Items?').waitUntilVisible();
@@ -66,6 +77,23 @@ Future<void> outflowOneRequestLine(
 
   await waitForSuccess($, $('Create delivery?'));
   await $(createDelivery ? 'Create' : 'Not now').tap(settlePolicy: SettlePolicy.noSettle);
+}
+
+/// Request [requestCode]'s serial-tracked line: the SKU labels of its item
+/// still in stock, read straight from the API (GET /item/{id}/serial-number —
+/// read-only). Seeded by the backend's SerialTrackedFlowSampleSeeder.
+Future<List<String>> inStockSerialsForRequest(String requestCode) async {
+  final api = Get.find<ApiProvider>();
+  final requests = (await api.getMap('/outflow-request/pagination', query: {'limit': '100'}))['data'] as List;
+  final request = requests.cast<Map>().where((r) => r['code'] == requestCode).firstOrNull;
+  if (request == null) fail('No outflow request $requestCode — run SerialTrackedFlowSampleSeeder');
+
+  final lines = (await api.getMap('/outflow-request/${request['id']}/summary'))['data'] as List;
+  final line = lines.cast<Map>().where((l) => l['manage_sn'] == true).firstOrNull;
+  if (line == null) fail('$requestCode has no serial-tracked line');
+
+  final item = (await api.getMap('/item/${line['item_id']}/serial-number'))['data'] as Map;
+  return [for (final s in item['serials'] as List) s['internal_code'] as String];
 }
 
 /// On a Fill / Scan page, presses the bottom-bar "Continue" until the page

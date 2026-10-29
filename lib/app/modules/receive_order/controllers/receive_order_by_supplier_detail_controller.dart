@@ -330,7 +330,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     final Map<String, dynamic> payload = {
       "receive_number": receiveNumber.value,
       "supplier_id": supplier.id,
-      "items": items.map((e) => e).toList(), // ensure list of maps
+      "items": linesToSubmit(items, "filled"), // unfilled lines would be saved as qty 0
     };
     final data = await ApiExecutor.run(
       isLoading: isLoadingReceiving,

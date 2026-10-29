@@ -159,7 +159,7 @@ void main() {
       // outflowing a request line and answering "Not now" to the prompt.
       await $(#appBarBackButton).tap();
       await expectScreen($, 'Outflow');
-      await outflowOneRequestLine($, createDelivery: false);
+      await outflowOneLine($, createDelivery: false);
       await expectScreen($, 'Outflow Requests');
       for (var i = 0; i < 3 && !$('By Request').exists; i++) {
         await $(#appBarBackButton).tap();
