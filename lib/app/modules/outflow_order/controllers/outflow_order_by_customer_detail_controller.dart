@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/accent.dart';
 import '../../../global/alert.dart';
 import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/outflow_request_customer_model.dart';
+import '../../../data/models/outflow_request_line_item_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
 import '../../../modules/delivery/delivery_actions.dart';
 import '../outflow_submit.dart';
@@ -12,14 +15,25 @@ import '../../../global/scan_feedback.dart';
 import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
 
+/// Item Summary + scan for one customer's reservations (a delivery order) —
+/// and, through [OutflowOrderByWorkOrderDetailController], for one work
+/// order's (material issued to production). The views read the target from
+/// the hooks below.
 class OutflowOrderByCustomerDetailController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
 
   /// Durable store for in-progress scans — they live only in memory until the
   /// final submit, so persist them to survive an app close / accidental exit.
-  final DraftService _drafts = Get.find<DraftService>();
+  final DraftService drafts = Get.find<DraftService>();
   Worker? _scanCacheWorker;
-  String get _draftScope => 'outflow_cust_${currentOrCustomer.id}';
+
+  // What this screen issues to; By Work Order overrides these.
+  String get draftScope => 'outflow_cust_${currentOrCustomer.id}';
+  String get targetLabel => 'Customer';
+  IconData get targetIcon => Icons.groups_rounded;
+  AppAccent get accent => AppAccent.amber;
+  Future<List<OutflowRequestLineItemModel>> fetchLines() =>
+      provider.getOutflowRequestLineItemByCustomer(currentOrCustomer.id);
 
   var items = <Map<String, dynamic>>[].obs;
   var selectedIndex = 0.obs;
@@ -53,13 +67,12 @@ class OutflowOrderByCustomerDetailController extends GetxController {
   Future<void> loadOrByCustomerItems() async {
     final data = await ApiExecutor.run(
       isLoading: isLoading,
-      task: () =>
-          provider.getOutflowRequestLineItemByCustomer(currentOrCustomer.id),
+      task: fetchLines,
     );
     // If network failed or exception handled, data is null
     if (data == null) return;
 
-    final cached = await readLineDraft(_drafts, _draftScope);
+    final cached = await readLineDraft(drafts, draftScope);
     final normalized = data.map((item) {
       final serverScanned = (item.scanned != null && item.scanned!.isNotEmpty)
           ? item.scanned!
@@ -72,6 +85,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
 
       return {
         "line_id": item.lineId,
+        "item_id": item.itemId,
         "name": item.name,
         "serialNumberType": item.serialNumberType,
         "manageExpired": item.manageExpired,
@@ -91,9 +105,9 @@ class OutflowOrderByCustomerDetailController extends GetxController {
   void _persistScanned() {
     final map = buildLineDraftMap(items, "scanned");
     if (map.isEmpty) {
-      _drafts.remove(_draftScope);
+      drafts.remove(draftScope);
     } else {
-      _drafts.saveJson(_draftScope, map);
+      drafts.saveJson(draftScope, map);
     }
   }
 
@@ -252,18 +266,18 @@ class OutflowOrderByCustomerDetailController extends GetxController {
 
   num get totalScanned => sumQty(getAllScannedUnified().values.expand((list) => list));
 
-  void startOutflowingItem() async {
+  Future<void> startOutflowingItem() async {
     final customer = currentOrCustomer;
 
     final payload = {
       "customer_id": customer.id,
       "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
     };
-    final data = await submitOutflowData(provider, payload, isLoading: isLoadingOutflowing);
+    final data = await submitOutflowData(provider.postOrLineToOutflowedData, payload, isLoading: isLoadingOutflowing);
     if (data == null) return;
 
     // Submitted to the server — drop the local in-progress draft.
-    await _drafts.remove(_draftScope);
+    await drafts.remove(draftScope);
     successAlertBottom("Outflow for ${customer.name} completed!");
 
     // Offer to create a delivery for the newly created outflow order.

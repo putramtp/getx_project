@@ -4,6 +4,8 @@ import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_li
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_customer_detail_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_work_order_binding.dart';
+import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_work_order_detail_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_by_request_detail_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/bindings/outflow_order_list_detail_binding.dart';
 import 'package:getx_project/app/modules/outflow_order/views/outflow_order_by_customer_detail_view.dart';
@@ -92,6 +94,8 @@ class AppPages {
   static const outflowOrderByRequestDetailPage = Routes.OUTFLOW_ORDER_BY_REQUEST_DETAIL;
   static const outflowOrderByCustomerPage = Routes.OUTFLOW_ORDER_BY_CUSTOMER;
   static const outflowOrderByCustomerDetailPage = Routes.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL;
+  static const outflowOrderByWorkOrderPage = Routes.OUTFLOW_ORDER_BY_WORK_ORDER;
+  static const outflowOrderByWorkOrderDetailPage = Routes.OUTFLOW_ORDER_BY_WORK_ORDER_DETAIL;
   //DELIVERY
   static const deliveryListPage = Routes.DELIVERY_LIST;
   static const deliveryDetailPage = Routes.DELIVERY_DETAIL;
@@ -181,6 +185,13 @@ class AppPages {
     _guard(_Paths.OUTFLOW_ORDER_BY_CUSTOMER_DETAIL,
         () => const OutflowOrderByCustomerDetailView(),
         binding: OutflowOrderByCustomerDetailBinding()),
+    // By Work Order reuses the By Customer views with work-order controllers.
+    _guard(_Paths.OUTFLOW_ORDER_BY_WORK_ORDER,
+        () => const OutflowOrderByCustomerView(),
+        binding: OutflowOrderByWorkOrderBinding()),
+    _guard(_Paths.OUTFLOW_ORDER_BY_WORK_ORDER_DETAIL,
+        () => const OutflowOrderByCustomerDetailView(),
+        binding: OutflowOrderByWorkOrderDetailBinding()),
 
     // DELIVERY
     _guard(_Paths.DELIVERY_LIST, () => const DeliveryListView(),

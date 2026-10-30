@@ -28,6 +28,7 @@ void main() {
     expect($('Outflow Orders'), findsOneWidget);
     expect($('By Request'), findsOneWidget);
     expect($('By Customer'), findsOneWidget);
+    expect($('By Work Order'), findsOneWidget);
     await $('Deliveries').scrollTo();
     expect($('Deliveries'), findsOneWidget);
   });
@@ -99,6 +100,27 @@ void main() {
 
     // The backend attached exactly that label and took it out of stock.
     expect(await inStockSerialsForRequest(_serialRequest), isNot(contains(label)));
+  });
+
+  e2eTest('work order list opens a work order\'s material', skip: !hasCredentials, ($) async {
+    await _openOutflowMenu($);
+    await _openFromMenu($, 'By Work Order', 'Work Orders');
+    expect(listCards(), findsWidgets, reason: 'no work order with open reservations — approve a material requisition');
+
+    await tapListCard($);
+    await expectScreen($, 'Item Summary');
+    await waitForList($);
+    expect(errorSnackbarText($), isNull);
+    expect($(RegExp('^By Work Order')), findsOneWidget);
+  });
+
+  e2eTest('issuing work order material returns to work orders', skip: !hasCredentials, ($) async {
+    await _openOutflowMenu($);
+    await outflowOneLine($, menuTile: 'By Work Order', listTitle: 'Work Orders', createDelivery: null);
+
+    await expectScreen($, 'Work Orders');
+    await waitForList($);
+    expect($('Item Summary'), findsNothing);
   });
 
   e2eTest('outflowing a customer line without a delivery returns to customers', skip: !hasCredentials, ($) async {

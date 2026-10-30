@@ -12,7 +12,7 @@ class OutflowRequestModel {
 
   /// False for a work-order / material-requisition reservation (no customer):
   /// the backend refuses to put those on a delivery order, so the app shows
-  /// them read-only — they are issued on the web (Issue by Work Order).
+  /// them read-only — they are issued from By Work Order.
   final bool hasCustomer;
 
   static const workOrderReservationLabel = 'Work order reservation';

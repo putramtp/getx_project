@@ -289,7 +289,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
       "or_id": or.id,
       "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
     };
-    final data = await submitOutflowData(provider, payload, isLoading: isLoadingOutflowing);
+    final data = await submitOutflowData(provider.postOrLineToOutflowedData, payload, isLoading: isLoadingOutflowing);
     if (data == null) return;
 
     // Submitted to the server — drop the local in-progress draft.

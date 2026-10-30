@@ -129,10 +129,10 @@ Semua test pernah lolos minimal sekali, **kecuali 4**:
 
 | # | Masalah | Siapa |
 |---|---|---|
-| D1 | `closed.period` di `confirmSerials` — scan label setelah bulan ditutup → 409, padahal tidak mengubah stok; app tidak bisa mengirim alasan | Jimmy / tim |
+| D1 | ✅ **Diputuskan: scan label bebas dari kunci bulan** — `confirmSerials` dikeluarkan dari `closed.period:receive_order` (scan hanya mengisi `scanned_at`/`scanned_by`, tanpa qty/harga/jurnal); penerimaan (`createReceiveData`, edit, hapus) tetap terkunci. Test di `MobileScanGuardsTest`. Perlu dikabarkan ke Jimmy (pemilik DATA-D-03) | — |
 | D2 | ✅ **Selesai** — qty desimal didukung penuh di receive & outflow (koma/titik, ≤ 6 desimal); item serial UNIQUE/BATCH tetap unit bulat. Backend: outflow `qty` `min:1` → `gt:0` + guard unit bulat untuk entri serial di `OutflowDataRequest` (3 test baru di `MobileScanGuardsTest`) | — |
-| D3 | Reservasi WO dikeluarkan langsung dari app (opsi 2, `issue-by-work-order`) | Ditunda |
-| D4 | Picker invoice (#11) kini butuh izin *view* dokumen sumber — user web tanpa izin itu akan 403 | Konfirmasi ke tim web |
+| D3 | ✅ **Diputuskan: menu baru By Work Order** — daftar WO dengan reservasi terbuka (`GET /outflow-request/work-order-summary`) → baris per WO dengan `can_issue`/alasan dari gerbang `issueByWorkOrder` (`GET …/{wo}/work-order-summary`) → Fill/Scan → `POST /outflow-order/issue-by-work-order` (tanpa Create Delivery). App memakai ulang view By Customer (controller turunan). Backend: gerbang WO dipindah ke `workOrderIssueRefusal()` (dipakai submit & summary), `issueByWorkOrder` kini menolak reservasi yang ditutup | — |
+| D4 | ✅ **Diputuskan: A — picker tetap butuh izin view dokumen sumber.** Ternyata role bawaan `finance` di ketujuh tenant tidak punya `receive-order.view`/`purchase-order.view`/`outflow-order.view` → finance akan 403 di form faktur. Perbaikan: `RoleTemplateSeeder` memberi ketiganya ke `finance` (tenant baru) + tenant migration `2026_10_30_100000_grant_invoice_source_views_to_invoice_roles` (tenant lama: role yang boleh create/update faktur dapat view sumbernya; hanya menambah). Sudah dijalankan di 7 tenant dev; **wajib** ikut `tenants:migrate` di server lain sebelum rilis | — |
 
 ### 5.3 Kecil / performa
 
@@ -155,7 +155,7 @@ Semua test pernah lolos minimal sekali, **kecuali 4**:
 
 ### 5.5 Operasional
 
-- Server lain (staging/production) yang menarik merge Jimmy **wajib** `php artisan deploy:sync-tenants` — tanpa itu Delivered/undo/expired error SQL. Rilis app versi baru setelah backend termigrasi.
+- Server lain (staging/production) yang menarik merge Jimmy **wajib** `php artisan deploy:sync-tenants` — tanpa itu Delivered/undo/expired error SQL, dan (D4) role finance kehilangan picker faktur. Rilis app versi baru setelah backend termigrasi.
 - Hapus akun `e2e_tester*` bila tidak dipakai lagi.
 
 ---

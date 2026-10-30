@@ -37,15 +37,16 @@ Future<void> openOrderWithAction(
 }
 
 /// From the Outflow menu: opens [menuTile] ("By Request" → "Outflow
-/// Requests", "By Customer" → "Customers"), outflows 1 unit of the first
-/// open quantity-only line, then answers the "Create delivery?" prompt with
-/// [createDelivery]. "Fill" = a quantity-only (manage_sn false) line; the
+/// Requests", "By Customer" → "Customers", "By Work Order" → "Work Orders"),
+/// outflows 1 unit of the first open quantity-only line, then answers the
+/// "Create delivery?" prompt with [createDelivery] — null for By Work Order,
+/// which issues to production and offers no delivery. "Fill" = a quantity-only (manage_sn false) line; the
 /// "Scan" path needs a serial-tracked line plus a serial known to be in stock.
 Future<void> outflowOneLine(
   PatrolIntegrationTester $, {
   String menuTile = 'By Request',
   String listTitle = 'Outflow Requests',
-  required bool createDelivery,
+  required bool? createDelivery,
 }) async {
   await $(menuTile).scrollTo();
   await $(menuTile).tap();
@@ -70,13 +71,18 @@ Future<void> outflowOneLine(
 }
 
 /// On an outflow Item Summary with something scanned/filled: submits it and
-/// answers the "Create delivery?" prompt with [createDelivery].
-Future<void> submitOutflow(PatrolIntegrationTester $, {required bool createDelivery}) async {
+/// answers the "Create delivery?" prompt with [createDelivery]; null (By Work
+/// Order) expects the "Material issued" confirmation instead of the prompt.
+Future<void> submitOutflow(PatrolIntegrationTester $, {required bool? createDelivery}) async {
   expectAboveSystemNavBar($, find.textContaining(RegExp('^Continue to outflowing items')));
   await $(RegExp('^Continue to outflowing items')).tap();
   await $('Continue to Outflowing Items?').waitUntilVisible();
   await $('Continue').tap(settlePolicy: SettlePolicy.noSettle);
 
+  if (createDelivery == null) {
+    await waitForSuccess($, $(RegExp('^Material issued to ')));
+    return;
+  }
   await waitForSuccess($, $('Create delivery?'));
   await $(createDelivery ? 'Create' : 'Not now').tap(settlePolicy: SettlePolicy.noSettle);
 }

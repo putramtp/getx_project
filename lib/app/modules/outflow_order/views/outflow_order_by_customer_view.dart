@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../global/accent.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
@@ -20,7 +19,7 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
     final double size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appHeader('Customers', accent: AppAccent.amber, icon: Icons.groups_rounded),
+      appBar: appHeader(controller.title, accent: controller.accent, icon: controller.icon),
       body: RefreshIndicator(
         onRefresh: controller.loadCustomers,
         child: SafeArea(
@@ -36,20 +35,20 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
                       focusNode: controller.searchFocus,
                       onSearchChanged: controller.onSearchChanged,
                       onToggleSort: controller.toggleSort,
-                      hintText: 'Search Customer...',
+                      hintText: controller.searchHint,
                     )),
                 SizedBox(height: size * 1.2),
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return skeletonOrderList(size, accent: amber);
+                      return skeletonOrderList(size, accent: controller.accent.base);
                     }
                     final orders = controller.filteredCustomers;
                     if (controller.hasError.value && orders.isEmpty) {
-                      return errorRetry(size, onRetry: controller.loadCustomers, accent: amber);
+                      return errorRetry(size, onRetry: controller.loadCustomers, accent: controller.accent.base);
                     }
                     if (orders.isEmpty) {
-                      return textNoData(size, message: 'No Customer data.');
+                      return textNoData(size, message: controller.emptyMessage);
                     }
                     return ListView.builder(
                       itemCount: orders.length,
@@ -64,8 +63,8 @@ class OutflowOrderByCustomerView extends GetView<OutflowOrderByCustomerControlle
                                     : sageTeal;
                         return orderListCard(
                           size: size,
-                          leadingIcon: Icons.store_rounded,
-                          accentColor: amber,
+                          leadingIcon: controller.cardIcon,
+                          accentColor: controller.accent.base,
                           title: customer.name,
                           subtitle: customer.customerCode,
                           subtitleIcon: Icons.qr_code_rounded,

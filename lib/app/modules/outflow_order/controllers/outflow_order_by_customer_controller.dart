@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'outflow_order_by_customer_detail_controller.dart';
+import '../../../global/accent.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/outflow_request_customer_model.dart';
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
+/// The By Customer list — and, through [OutflowOrderByWorkOrderController],
+/// the By Work Order one: both list targets with reserved / outflowed totals
+/// (`OrCustomerModel` rows) and open one target's Item Summary.
 class OutflowOrderByCustomerController extends GetxController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
   final searchController = TextEditingController();
@@ -23,6 +27,16 @@ class OutflowOrderByCustomerController extends GetxController {
   // 🗓️ Date filter fields
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
+
+  // What this list shows; By Work Order overrides these.
+  String get title => 'Customers';
+  String get searchHint => 'Search Customer...';
+  String get emptyMessage => 'No Customer data.';
+  AppAccent get accent => AppAccent.amber;
+  IconData get icon => Icons.groups_rounded;
+  IconData get cardIcon => Icons.store_rounded;
+  String get detailRoute => AppPages.outflowOrderByCustomerDetailPage;
+  Future<List<OrCustomerModel>> fetchTargets() => provider.getCustomers();
 
   @override
   void onInit() {
@@ -66,7 +80,7 @@ class OutflowOrderByCustomerController extends GetxController {
     final data = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
-      task: () => provider.getCustomers(),
+      task: fetchTargets,
     );
     // If network failed or exception handled, data is null
     if (data == null) return;
@@ -82,7 +96,7 @@ class OutflowOrderByCustomerController extends GetxController {
     if (Get.isRegistered<OutflowOrderByCustomerDetailController>()) {
       Get.delete<OutflowOrderByCustomerDetailController>(force: true);
     }
-    Get.toNamed(AppPages.outflowOrderByCustomerDetailPage, arguments: customer);
+    Get.toNamed(detailRoute, arguments: customer);
   }
 
 }

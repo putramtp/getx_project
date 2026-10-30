@@ -219,7 +219,7 @@ class OutflowOrderByRequestDetailView
           Expanded(
             child: Text(
               "This is a work order reservation, so it can't go on a delivery order. "
-              "Issue it on the web with Issue by Work Order.",
+              "Issue it from Outflow → By Work Order.",
               style: AppTextStyle.small(size, color: AppAccent.purple.text),
             ),
           ),

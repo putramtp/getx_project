@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../global/accent.dart';
 import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../../../global/size_config.dart';
-import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
@@ -25,14 +23,14 @@ class ScanPageByCustomer
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appHeader('Scan Item', accent: AppAccent.amber, icon: Icons.qr_code_scanner_rounded),
+      appBar: appHeader('Scan Item', accent: controller.accent, icon: Icons.qr_code_scanner_rounded),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(size * 1.6),
           child: Obx(() {
             final index = controller.selectedIndex.value;
             if (controller.items.isEmpty || index >= controller.items.length) {
-              return skeletonSummaryList(size, accent: amber);
+              return skeletonSummaryList(size, accent: controller.accent.base);
             }
 
             final item = controller.items[index];
@@ -62,7 +60,7 @@ class ScanPageByCustomer
                 children: [
                   orderFillItemHeader(
                     size,
-                    accent: AppAccent.amber,
+                    accent: controller.accent,
                     name: item["name"].toString(),
                     targetLabel: "Reserved",
                     target: reserved,
@@ -71,7 +69,7 @@ class ScanPageByCustomer
                     done: scannedQty,
                   ),
                   SizedBox(height: size * 2),
-                  orderFillResultsTitle(size, "Scanned Results", count: scanned.length, accent: AppAccent.amber),
+                  orderFillResultsTitle(size, "Scanned Results", count: scanned.length, accent: controller.accent),
                   SizedBox(height: size * 0.8),
                   Expanded(child: _buildScannedList(size, scanned, context)),
                 ],
@@ -87,7 +85,7 @@ class ScanPageByCustomer
             controller.items[index]['manage_sn'] == true;
         return orderScanFab(
           size: size,
-          color: amber,
+          color: controller.accent.base,
           icon: manageSn ? Icons.qr_code_scanner : Icons.edit_note_rounded,
           onPressed: _onScanTap,
         );
@@ -117,15 +115,15 @@ class ScanPageByCustomer
     if (serialType == 'UNIQUE') {
       await Get.to(() => ScannerPage(
             title: item['name']?.toString() ?? 'Scan Serial',
-            accent: amber,
+            accent: controller.accent.base,
             onCode: (code) async => controller.scanUnique(code),
-            onManualEntry: () => showManualSerialDialog(accent: amber),
+            onManualEntry: () => showManualSerialDialog(accent: controller.accent.base),
           ));
       return;
     }
 
     // BATCH / OTHER: a single scan (or manual entry) then a quantity dialog.
-    final barcode = await captureSerialInput(accent: amber);
+    final barcode = await captureSerialInput(accent: controller.accent.base);
     if (barcode == null) return;
 
     if (serialType == 'BATCH') {
@@ -166,7 +164,7 @@ class ScanPageByCustomer
         onClear: controller.clearScannedCodes,
         continueEnabled: hasAnyScanned,
         onContinue: controller.goToNextItem,
-        accent: amber,
+        accent: controller.accent.base,
       );
     });
   }
@@ -204,9 +202,9 @@ class ScanPageByCustomer
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: amber.withValues(alpha: 0.12),
+              backgroundColor: controller.accent.base.withValues(alpha: 0.12),
               child: Icon(isQtyOnly ? Icons.tag_rounded : Icons.qr_code,
-                  color: amber),
+                  color: controller.accent.base),
             ),
             title: Text(
               title,

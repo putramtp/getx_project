@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../global/accent.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/widget/app_buttons.dart';
 import '../../../global/widget/accent_pill.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
-import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_list_widgets.dart';
 import '../../../global/widget/skeleton_widgets.dart';
@@ -26,9 +24,9 @@ class OutflowOrderByCustomerDetailView
     return Scaffold(
       appBar: appHeader(
         'Item Summary',
-        accent: AppAccent.amber,
+        accent: controller.accent,
         icon: Icons.list_alt_rounded,
-        subtitle: 'By Customer · ${controller.currentOrCustomer.name}',
+        subtitle: 'By ${controller.targetLabel} · ${controller.currentOrCustomer.name}',
       ),
       body: SafeArea(
         // Keep "Continue" above Android's 3-button navigation bar (edge-to-edge).
@@ -42,7 +40,7 @@ class OutflowOrderByCustomerDetailView
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
-                    return skeletonSummaryList(size, accent: amber);
+                    return skeletonSummaryList(size, accent: controller.accent.base);
                   }
 
                   if (controller.items.isEmpty) {
@@ -112,7 +110,7 @@ class OutflowOrderByCustomerDetailView
                         actionIcon: manageSn
                             ? Icons.qr_code_scanner_rounded
                             : Icons.edit_rounded,
-                        actionColor: AppAccent.amber.text,
+                        actionColor: controller.accent.text,
                         onAction: () {
                           controller.selectedIndex.value = index;
                           controller.selectedItem.value = item;
@@ -170,7 +168,7 @@ class OutflowOrderByCustomerDetailView
     final size = SizeConfig.defaultSize;
     return orderSubmitConfirmDialog(
       size: size,
-      accent: AppAccent.amber,
+      accent: controller.accent,
       title: Text(
         'Continue to Outflowing Items?',
         style: AppTextStyle.custom(size, px: 20, weight: FontWeight.bold),
@@ -200,12 +198,12 @@ class OutflowOrderByCustomerDetailView
         loading: controller.isLoading.value,
         child: orderSummaryHeader(
           size: size,
-          accent: AppAccent.amber,
-          icon: Icons.groups_rounded,
-          label: 'Customer',
+          accent: controller.accent,
+          icon: controller.targetIcon,
+          label: controller.targetLabel,
           title: customer.name,
           code: customer.customerCode,
-          badge: accentPill(size, customer.status, accent: AppAccent.amber),
+          badge: accentPill(size, customer.status, accent: controller.accent),
           totals: lineTotals(
             controller.items,
             expectedKey: 'reserved',

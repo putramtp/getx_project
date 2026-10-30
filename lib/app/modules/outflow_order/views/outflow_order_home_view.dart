@@ -67,6 +67,15 @@ class OutflowOrderHomeView extends GetView {
                   ],
                 ),
               ),
+              SizedBox(height: size * 1.6),
+              orderMenuInfoCard(
+                size: size,
+                title: "By Work Order",
+                subtitle: "Issue reserved material to production",
+                icon: Icons.precision_manufacturing_rounded,
+                accent: AppAccent.sage,
+                onTap: () => Get.toNamed(AppPages.outflowOrderByWorkOrderPage),
+              ),
               SizedBox(height: size * 3),
               orderMenuSectionHeader(
                   size, "Logistics", Icons.local_shipping_outlined, steelBlue),

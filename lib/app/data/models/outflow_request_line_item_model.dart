@@ -2,6 +2,9 @@ import 'package:getx_project/app/global/functions.dart';
 
 class OutflowRequestLineItemModel {
   final int lineId;
+
+  /// The line's item — By Work Order sends it with each issued line.
+  final int? itemId;
   final String name;
   final String serialNumberType;
   final bool manageExpired;
@@ -18,6 +21,7 @@ class OutflowRequestLineItemModel {
 
   OutflowRequestLineItemModel({
     required this.lineId,
+    this.itemId,
     required this.name,
     required this.serialNumberType,
     required this.manageExpired,
@@ -38,6 +42,7 @@ class OutflowRequestLineItemModel {
   factory OutflowRequestLineItemModel.fromJson(Map<String, dynamic> json) {
     return OutflowRequestLineItemModel(
       lineId: json['line_id'],
+      itemId: (num.tryParse(json['item_id']?.toString() ?? ''))?.toInt(),
       name: json['item_name'] ?? '-',
       serialNumberType: json['serial_number_type'] ?? '-',
       manageExpired: json['manage_expired'] ?? false,

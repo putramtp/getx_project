@@ -39,4 +39,19 @@ class OutflowOrderProvider extends ApiProvider {
   Future<List<OrCustomerModel>> getCustomers() {
     return getList('/outflow-request/customer-summary', OrCustomerModel.fromJson);
   }
+
+  /// Work orders with open reservations — rows shaped like the customer list's.
+  Future<List<OrCustomerModel>> getWorkOrders() {
+    return getList('/outflow-request/work-order-summary', OrCustomerModel.fromJson);
+  }
+
+  Future<List<OutflowRequestLineItemModel>> getOutflowRequestLineItemByWorkOrder(int workOrderId) {
+    return getList('/outflow-request/$workOrderId/work-order-summary', OutflowRequestLineItemModel.fromJson);
+  }
+
+  /// `POST /outflow-order/issue-by-work-order` — issues reserved material to a
+  /// work order (a JC outflow order, no delivery). Body: [workOrderIssuePayload].
+  Future<Map<String, dynamic>> issueByWorkOrder(Map<String, dynamic> payload) {
+    return postMap('/outflow-order/issue-by-work-order', payload);
+  }
 }
