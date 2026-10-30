@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../global/accent.dart';
 import '../../../global/widget/accent_header_card.dart';
 import '../../../global/widget/accent_pill.dart';
+import '../../../global/widget/app_buttons.dart';
 import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/product_tile.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
@@ -167,34 +168,17 @@ class ProductView extends GetView<ProductController> {
             accentPill(size, '${controller.totalProducts.value}', accent: AppAccent.slate),
           ],
         ),
-        Padding(
-          padding:  EdgeInsets.only(right: size * 0.5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                tooltip: 'Sort',
-                padding: EdgeInsets.symmetric(horizontal: size *1),
-                constraints: const BoxConstraints(),
-                onPressed: controller.toggleSort,  
-                icon: Icon(controller.isAscending.value ? Icons.arrow_drop_down : Icons.arrow_drop_up, size: size *3, color: navyMid),
-              ),
-              IconButton(
-                tooltip: 'Search',
-                padding: EdgeInsets.symmetric(horizontal: size *1),
-                constraints: const BoxConstraints(),
-                onPressed: controller.startSearch,   // ← Tap to search
-                icon: Icon(Icons.search, size: size * 2, color: navyMid),
-              ),
-              IconButton(
-                tooltip: 'Filter',
-                padding: EdgeInsets.symmetric(horizontal: size *1),
-                constraints: const BoxConstraints(),
-                onPressed:  () => _openTopFilterSheet(context),   // ← Tap to search
-                icon: Icon(Icons.tune_rounded, size: size * 2, color: navyMid),
-              ),
-            ],
-          ),
+        Row(
+          children: [
+            // Flipped when descending, so the icon still shows the sort direction.
+            softIconButton(size, Icons.sort_rounded,
+                tooltip: 'Sort', onPressed: controller.toggleSort, flipVertically: !controller.isAscending.value),
+            SizedBox(width: size * 0.5),
+            softIconButton(size, Icons.search_rounded, tooltip: 'Search', onPressed: controller.startSearch),
+            SizedBox(width: size * 0.5),
+            softIconButton(size, Icons.tune_rounded,
+                tooltip: 'Filter', onPressed: () => _openTopFilterSheet(context)),
+          ],
         ),
       ],
     );

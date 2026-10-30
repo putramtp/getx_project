@@ -96,3 +96,29 @@ Widget accentOutlineButton(
     ),
   );
 }
+
+/// Small square icon action on a soft navy tint — the list-header buttons
+/// (Products: sort / search / filter). 28 × 28 at the default size; find it in
+/// tests by its [tooltip].
+Widget softIconButton(
+  double size,
+  IconData icon, {
+  required String tooltip,
+  required VoidCallback? onPressed,
+  bool flipVertically = false,
+}) {
+  final side = size * 2.8;
+  return IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    icon: Transform.flip(flipY: flipVertically, child: Icon(icon, size: size * 1.4, color: navyMid)),
+    style: IconButton.styleFrom(
+      backgroundColor: navyMid.withValues(alpha: 0.09),
+      fixedSize: Size.square(side),
+      minimumSize: Size.square(side),
+      padding: EdgeInsets.zero,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(size * 0.9)),
+    ),
+  );
+}

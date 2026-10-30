@@ -56,4 +56,15 @@ void main() {
     expect(tester.widget<Icon>(find.byIcon(Icons.south_rounded)).color, stockInColor);
     expect(tester.widget<Icon>(find.byIcon(Icons.north_rounded)).color, stockOutColor);
   });
+
+  testWidgets('softIconButton is a square navy-tinted button found by its tooltip', (tester) async {
+    var taps = 0;
+    await pump(tester, softIconButton(10, Icons.search, tooltip: 'Search', onPressed: () => taps++));
+
+    final button = find.byTooltip('Search');
+    expect(tester.getSize(button), const Size(28, 28)); // mockup: 28 × 28
+    expect(tester.widget<Icon>(find.byIcon(Icons.search)).color, navyMid);
+    await tester.tap(button);
+    expect(taps, 1);
+  });
 }
