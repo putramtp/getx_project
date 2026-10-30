@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'serial_number_model.dart';
 
 class ReceiveOrderDetailModel {
@@ -75,7 +76,7 @@ class ReceiveOrderLine {
   final int itemId;
   final String itemName;
   final String poLineId;
-  final int qty;
+  final num qty;
   final double pricePerUnit;
   final double priceTotal;
   final List<SerialNumberModel> serialNumbers;
@@ -101,7 +102,7 @@ class ReceiveOrderLine {
       poLineId: json['po_line_id']?.toString() ?? '',
       // qty / prices arrive as decimal strings (backend AsDecimalSix cast),
       // so parse leniently from string-or-number instead of casting directly.
-      qty: (num.tryParse(json['qty']?.toString() ?? '') ?? 0).toInt(),
+      qty: safeToNum(json['qty']),
       pricePerUnit: double.tryParse(json['price_per_unit']?.toString() ?? '') ?? 0,
       priceTotal: double.tryParse(json['price_total']?.toString() ?? '') ?? 0,
       serialNumbers: (json['serial_numbers'] as List<dynamic>? ?? [])

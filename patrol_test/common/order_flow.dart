@@ -6,14 +6,16 @@ import 'package:patrol/patrol.dart';
 import 'harness.dart';
 
 /// On an order list screen (PO / request / supplier / customer), opens cards
-/// top-down until one's Item Summary still offers [action] ("Fill" / "Scan").
-/// Fails with [noneMessage] when none of the first [maxCards] does.
+/// top-down until one's Item Summary still offers [action] ("Fill" / "Scan"),
+/// scrolling each summary down to it. Fails with [noneMessage] when none of the
+/// first [maxCards] does — work-order reservations, finished documents and
+/// lines the backend refuses (read-only) fill the top of the dev lists.
 Future<void> openOrderWithAction(
   PatrolIntegrationTester $, {
   required String listTitle,
   required String action,
   required String noneMessage,
-  int maxCards = 8,
+  int maxCards = 15,
   Set<String> skipTitles = const {},
 }) async {
   final found = await openFirstCardWhere(
@@ -28,7 +30,7 @@ Future<void> openOrderWithAction(
       // found." plus an error snackbar, which must not read as "nothing open".
       final error = errorSnackbarText($);
       if (error != null) fail('Item Summary failed to load: $error');
-      return $(action).exists;
+      return scrollUntilExists($, $(action));
     },
   );
   if (!found) fail(noneMessage);

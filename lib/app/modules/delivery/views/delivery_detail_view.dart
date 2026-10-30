@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/models/delivery_model.dart';
 import '../../../data/models/delivery_status_model.dart';
 import '../../../global/accent.dart';
+import '../../../global/alert.dart';
 import '../../../global/widget/accent_header_card.dart';
 import '../../../global/widget/accent_pill.dart';
 import '../../../global/widget/app_header.dart';
@@ -13,8 +15,10 @@ import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/delivery_detail_controller.dart';
+import 'delivery_proof_card.dart';
 import 'delivery_status_panel.dart';
 
 class DeliveryDetailView extends GetView<DeliveryDetailController> {
@@ -28,7 +32,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
       backgroundColor: Colors.grey[100],
       appBar: obxHeader(() {
         final d = controller.delivery.value;
-        return appHeader('Delivery Detail', accent: AppAccent.steel, icon: Icons.route_rounded, subtitle: d == null ? null : '${d.code} · ${d.statusName}');
+        return appHeader('Delivery Detail', accent: AppAccent.steel, icon: Icons.route_rounded, subtitle: d == null ? null : '${d.code} · ${d.statusLabel}');
       }),
       body: SafeArea(
         child: Obx(() {
@@ -50,6 +54,17 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                 _infoCard(size, d),
                 SizedBox(height: size * 1.6),
                 _statusPanel(size, d),
+                if (controller.isLocked) ...[
+                  SizedBox(height: size * 1.6),
+                  deliveryProofCard(
+                    size,
+                    proofs: d.proofs,
+                    uploading: controller.isUploading.value,
+                    onCamera: () => _pickProof(ImageSource.camera),
+                    onGallery: () => _pickProof(ImageSource.gallery),
+                    onOpen: _openProof,
+                  ),
+                ],
               ],
             ),
           ),
@@ -61,7 +76,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
 
   DeliveryStatusModel _currentStatus(DeliveryModel d) =>
       controller.statuses.firstWhereOrNull((s) => s.id == d.statusId) ??
-      DeliveryStatusModel(id: d.statusId, name: d.statusName, color: '');
+      DeliveryStatusModel(id: d.statusId, name: d.statusName, label: d.statusLabel, color: '');
 
   Widget _header(double size, DeliveryModel d) {
     return accentHeaderCard(
@@ -70,7 +85,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
       icon: Icons.route_rounded,
       label: 'Delivery',
       title: '#${d.code}',
-      badge: statusPill(size, d.statusName, deliveryStatusColor(_currentStatus(d))),
+      badge: statusPill(size, d.statusLabel, deliveryStatusColor(_currentStatus(d))),
       stats: [
         HeaderStat('ETA', _estimateText(d)),
         HeaderStat('Customer', d.customer),
@@ -78,32 +93,74 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     );
   }
 
-  /// One "Mark `<status>`" per other status plus "Edit details". Cancelling
-  /// asks for confirmation first; a quick change missing ETA/address opens
-  /// the edit form instead.
+  /// One "Mark `<status>`" per status it may move to next, plus "Edit details"
+  /// (hidden once delivered). Cancelling asks for confirmation first, Delivered
+  /// asks who received the goods; a quick change missing ETA/address opens the
+  /// edit form instead.
   Widget _statusPanel(double size, DeliveryModel d) {
     return deliveryStatusPanel(
       size,
       current: _currentStatus(d),
-      others: controller.statuses.where((s) => s.id != d.statusId).toList(),
+      others: controller.nextStatuses,
+      canEdit: !controller.isLocked,
+      undoTo: d.undoAvailable ? d.undoToLabel : null,
+      onUndo: () async {
+        if (controller.isUpdating.value || d.undoToLabel == null) return;
+        final reason = await showUndoReasonDialog(d.undoToLabel!);
+        if (reason != null) await controller.undoStatus(reason);
+      },
       onEdit: () => _openEditSheet(),
       onMark: (s) async {
         if (controller.isUpdating.value) return;
-        if (s.name.toLowerCase().contains('cancel') && await _confirmCancel(s) != true) return;
-        final ok = await controller.quickSetStatus(s.id);
+        if (_isFinalStatus(s) && await _confirmFinal(s) != true) return;
+        String? receiver;
+        if (controller.isDeliveredStatus(s.id)) {
+          receiver = await showReceiverNameDialog();
+          if (receiver == null) return;
+        }
+        final ok = await controller.quickSetStatus(s.id, receiverName: receiver);
         if (!ok) _openEditSheet(presetStatusId: s.id);
       },
     );
   }
 
-  Future<bool?> _confirmCancel(DeliveryStatusModel s) {
+  /// Picks a photo (resized: the backend caps a file at 20 MB) and uploads it.
+  Future<void> _pickProof(ImageSource source) async {
+    if (controller.isUploading.value) return;
+    final file = await ImagePicker().pickImage(source: source, maxWidth: 2000, imageQuality: 85);
+    if (file == null) return;
+    await controller.uploadProof(await file.readAsBytes(), file.name);
+  }
+
+  /// A photo opens in an in-app preview; other files (a PDF note uploaded on
+  /// the web) are opened there.
+  Future<void> _openProof(DeliveryProof proof) async {
+    if (!proof.isImage) {
+      infoAlertBottom("Open ${proof.title} on the web — the app previews photos only.", title: "Not a photo");
+      return;
+    }
+    final bytes = await controller.fetchProof(proof);
+    if (bytes != null) await showProofPreview(proof.title, bytes);
+  }
+
+  /// Cancelled and Failed end the delivery (only a manager can undo them), so
+  /// they ask first; Delivered asks for the receiver instead.
+  bool _isFinalStatus(DeliveryStatusModel s) {
+    final name = s.name.toLowerCase();
+    return name.contains('cancel') || name.contains('fail');
+  }
+
+  Future<bool?> _confirmFinal(DeliveryStatusModel s) {
+    final cancelling = s.name.toLowerCase().contains('cancel');
     return Get.dialog<bool>(
       AlertDialog(
-        title: Text("Mark ${s.name}?"),
-        content: const Text("This delivery will be marked as cancelled."),
+        title: Text("Mark ${s.label}?"),
+        content: Text(cancelling
+            ? "This delivery will be marked as cancelled."
+            : "This delivery will be marked as failed / returned. Only a manager can undo it."),
         actions: [
           TextButton(onPressed: () => closeRoute(false), child: const Text("Back")),
-          TextButton(onPressed: () => closeRoute(true), child: Text("Mark ${s.name}")),
+          TextButton(onPressed: () => closeRoute(true), child: Text("Mark ${s.label}")),
         ],
       ),
     );
@@ -136,6 +193,10 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
               d.address.isEmpty ? "—" : d.address),
           _infoRow(size, Icons.notes_rounded, "Notes",
               (d.description == null || d.description!.isEmpty) ? "—" : d.description!),
+          if (d.receiverName != null && d.receiverName!.isNotEmpty)
+            _infoRow(size, Icons.how_to_reg_rounded, "Received by", d.receiverName!),
+          if (d.deliveredAt != null)
+            _infoRow(size, Icons.task_alt_rounded, "Delivered at", d.deliveredAt!),
           _infoRow(size, Icons.person_pin_rounded, "Updated by", d.updatedName),
         ],
       ),
@@ -182,6 +243,12 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
 
     final addressCtrl = TextEditingController(text: d.address);
     final descCtrl = TextEditingController(text: d.description ?? '');
+    final receiverCtrl = TextEditingController();
+    // Only the current status and the ones it may move to are offered.
+    final choices = [
+      ...controller.statuses.where((s) => s.id == d.statusId),
+      ...controller.nextStatuses,
+    ];
     int statusId = presetStatusId ?? d.statusId;
     DateTime? date = DateTime.tryParse(d.estimateAt ?? '');
     TimeOfDay? time = _parseTime(d.estimateTime);
@@ -217,19 +284,30 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                     style: AppTextStyle.small(size, color: Colors.grey.shade600)),
                 SizedBox(height: size * 0.6),
                 DropdownButtonFormField<int>(
-                  initialValue: controller.statuses.any((s) => s.id == statusId)
+                  initialValue: choices.any((s) => s.id == statusId)
                       ? statusId
                       : null,
                   isExpanded: true,
                   decoration: _fieldDecoration(size),
-                  items: controller.statuses
+                  items: choices
                       .map((s) => DropdownMenuItem(
                             value: s.id,
-                            child: Text(s.name),
+                            child: Text(s.label),
                           ))
                       .toList(),
                   onChanged: (v) => setSheet(() => statusId = v ?? statusId),
                 ),
+                if (statusId != d.statusId && controller.isDeliveredStatus(statusId)) ...[
+                  SizedBox(height: size * 1.4),
+                  Text("Received by",
+                      style: AppTextStyle.small(size, color: Colors.grey.shade600)),
+                  SizedBox(height: size * 0.6),
+                  TextField(
+                    key: const Key('deliveryEditReceiverField'),
+                    controller: receiverCtrl,
+                    decoration: _fieldDecoration(size, hint: "Name of the person who received the goods"),
+                  ),
+                ],
                 SizedBox(height: size * 1.4),
                 Row(
                   children: [
@@ -309,6 +387,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                                       : null,
                                   address: addressCtrl.text,
                                   description: descCtrl.text,
+                                  receiverName: receiverCtrl.text,
                                 );
                                 if (saved) closeRoute();
                               },
@@ -338,6 +417,7 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     ).whenComplete(() {
       addressCtrl.dispose();
       descCtrl.dispose();
+      receiverCtrl.dispose();
     });
   }
 

@@ -36,17 +36,11 @@ class ScanPageByCustomer
             }
 
             final item = controller.items[index];
-            final int reserved = (item["reserved"] ?? 0) as int;
-            final int received = (item["received"] ?? 0) as int;
+            final reserved = safeToNum(item["reserved"]);
+            final received = safeToNum(item["received"]);
             final List<Map<String, dynamic>> scanned =
                 List<Map<String, dynamic>>.from(item["scanned"] ?? []);
-
-            final int scannedQty = scanned.fold<int>(0, (sum, e) {
-              final qtyValue = e['qty'];
-              final parsedQty =
-                  qtyValue is int ? qtyValue : int.tryParse('$qtyValue') ?? 0;
-              return sum + parsedQty;
-            });
+            final scannedQty = sumQty(scanned);
 
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
@@ -198,15 +192,15 @@ class ScanPageByCustomer
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final code = scanned[i]['serial_number'];
-          final qty = scanned[i]['qty'] ?? 1;
+          final qty = safeToNum(scanned[i]['qty'] ?? 1);
           final serialType = controller.items[controller.selectedIndex.value]
                   ['serialNumberType'] ??
               'OTHER';
           // Codeless entries are non serial-tracked (quantity-only) items.
           final bool isQtyOnly = code == null;
           final String title = isQtyOnly
-              ? "Qty: $qty"
-              : (serialType == 'UNIQUE' ? code : "$code (qty: $qty)");
+              ? "Qty: ${formatQty(qty)}"
+              : (serialType == 'UNIQUE' ? code : "$code (qty: ${formatQty(qty)})");
 
           return ListTile(
             leading: CircleAvatar(
@@ -226,7 +220,7 @@ class ScanPageByCustomer
   }
 
   Future<void> _showRowActions(BuildContext context, int i, bool isQtyOnly,
-      String? code, dynamic qty) async {
+      String? code, num qty) async {
     await Get.bottomSheet(
       SafeArea(
         child: Wrap(
@@ -238,7 +232,7 @@ class ScanPageByCustomer
                 closeRoute();
                 if (isQtyOnly) {
                   final result = await showOtherItemDialog(
-                      initialQty: qty is int ? qty : int.tryParse('$qty'));
+                      initialQty: qty);
                   if (result != null &&
                       result['qty'] != null &&
                       result['qty'] > 0) {

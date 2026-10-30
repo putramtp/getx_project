@@ -6,6 +6,7 @@ import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/outlfow_request_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_request_controller.dart';
 import '../../../modules/delivery/delivery_actions.dart';
+import '../outflow_submit.dart';
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../global/scan_feedback.dart';
 import '../../../services/draft_service.dart';
@@ -65,8 +66,11 @@ class OutflowOrderByRequestDetailController extends GetxController {
       final serverScanned = (item.scanned != null && item.scanned!.isNotEmpty)
           ? item.scanned!
           : <String>[];
-      // Restore any locally cached in-progress scans for this line.
-      final scanned = cached[item.lineId.toString()] ?? serverScanned;
+      // Restore any locally cached in-progress scans for this line — unless the
+      // backend now refuses it, so a stale scan can't ride along to the submit.
+      final scanned = item.blockedReason != null
+          ? <String>[]
+          : cached[item.lineId.toString()] ?? serverScanned;
 
       return {
         "line_id": item.lineId,
@@ -78,6 +82,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
         "reserved": item.reserved,
         "received": item.received,
         "scanned": scanned,
+        "blocked_reason": item.blockedReason,
       };
     }).toList();
 
@@ -95,23 +100,22 @@ class OutflowOrderByRequestDetailController extends GetxController {
   }
 
   void addScannedCode(String code,
-      {int? batchQty, Map<String, dynamic>? extraData}) {
+      {num? batchQty, Map<String, dynamic>? extraData}) {
     final index = selectedIndex.value;
     if (index >= items.length) return;
 
     final item = items[index];
     final String itemName = item['name'] ?? '(unknown item)';
     final serialType = item['serialNumberType'] ?? 'OTHER';
-    final reservedQty = item['reserved'] ?? 0;
-    final received = item['received'] ?? 0;
+    final reservedQty = safeToNum(item['reserved']);
+    final received = safeToNum(item['received']);
 
     final List<Map<String, dynamic>> scanned =
         List<Map<String, dynamic>>.from(item["scanned"] ?? []);
 
     final existingIndex = scanned.indexWhere((e) => e['serial_number'] == code);
 
-    final totalScannedQty =
-        scanned.fold(0, (sum, e) => sum + (e['qty'] ?? 1) as int);
+    final totalScannedQty = sumQty(scanned);
 
     final qtyToAdd = batchQty ?? 1;
 
@@ -124,9 +128,9 @@ class OutflowOrderByRequestDetailController extends GetxController {
     }
 
     // Cap at the remaining qty: received + scanned must not exceed expected.
-    if (received + totalScannedQty + qtyToAdd > reservedQty) {
+    if (roundQty(received + totalScannedQty + qtyToAdd) > reservedQty) {
       errorAlertBottom(
-        "This would exceed the remaining qty (${reservedQty - received}) for $itemName.",
+        "This would exceed the remaining qty (${formatQty(reservedQty - received)}) for $itemName.",
         title: "Exceeded Quantity",
       );
       return;
@@ -144,7 +148,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
     if (existingIndex != -1 && serialType == "BATCH") {
       scanned[existingIndex]['qty'] =
-          (scanned[existingIndex]['qty'] ?? 0) + qtyToAdd;
+          roundQty(safeToNum(scanned[existingIndex]['qty']) + qtyToAdd);
     } else {
       scanned.add(newData);
     }
@@ -166,42 +170,42 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
     final item = items[index];
     final String itemName = item['name'] ?? 'item';
-    final reservedQty = item['reserved'] ?? 0;
-    final received = item['received'] ?? 0;
+    final reservedQty = safeToNum(item['reserved']);
+    final received = safeToNum(item['received']);
 
     final scanned = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
     if (scanned.any((e) => e['serial_number'] == code)) {
       return ScanFeedback.duplicate("\"$code\" already scanned.");
     }
 
-    final total = scanned.fold<int>(0, (sum, e) => sum + safeToInt(e['qty']));
-    if (received + total + 1 > reservedQty) {
+    final total = sumQty(scanned);
+    if (roundQty(received + total + 1) > reservedQty) {
       return ScanFeedback.error(
-          "Reached reserved qty ($reservedQty) for $itemName.");
+          "Reached reserved qty (${formatQty(reservedQty)}) for $itemName.");
     }
 
     scanned.add({"serial_number": code, "qty": 1});
     item['scanned'] = scanned;
     items[index] = item;
     items.refresh();
-    return ScanFeedback.ok("Scanned ${received + total + 1}/$reservedQty");
+    return ScanFeedback.ok("Scanned ${formatQty(received + total + 1)}/${formatQty(reservedQty)}");
   }
 
   /// Non serial-tracked (manage_sn == false) items don't scan — they hold a
   /// single quantity entry with no code. Set/replace it (used for add + edit).
-  void setScannedQty(int qty) {
+  void setScannedQty(num qty) {
     final index = selectedIndex.value;
     if (index >= items.length) return;
 
     final item = items[index];
     final String itemName = item['name'] ?? '(unknown item)';
-    final reservedQty = item['reserved'] ?? 0;
-    final received = item['received'] ?? 0;
+    final reservedQty = safeToNum(item['reserved']);
+    final received = safeToNum(item['received']);
 
     // Cap at the remaining qty: received + this entry must not exceed expected.
-    if (received + qty > reservedQty) {
+    if (roundQty(received + qty) > reservedQty) {
       errorAlertBottom(
-        "Quantity would exceed the remaining qty (${reservedQty - received}) for $itemName.",
+        "Quantity would exceed the remaining qty (${formatQty(reservedQty - received)}) for $itemName.",
         title: "Exceeded Quantity",
       );
       return;
@@ -256,9 +260,10 @@ class OutflowOrderByRequestDetailController extends GetxController {
   }
 
   void goToNextItem() {
-    final next = selectedIndex.value + 1;
+    // Lines the backend would refuse are read-only — skip them.
+    final next = nextOpenLine(items, selectedIndex.value);
 
-    if (next < items.length) {
+    if (next != null) {
       selectedIndex.value = next;
     } else {
       closeRoute(true);
@@ -276,12 +281,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     return result;
   }
 
-  int get totalScanned {
-    final all = getAllScannedUnified();
-    return all.values.fold<int>(0, (sum, list) {
-      return sum + list.fold<int>(0, (inner, e) => inner + safeToInt(e['qty']));
-    });
-  }
+  num get totalScanned => sumQty(getAllScannedUnified().values.expand((list) => list));
 
   void startOutflowingItem() async {
     final or = currentOr;
@@ -289,10 +289,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
       "or_id": or.id,
       "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
     };
-    final data = await ApiExecutor.run(
-      isLoading: isLoadingOutflowing,
-      task: () => provider.postOrLineToOutflowedData(payload),
-    );
+    final data = await submitOutflowData(provider, payload, isLoading: isLoadingOutflowing);
     if (data == null) return;
 
     // Submitted to the server — drop the local in-progress draft.

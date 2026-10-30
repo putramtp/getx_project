@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:flutter/material.dart';
 
 import '../accent.dart';
@@ -18,12 +19,12 @@ Widget orderFillItemHeader(
   required AppAccent accent,
   required String name,
   required String targetLabel,
-  required int target,
-  required int received,
+  required num target,
+  required num received,
   required String doneLabel,
-  required int done,
+  required num done,
 }) {
-  final remaining = target - (received + done);
+  final remaining = roundQty(target - (received + done));
   return accentHeaderCard(
     size: size,
     accent: accent,
@@ -32,17 +33,17 @@ Widget orderFillItemHeader(
     title: name,
     badge: accentPill(
       size,
-      remaining > 0 ? '$remaining left' : 'Done',
+      remaining > 0 ? '${formatQty(remaining)} left' : 'Done',
       accent: accent,
       outlined: true,
     ),
     stats: [
-      HeaderStat(targetLabel, '$target', color: Colors.grey.shade700),
-      HeaderStat('Received', '$received', color: navyMid),
-      HeaderStat(doneLabel, '$done', color: accent.base),
+      HeaderStat(targetLabel, formatQty(target), color: Colors.grey.shade700),
+      HeaderStat('Received', formatQty(received), color: navyMid),
+      HeaderStat(doneLabel, formatQty(done), color: accent.base),
       HeaderStat(
         'Remaining',
-        '$remaining',
+        formatQty(remaining),
         color: remaining <= 0 ? Colors.grey : stockOutColor,
       ),
     ],
@@ -52,7 +53,7 @@ Widget orderFillItemHeader(
         ProgressSegment(target > 0 ? done / target : 0, accent.base),
       ],
       caption:
-          '$received received · $done ${doneLabel.toLowerCase()} of $target',
+          '${formatQty(received)} received · ${formatQty(done)} ${doneLabel.toLowerCase()} of ${formatQty(target)}',
     ),
   );
 }

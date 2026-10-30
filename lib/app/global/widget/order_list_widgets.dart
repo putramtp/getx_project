@@ -184,7 +184,9 @@ Widget orderItemSummaryTile({
   required IconData actionIcon,
   required Color actionColor,
   required VoidCallback onAction,
+  String? blockedReason,
 }) {
+  final blocked = blockedReason != null;
   return Container(
     padding: EdgeInsets.all(size * 1.4),
     decoration: BoxDecoration(
@@ -223,10 +225,26 @@ Widget orderItemSummaryTile({
               Text(subtitle,
                   style: AppTextStyle.small(size, color: Colors.grey.shade600)
                       .copyWith(fontSize: size * 1.2)),
+              if (blocked) ...[
+                SizedBox(height: size * 0.6),
+                Row(
+                  key: const Key('orderLineBlockedReason'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lock_outline_rounded, size: size * 1.5, color: amberDark),
+                    SizedBox(width: size * 0.5),
+                    Expanded(
+                      child: Text(blockedReason,
+                          style: AppTextStyle.small(size, color: amberDark)
+                              .copyWith(fontSize: size * 1.2, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
-        if (showAction) ...[
+        if (showAction && !blocked) ...[
           SizedBox(width: size * 1.2),
           Material(
             color: Colors.transparent,
@@ -307,7 +325,7 @@ Widget orderSerialLineCard({
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyle.bodyBold(size).copyWith(fontSize: size * 1.5)),
               SizedBox(height: size * 0.4),
-              Text("Quantity: $qty",
+              Text("Quantity: ${formatQty(qty)}",
                   style: AppTextStyle.small(size, color: Colors.grey.shade600)
                       .copyWith(fontSize: size * 1.3)),
               if (showConfirmation && serials.isNotEmpty) ...[
@@ -468,25 +486,26 @@ void showSerialNumbersDialog(
 /// [pending] filled/scanned in this session, and how many lines are complete.
 class LineTotals {
   const LineTotals(this.expected, this.done, this.pending, this.lines, this.linesDone);
-  final int expected;
-  final int done;
-  final int pending;
+  final num expected;
+  final num done;
+  final num pending;
   final int lines;
   final int linesDone;
 }
 
 LineTotals lineTotals(List<Map<String, dynamic>> items, {required String expectedKey, required String pendingKey}) {
-  var expected = 0, done = 0, pending = 0, linesDone = 0;
+  num expected = 0, done = 0, pending = 0;
+  var linesDone = 0;
   for (final item in items) {
-    final e = safeToInt(item[expectedKey]);
-    final d = safeToInt(item['received']);
-    final p = List<Map>.from(item[pendingKey] ?? const []).fold<int>(0, (sum, x) => sum + safeToInt(x['qty']));
+    final e = safeToNum(item[expectedKey]);
+    final d = safeToNum(item['received']);
+    final p = sumQty(List<Map>.from(item[pendingKey] ?? const []));
     expected += e;
     done += d;
     pending += p;
-    if (e > 0 && d + p >= e) linesDone++;
+    if (e > 0 && roundQty(d + p) >= e) linesDone++;
   }
-  return LineTotals(expected, done, pending, items.length, linesDone);
+  return LineTotals(roundQty(expected), roundQty(done), roundQty(pending), items.length, linesDone);
 }
 
 /// Item Summary header (receive By-PO/Supplier, outflow By-Request/Customer):
@@ -517,9 +536,9 @@ Widget orderSummaryHeader({
     code: code,
     badge: badge,
     stats: [
-      HeaderStat(labels.$1, '$target'),
-      HeaderStat(labels.$2, '${totals.done}', color: navyMid),
-      HeaderStat(labels.$3, '${totals.pending}', color: accent.text),
+      HeaderStat(labels.$1, formatQty(target)),
+      HeaderStat(labels.$2, formatQty(totals.done), color: navyMid),
+      HeaderStat(labels.$3, formatQty(totals.pending), color: accent.text),
     ],
     footer: footer,
     footerIcon: footerIcon,
@@ -546,7 +565,7 @@ Widget orderRecordHeader({
   required bool isIn,
   String? type,
   int lines = 0,
-  int totalQty = 0,
+  num totalQty = 0,
   DateTime? date,
   String? footer,
   IconData footerIcon = Icons.info_outline_rounded,
@@ -563,7 +582,7 @@ Widget orderRecordHeader({
       HeaderStat('Lines', '$lines'),
       HeaderStat(
         'Total qty',
-        '${isIn ? '+' : '-'}$totalQty',
+        '${isIn ? '+' : '-'}${formatQty(totalQty)}',
         color: isIn ? stockInColor : stockOutColor,
       ),
       HeaderStat('Date', date == null ? '-' : getDateString(date)),
@@ -583,7 +602,7 @@ class SubmitConfirmLine {
   final List<String> entries;
 
   /// Shown as "Total: n" next to the name when set.
-  final int? total;
+  final num? total;
 }
 
 /// Confirmation before submitting a receive / outflow (By PO, By Supplier,
@@ -666,7 +685,7 @@ Widget _submitConfirmLineCard(double size, SubmitConfirmLine line, IconData entr
                   style: AppTextStyle.custom(size, px: 15, weight: FontWeight.w600, color: Colors.black87)),
             ),
             if (line.total != null)
-              Text('Total: ${line.total}',
+              Text('Total: ${formatQty(line.total!)}',
                   style: AppTextStyle.plain(weight: FontWeight.w500, color: Colors.black54)),
           ],
         ),
@@ -693,7 +712,7 @@ Widget _submitConfirmLineCard(double size, SubmitConfirmLine line, IconData entr
 /// (with its qty when more than 1), or just the qty for a quantity-only line.
 String scannedEntryLabel(Map<String, dynamic> entry) {
   final code = entry['serial_number'];
-  final qty = entry['qty'];
-  if (code == null) return 'scanned: $qty';
-  return qty == 1 ? '$code' : '$code (qty: $qty)';
+  final qty = safeToNum(entry['qty']);
+  if (code == null) return 'scanned: ${formatQty(qty)}';
+  return qty == 1 ? '$code' : '$code (qty: ${formatQty(qty)})';
 }

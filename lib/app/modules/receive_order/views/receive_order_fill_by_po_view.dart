@@ -43,17 +43,11 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
             // line can be split across serials (e.g. 5 = 2 + 3).
             final bool batchSerial = item['manage_sn'] == true &&
                 item['serialNumberType'] == 'BATCH';
-            final int expected = (item["expected"] ?? 0) as int;
-            final int received = (item["received"] ?? 0) as int;
+            final expected = safeToNum(item["expected"]);
+            final received = safeToNum(item["received"]);
             final List<Map<String, dynamic>> filled =
                 List<Map<String, dynamic>>.from(item["filled"] ?? []);
-
-            final int filledQty = filled.fold<int>(0, (sum, e) {
-              final qtyValue = e['qty'];
-              final parsedQty =
-                  qtyValue is int ? qtyValue : int.tryParse('$qtyValue') ?? 0;
-              return sum + parsedQty;
-            });
+            final filledQty = sumQty(filled);
 
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 420),
@@ -130,7 +124,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
       final barcode = await showManualSerialDialog(accent: _accent);
       if (barcode == null) return;
       final result = await showReceiveItemQtyDialog(accent: _accent,
-          type: serialType, manageExpired: manageExpired);
+          type: serialType, manageExpired: manageExpired, wholeUnits: true);
       if (result != null && result['qty'] != null && result['qty'] > 0) {
         controller.addFilledSerial(
           serial: barcode,
@@ -140,7 +134,8 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
       }
     } else {
       final result = await showReceiveItemQtyDialog(accent: _accent,
-          type: serialType, manageExpired: manageExpired);
+          type: serialType, manageExpired: manageExpired,
+          wholeUnits: wholeUnitsOnly(item));
       if (result != null && result['qty'] != null && result['qty'] > 0) {
         controller.addFilledQty(
           batchQty: result['qty'],
@@ -201,11 +196,11 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final serial = filled[i]['serial'];
-          final qty = filled[i]['qty'] ?? 1;
+          final qty = safeToNum(filled[i]['qty'] ?? 1);
           final expiredDate = filled[i]['expired_date'] ?? '';
           final bool isSerial = serial != null;
           final String titleText =
-              isSerial ? "$serial  (qty: $qty)" : "$qty";
+              isSerial ? "$serial  (qty: ${formatQty(qty)})" : formatQty(qty);
 
           return ListTile(
             leading: CircleAvatar(
@@ -238,7 +233,7 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
   }
 
   Future<void> _showRowActions(
-      int i, bool isSerial, dynamic qty, String expiredDate) async {
+      int i, bool isSerial, num qty, String expiredDate) async {
     await Get.bottomSheet(
       SafeArea(
         child: Wrap(
@@ -257,7 +252,8 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                         controller.items[controller.selectedIndex.value]
                                 ['manageExpired'] ==
                             true,
-                    initialQty: qty is int ? qty : int.tryParse('$qty'),
+                    wholeUnits: true,
+                    initialQty: qty,
                     initialExpired: expiredDate.isNotEmpty ? expiredDate : null,
                   );
                   if (result != null &&
@@ -276,7 +272,8 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
                 final result = await showReceiveItemQtyDialog(accent: _accent,
                   type: cur['serialNumberType'],
                   manageExpired: cur['manageExpired'],
-                  initialQty: qty is int ? qty : int.tryParse('$qty'),
+                  wholeUnits: wholeUnitsOnly(cur),
+                  initialQty: qty,
                   initialExpired: expiredDate.isNotEmpty ? expiredDate : null,
                 );
                 if (result != null &&

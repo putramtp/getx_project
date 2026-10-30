@@ -6,7 +6,7 @@ import 'package:get_storage/get_storage.dart';
 ///
 /// The bearer token is the one sensitive value here, so it is kept in
 /// [FlutterSecureStorage] (Keychain / Keystore) rather than the unencrypted
-/// `get_storage` box. Non-secret profile data (username, roles, user id) stays
+/// `get_storage` box. Non-secret profile data (username, roles) stays
 /// in `get_storage`. In-memory reactive fields act as the synchronous source of
 /// truth that the request modifier and route middleware read.
 class AuthService extends GetxService {
@@ -22,17 +22,14 @@ class AuthService extends GetxService {
   static const String _tokenKey = 'auth_token';
   static const String _usernameKey = 'username_key';
   static const String _rolesKey = 'roles_key';
-  static const String _userIdKey = 'user_id_key';
+  // Older builds cached the user id for a delivery's `updated_by`; the backend
+  // now takes it from the token, so the stored copy is only cleaned up.
+  static const String _legacyUserIdKey = 'user_id_key';
 
   // Reactive variables for reactivity
   final RxnString token = RxnString(null);
   final RxnString username = RxnString(null);
   final RxnString roles = RxnString(null);
-
-  /// Authenticated user's id. The /login response doesn't include it, so it is
-  /// resolved lazily from /user/currentDetail when first needed (e.g. as the
-  /// `updated_by` field when updating a delivery).
-  final RxnInt userId = RxnInt(null);
 
   /// Loads persisted credentials into memory. Must complete before the app
   /// reads [currentToken] (registered via `Get.putAsync` in main()).
@@ -53,7 +50,7 @@ class AuthService extends GetxService {
     token.value = storedToken;
     username.value = _box.read<String>(_usernameKey);
     roles.value = _box.read<String>(_rolesKey);
-    userId.value = _box.read<int>(_userIdKey);
+    await _box.remove(_legacyUserIdKey);
     return this;
   }
 
@@ -78,32 +75,19 @@ class AuthService extends GetxService {
     _box.write(_rolesKey, newRoles);
   }
 
-  /// Save the authenticated user's id to memory and storage
-  void setUserId(int? newUserId) {
-    userId.value = newUserId;
-    if (newUserId == null) {
-      _box.remove(_userIdKey);
-    } else {
-      _box.write(_userIdKey, newUserId);
-    }
-  }
-
   /// Clear all credentials (used on logout / session expiry).
   Future<void> clearToken() async {
     token.value = null;
     username.value = null;
     roles.value = null;
-    userId.value = null;
 
     await _secure.delete(key: _tokenKey);
     _box.remove(_usernameKey);
     _box.remove(_rolesKey);
-    _box.remove(_userIdKey);
   }
 
   /// Convenience getters
   String? get currentToken => token.value;
   String? get currentUsername => username.value;
   String? get currentUserRoles => roles.value;
-  int? get currentUserId => userId.value;
 }

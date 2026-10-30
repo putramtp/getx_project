@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -70,7 +71,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
                     typeAccent: type.toUpperCase().contains('PO') ? AppAccent.sky : AppAccent.sage,
                     isIn: true,
                     lines: lines.length,
-                    totalQty: lines.fold<int>(0, (sum, l) => sum + l.qty),
+                    totalQty: roundQty(lines.fold<num>(0, (sum, l) => sum + l.qty)),
                     date: detail?.date ?? controller.currentReceiveOrder.date,
                     footer: headerFooterText([detail?.supplierName, detail?.receiveNumber]),
                     footerIcon: Icons.storefront_rounded,

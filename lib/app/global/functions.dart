@@ -101,6 +101,63 @@ int safeToInt(dynamic value) {
   return 0;
 }
 
+/// Quantities are DECIMAL(18,6) on the backend (kg, metre, ...). Rounds to that
+/// scale so float sums don't drift (0.1 + 0.2 must equal 0.3 in the over-fill
+/// guards), and returns whole values as `int` so they print as "3", not "3.0".
+num roundQty(num value) {
+  final rounded = (value * 1000000).round() / 1000000;
+  return rounded == rounded.truncateToDouble() ? rounded.toInt() : rounded;
+}
+
+num safeToNum(dynamic value) {
+  if (value is num) return roundQty(value);
+  if (value is String) return roundQty(num.tryParse(value.trim()) ?? 0);
+  return 0;
+}
+
+/// Total `qty` over fill/scan entries.
+num sumQty(Iterable<Map> entries) =>
+    roundQty(entries.fold<num>(0, (sum, e) => sum + safeToNum(e['qty'])));
+
+String formatQty(num value) => '${roundQty(value)}';
+
+/// Parses a typed quantity ("2.5" or "2,5"). Null when blank, not above 0,
+/// beyond 6 decimals, or a fraction where [wholeUnits] are required.
+num? parseQty(String text, {bool wholeUnits = false}) {
+  final value = num.tryParse(text.trim().replaceAll(',', '.'));
+  if (value == null || value <= 0) return null;
+  final qty = roundQty(value);
+  if (qty != value) return null;
+  if (wholeUnits && qty is! int) return null;
+  return qty;
+}
+
+/// Serial-tracked UNIQUE/BATCH lines count whole units — the backend makes one
+/// SKU per unit / batch entry and rejects fractions. Everything else (quantity
+/// only) may be fractional.
+bool wholeUnitsOnly(Map item) =>
+    item['manage_sn'] == true && const ['UNIQUE', 'BATCH'].contains(item['serialNumberType']);
+
+/// The reason a PO/OR summary line can't be received/issued from the app: the
+/// backend sends `[flag]: false` (`can_receive` / `can_issue`) with a
+/// `blocked_reason`. Null when the line is open — or the backend predates the flag.
+String? lineBlockedReason(Map<String, dynamic> json, String flag) {
+  if (json[flag] != false) return null;
+  final reason = json['blocked_reason']?.toString().trim() ?? '';
+  return reason.isEmpty ? 'This line cannot be processed from the app.' : reason;
+}
+
+/// A line the backend refuses: shown read-only, never filled/scanned or submitted.
+bool isLineBlocked(Map item) => item['blocked_reason'] != null;
+
+/// The first line after [after] that can still be filled/scanned, or null.
+int? nextOpenLine(List<Map> items, int after) {
+  for (var i = after + 1; i < items.length; i++) {
+    if (!isLineBlocked(items[i])) return i;
+  }
+  return null;
+}
+
 /// The receive/outflow lines worth submitting: those with at least one entry
 /// under [entriesKey] ("filled" on receive, "scanned" on outflow) whose qty is
 /// above 0. The backend saves every line it is sent, so an unfilled one would

@@ -1,9 +1,11 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class PurchaseOrderModel {
   final int id;
   final String poNumber;
   final String supplier;
-  final int received;
-  final int total;
+  final num received;
+  final num total;
   final String items; // e.g. "3/10 Item"
   final String status;
   final DateTime date;
@@ -20,13 +22,15 @@ class PurchaseOrderModel {
   });
 
   factory PurchaseOrderModel.fromJson(Map<String, dynamic> json) {
+    final received = safeToNum(json['received']);
+    final total = safeToNum(json['total']);
     return PurchaseOrderModel(
       id: json['id'] ?? 0,
       poNumber: json['po_number'] ?? 'Unknown',
       supplier: json['supplier'] ?? '-',
-      received: json['received'] ?? 0,
-      total: json['total'] ?? 0,
-      items: '${json['received'] ?? 0}/${json['total'] ?? 0} Item',
+      received: received,
+      total: total,
+      items: '${formatQty(received)}/${formatQty(total)} Item',
       status: json['status'] ?? '-',
       date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
     );

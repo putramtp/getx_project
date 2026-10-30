@@ -50,14 +50,20 @@ class OutflowOrderByRequestDetailView
                     return textNoData(size, message: "No items found.");
                   }
 
+                  final issuable = controller.currentOr.hasCustomer;
                   return ListView.separated(
-                    itemCount: controller.items.length,
+                    itemCount: controller.items.length + (issuable ? 0 : 1),
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
+                      // A work-order reservation is read-only here: say why first.
+                      if (!issuable) {
+                        if (index == 0) return _workOrderNotice(size);
+                        index -= 1;
+                      }
                       final item = controller.items[index];
-                      final expected = item['expected'] ?? 0;
+                      final expected = safeToNum(item['expected']);
                       // Outflow is capped at the reserved qty, not the requested one.
-                      final reserved = item['reserved'] ?? 0;
+                      final reserved = safeToNum(item['reserved']);
                       // Unified scanned format: [{code, qty}]
                       final List<Map<String, dynamic>> scannedList =
                           List<Map<String, dynamic>>.from(
@@ -65,24 +71,25 @@ class OutflowOrderByRequestDetailView
                           );
 
                       // Sum up total scanned qty
-                      final scannedCount = scannedList.fold<int>(
-                        0,
-                        (sum, e) =>
-                            sum +
-                            ((e['qty'] is int)
-                                ? e['qty'] as int
-                                : int.tryParse('${e['qty']}') ?? 0),
-                      );
-                      final outflowed = item['received'] ?? 0;
+                      final scannedCount = sumQty(scannedList);
+                      final outflowed = safeToNum(item['received']);
                       final bool isFinished = outflowed >= reserved;
-                      final outflowedAndScanned = outflowed + scannedCount;
+                      final outflowedAndScanned = roundQty(outflowed + scannedCount);
 
                       // log("${item['name']} - ${item['serialNumberType']}");
+
+                      // A line the backend would refuse stays read-only with its
+                      // reason (a finished line needs no explanation).
+                      final String? blockedReason =
+                          isFinished ? null : item['blocked_reason'] as String?;
 
                       IconData icon;
                       Color bgColor;
 
-                      if (reserved > 0 && outflowedAndScanned >= reserved) {
+                      if (blockedReason != null) {
+                        icon = Icons.lock_rounded;
+                        bgColor = Colors.grey;
+                      } else if (reserved > 0 && outflowedAndScanned >= reserved) {
                         icon = Icons.check_circle_rounded;
                         bgColor = Colors.green;
                       } else if (outflowedAndScanned > 0 &&
@@ -103,10 +110,11 @@ class OutflowOrderByRequestDetailView
                         size: size,
                         name: item['name'] ?? "Unnamed",
                         subtitle:
-                            "Reserved: $reserved/$expected | Outflowed: $outflowed | Outflowing: $scannedCount",
+                            "Reserved: ${formatQty(reserved)}/${formatQty(expected)} | Outflowed: ${formatQty(outflowed)} | Outflowing: ${formatQty(scannedCount)}",
                         statusIcon: icon,
                         statusColor: bgColor,
-                        showAction: !isFinished,
+                        blockedReason: blockedReason,
+                        showAction: issuable && !isFinished,
                         actionLabel: manageSn ? "Scan" : "Fill",
                         actionIcon: manageSn
                             ? Icons.qr_code_scanner_rounded
@@ -141,10 +149,10 @@ class OutflowOrderByRequestDetailView
           SizeConfig.defaultSize,
           isLoading
               ? "Processing..."
-              : "Continue to outflowing items ($totalScanned scanned)",
+              : "Continue to outflowing items (${formatQty(totalScanned)} scanned)",
           icon: Icons.receipt_long_rounded,
           loading: isLoading,
-          onPressed: () async {
+          onPressed: !controller.currentOr.hasCustomer ? null : () async {
             if (controller.items.isEmpty) return;
             // Use the unified scanned data
             final allScannedUnified = controller.getAllScannedUnified();
@@ -164,7 +172,7 @@ class OutflowOrderByRequestDetailView
 
   Widget _buildConfirmDialog(
     Map<dynamic, List<Map<String, dynamic>>> allScanned,
-    int totalScanned,
+    num totalScanned,
   ) {
     final size = SizeConfig.defaultSize;
     return orderSubmitConfirmDialog(
@@ -175,23 +183,48 @@ class OutflowOrderByRequestDetailView
         style: AppTextStyle.custom(size, px: 20, weight: FontWeight.bold),
         textAlign: TextAlign.center,
       ),
-      summary: 'Total Outflowing quantity: $totalScanned',
+      summary: 'Total Outflowing quantity: ${formatQty(totalScanned)}',
       entryIcon: Icons.qr_code_2,
       lines: [
         for (final item in controller.items)
           if (allScanned[item['line_id']]?.isNotEmpty ?? false)
             SubmitConfirmLine(
               name: item['name'] ?? 'Unnamed',
-              total: allScanned[item['line_id']]!.fold<int>(
-                0,
-                (sum, e) => sum + safeToInt(e['qty']),
-              ),
+              total: sumQty(allScanned[item['line_id']]!),
               entries: [
                 for (final e in allScanned[item['line_id']]!)
                   scannedEntryLabel(e),
               ],
             ),
       ],
+    );
+  }
+
+  /// Shown above the lines of a reservation with no customer (work order /
+  /// material requisition): the backend won't put it on a delivery order.
+  Widget _workOrderNotice(double size) {
+    return Container(
+      key: const Key('outflowWorkOrderNotice'),
+      padding: EdgeInsets.all(size * 1.4),
+      decoration: BoxDecoration(
+        color: AppAccent.purple.tint(0.08),
+        borderRadius: BorderRadius.circular(size * 1.6),
+        border: Border.all(color: AppAccent.purple.tint(0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.engineering_rounded, color: AppAccent.purple.text, size: size * 2.4),
+          SizedBox(width: size * 1.2),
+          Expanded(
+            child: Text(
+              "This is a work order reservation, so it can't go on a delivery order. "
+              "Issue it on the web with Issue by Work Order.",
+              style: AppTextStyle.small(size, color: AppAccent.purple.text),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

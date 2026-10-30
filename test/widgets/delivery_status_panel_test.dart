@@ -37,6 +37,28 @@ void main() {
     expect(find.text('Edit details'), findsOneWidget);
   });
 
+  testWidgets('statuses read as the web labels them', (tester) async {
+    await pumpUi(
+      tester,
+      Scaffold(
+        body: SingleChildScrollView(
+          child: deliveryStatusPanel(
+            9.6,
+            current: DeliveryStatusModel(id: 1, name: 'Pending', label: 'Scheduled', color: ''),
+            others: [DeliveryStatusModel(id: 2, name: 'Shipped', label: 'On the way', color: '')],
+            onMark: (_) {},
+            onEdit: () {},
+            undoTo: 'Scheduled',
+            onUndo: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Now: Scheduled'), findsOneWidget);
+    expect(find.text('Mark On the way'), findsOneWidget);
+    expect(find.text('Mark Shipped'), findsNothing);
+  });
+
   testWidgets('white API color falls back to navy', (tester) async {
     await pump(tester, onMark: (_) {});
     expect(tester.widget<Text>(find.text('Mark Shipped')).style?.color, navyMid);

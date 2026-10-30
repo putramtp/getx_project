@@ -37,6 +37,44 @@ Future<void> _openFirstDelivery(PatrolIntegrationTester $) async {
   await $(RegExp(r'^Now: ')).waitUntilExists(timeout: apiTimeout);
 }
 
+/// Opens the first delivery that can still be edited and moved on — a
+/// delivered (or otherwise final) one has no "Edit details" / "Mark" buttons.
+Future<void> _openEditableDelivery(PatrolIntegrationTester $) async {
+  await _openDeliveries($);
+  final found = await openFirstCardWhere(
+    $,
+    listTitle: 'Deliveries',
+    matches: () async {
+      await expectScreen($, 'Delivery Detail');
+      await $(RegExp(r'^Now: ')).waitUntilExists(timeout: apiTimeout);
+      await waitForList($);
+      return $('Edit details').exists && $(RegExp('^Mark ')).exists;
+    },
+  );
+  expect(found, isTrue, reason: 'no open (not yet delivered) delivery among the recent ones');
+}
+
+/// Taps the first "Mark `<status>`" and answers its prompt: Cancelled asks for
+/// confirmation, Delivered asks who received the goods.
+///
+/// The prompt is known from the button's label up front: waiting for one that
+/// never shows would outlast the 3 s success snackbar the caller then expects.
+Future<void> _markFirstStatus(PatrolIntegrationTester $) async {
+  await $(RegExp('^Mark ')).scrollTo();
+  // Read through the finder: the matched widget is a RichText, not a Text.
+  final label = ($(RegExp('^Mark ')).first.text ?? '').toLowerCase();
+  await $(RegExp('^Mark ')).first.tap(settlePolicy: SettlePolicy.noSettle);
+  if (label.contains('cancel') || label.contains('fail')) {
+    // The dialog's button is last in the tree.
+    await $(RegExp(r'^This delivery will be marked as')).waitUntilVisible();
+    await $(RegExp('^Mark ')).last.tap(settlePolicy: SettlePolicy.noSettle);
+  } else if (label.contains('deliver')) {
+    await $(#deliveryReceiverField).waitUntilVisible();
+    await $(#deliveryReceiverField).enterText('E2E ${uniqueSuffix()}');
+    await $('Mark Delivered').last.tap(settlePolicy: SettlePolicy.noSettle);
+  }
+}
+
 final _updated = RegExp(r'updated\.$');
 
 /// From the Outflow menu: opens the first outflow order that still offers
@@ -104,7 +142,7 @@ void main() {
   });
 
   e2eTest('saving without an address keeps the edit sheet open', skip: !hasCredentials, ($) async {
-    await _openFirstDelivery($);
+    await _openEditableDelivery($);
 
     await $('Edit details').scrollTo();
     await $('Edit details').tap();
@@ -121,7 +159,7 @@ void main() {
   });
 
   e2eTest('editing details then marking a status updates the delivery', skip: !hasCredentials, ($) async {
-    await _openFirstDelivery($);
+    await _openEditableDelivery($);
     final before = _currentStatus($);
 
     await $('Edit details').scrollTo();
@@ -138,12 +176,7 @@ void main() {
     await closeSnackbars($);
     expect($('Edit Delivery'), findsNothing);
 
-    await $(RegExp('^Mark ')).scrollTo();
-    await $(RegExp('^Mark ')).first.tap(settlePolicy: SettlePolicy.noSettle);
-    // A "cancel" status asks for confirmation first; the dialog's button is last in the tree.
-    if (await appears($, $('This delivery will be marked as cancelled.'))) {
-      await $(RegExp('^Mark ')).last.tap(settlePolicy: SettlePolicy.noSettle);
-    }
+    await _markFirstStatus($);
     await waitForSuccess($, $(_updated));
     await $.pumpAndTrySettle();
     expect(_currentStatus($), isNot(before));

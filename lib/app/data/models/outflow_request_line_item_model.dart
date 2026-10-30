@@ -1,14 +1,20 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class OutflowRequestLineItemModel {
   final int lineId;
   final String name;
   final String serialNumberType;
   final bool manageExpired;
   final bool manageSn; // master "is serial-tracked" flag
-  final int expected;
+  final num expected;
   /// Issuable ceiling: the backend rejects outflows beyond the reserved qty.
-  final int reserved;
-  int? received; // nullable if you prefer to derive from scanned
+  final num reserved;
+  num? received; // nullable if you prefer to derive from scanned
   List<String>? scanned;
+
+  /// Why the backend would refuse to issue this line (unapproved request,
+  /// cancelled order, ...); null when it can be issued. Shown read-only.
+  final String? blockedReason;
 
   OutflowRequestLineItemModel({
     required this.lineId,
@@ -20,13 +26,14 @@ class OutflowRequestLineItemModel {
     required this.reserved,
     this.received,
     List<String>? scanned,
+    this.blockedReason,
   }) : scanned = scanned ?? [];
 
   // computed getter — always returns a non-null count
   int get scannedCount => scanned?.length ?? 0;
 
   // prefer explicit received if set, otherwise return scannedCount
-  int get receivedCount => received ?? scannedCount;
+  num get receivedCount => received ?? scannedCount;
 
   factory OutflowRequestLineItemModel.fromJson(Map<String, dynamic> json) {
     return OutflowRequestLineItemModel(
@@ -35,13 +42,14 @@ class OutflowRequestLineItemModel {
       serialNumberType: json['serial_number_type'] ?? '-',
       manageExpired: json['manage_expired'] ?? false,
       manageSn: json['manage_sn'] ?? false,
-      expected: json['expected_qty'] ?? 0,
+      expected: safeToNum(json['expected_qty']),
       // Older backends don't send reserved_qty; fall back to the full request.
-      reserved: ((json['reserved_qty'] ?? json['expected_qty'] ?? 0) as num).toInt(),
-      received: json['received_qty'] ?? 0,
+      reserved: safeToNum(json['reserved_qty'] ?? json['expected_qty']),
+      received: safeToNum(json['received_qty']),
       scanned: (json['scanned'] is List)
           ? List<String>.from(json['scanned'])
           : <String>[],
+      blockedReason: lineBlockedReason(json, 'can_issue'),
     );
   }
 

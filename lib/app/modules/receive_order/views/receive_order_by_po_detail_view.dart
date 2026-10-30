@@ -57,30 +57,31 @@ class ReceiveOrderByPoDetailView
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = controller.items[index];
-                      final expected = item['expected'] ?? 0;
+                      final expected = safeToNum(item['expected']);
                       // Unified filled format: [{code, qty}]
                       final List<Map<String, dynamic>> filledList =
                           List<Map<String, dynamic>>.from(item['filled'] ?? []);
 
                       // Sum up total filled qty
-                      final filledCount = filledList.fold<int>(
-                        0,
-                        (sum, e) =>
-                            sum +
-                            ((e['qty'] is int)
-                                ? e['qty'] as int
-                                : int.tryParse('${e['qty']}') ?? 0),
-                      );
-                      final received = item['received'] ?? 0;
+                      final filledCount = sumQty(filledList);
+                      final received = safeToNum(item['received']);
                       final bool isFinished = received >= expected;
-                      final receivedAndFilled = received + filledCount;
+                      final receivedAndFilled = roundQty(received + filledCount);
 
                       // log("${item['name']} - ${item['serialNumberType']}");
+
+                      // A line the backend would refuse stays read-only with its
+                      // reason (a finished line needs no explanation).
+                      final String? blockedReason =
+                          isFinished ? null : item['blocked_reason'] as String?;
 
                       IconData icon;
                       Color bgColor;
 
-                      if (expected > 0 && receivedAndFilled >= expected) {
+                      if (blockedReason != null) {
+                        icon = Icons.lock_rounded;
+                        bgColor = Colors.grey;
+                      } else if (expected > 0 && receivedAndFilled >= expected) {
                         icon = Icons.check_circle_rounded;
                         bgColor = Colors.green;
                       } else if (receivedAndFilled > 0 &&
@@ -96,9 +97,10 @@ class ReceiveOrderByPoDetailView
                         size: size,
                         name: item['name'] ?? "Unnamed",
                         subtitle:
-                            "Expected: $expected | Received: $received | receiving: $filledCount",
+                            "Expected: ${formatQty(expected)} | Received: ${formatQty(received)} | receiving: ${formatQty(filledCount)}",
                         statusIcon: icon,
                         statusColor: bgColor,
+                        blockedReason: blockedReason,
                         showAction: !isFinished,
                         actionLabel: "Fill",
                         actionIcon: Icons.edit_rounded,
@@ -132,7 +134,7 @@ class ReceiveOrderByPoDetailView
           SizeConfig.defaultSize,
           isLoading
               ? "Processing..."
-              : "Continue to receiving items ($totalFilled filled)",
+              : "Continue to receiving items (${formatQty(totalFilled)} filled)",
           icon: Icons.receipt_long_rounded,
           loading: isLoading,
           onPressed: () async {
@@ -176,7 +178,7 @@ class ReceiveOrderByPoDetailView
 
   Widget _buildConfirmDialog(
     Map<dynamic, List<Map<String, dynamic>>> allFilled,
-    int totalFilled,
+    num totalFilled,
   ) {
     final size = SizeConfig.defaultSize;
     return orderSubmitConfirmDialog(
@@ -219,21 +221,18 @@ class ReceiveOrderByPoDetailView
           ],
         ),
       ),
-      summary: 'Total receiving quantity: $totalFilled',
+      summary: 'Total receiving quantity: ${formatQty(totalFilled)}',
       lines: [
         for (final item in controller.items)
           if (allFilled[item['line_id']]?.isNotEmpty ?? false)
             SubmitConfirmLine(
               name: item['name'] ?? 'Unnamed',
               total: item['serialNumberType'] == 'BATCH'
-                  ? allFilled[item['line_id']]!.fold<int>(
-                      0,
-                      (sum, e) => sum + safeToInt(e['qty']),
-                    )
+                  ? sumQty(allFilled[item['line_id']]!)
                   : null,
               entries: [
                 for (final e in allFilled[item['line_id']]!)
-                  'Filled: ${e['qty']}',
+                  'Filled: ${formatQty(safeToNum(e['qty']))}',
               ],
             ),
       ],

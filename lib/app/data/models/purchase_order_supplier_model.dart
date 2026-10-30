@@ -1,9 +1,11 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class PoSupplierModel {
   final int id;
   final String code;
   final String name;
-  final int received;
-  final int total;
+  final num received;
+  final num total;
   final String items; // e.g. "3/10 Item"
   final String status;
 
@@ -18,13 +20,15 @@ class PoSupplierModel {
   });
 
   factory PoSupplierModel.fromJson(Map<String, dynamic> json) {
+    final received = safeToNum(json['received']);
+    final total = safeToNum(json['total']);
     return PoSupplierModel(
       id: json['id'],
       code: json['code'],
       name: json['name'],
-      received: json['received'] ?? 0,
-      total: json['total'] ?? 0,
-      items: '${json['received'] ?? 0}/${json['total'] ?? 0} Item',
+      received: received,
+      total: total,
+      items: '${formatQty(received)}/${formatQty(total)} Item',
       status: json['status'] ?? '-',
     );
   }

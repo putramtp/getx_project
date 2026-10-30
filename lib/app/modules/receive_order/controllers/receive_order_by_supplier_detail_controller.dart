@@ -61,8 +61,11 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       final serverFilled = (item.filled != null && item.filled!.isNotEmpty)
           ? item.filled!
           : <String>[];
-      // Restore any locally cached in-progress fills for this line.
-      final filled = cached[item.lineId.toString()] ?? serverFilled;
+      // Restore any locally cached in-progress fills for this line — unless the
+      // backend now refuses it, so a stale fill can't ride along to the submit.
+      final filled = item.blockedReason != null
+          ? <String>[]
+          : cached[item.lineId.toString()] ?? serverFilled;
       return {
         "line_id": item.lineId,
         "name": item.name,
@@ -72,6 +75,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
         "expected": item.expected,
         "received": item.received,
         "filled": filled,
+        "blocked_reason": item.blockedReason,
       };
     }).toList();
 
@@ -90,7 +94,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
 
   /// 🔹 Add new filled barcode (Unified format for UNIQUE + BATCH)
   void addFilledQty({
-    int? batchQty,
+    num? batchQty,
     String? expiredDate,
   }) {
     final index = selectedIndex.value;
@@ -99,17 +103,14 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     final item = items[index];
     final String itemName = item['name'] ?? '(unknown item)';
     final serialType = item['serialNumberType'] ?? 'OTHER';
-    final expectedQty = item['expected'] ?? 0;
-    final receivedQty = item['received'] ?? 0;
+    final expectedQty = safeToNum(item['expected']);
+    final receivedQty = safeToNum(item['received']);
 
     final List<Map<String, dynamic>> filled =
         List<Map<String, dynamic>>.from(item["filled"] ?? []);
 
     // 🔹 Calculate current total filled qty
-    final totalFilledQty = filled.fold<int>(
-      0,
-      (sum, e) => sum + (e['qty'] ?? 1) as int,
-    );
+    final totalFilledQty = sumQty(filled);
 
     // 🔹 Determine new qty
     final qtyToAdd = batchQty ?? 1;
@@ -121,10 +122,10 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     }
 
     // 🔹 Over-fill protection
-    if ((totalFilledQty + qtyToAdd + receivedQty) > expectedQty) {
+    if (roundQty(totalFilledQty + qtyToAdd + receivedQty) > expectedQty) {
       errorAlertBottom(
           title: "Exceeded Quantity",
-          "Filling this item would exceed the expected qty ($expectedQty) for $itemName.");
+          "Filling this item would exceed the expected qty (${formatQty(expectedQty)}) for $itemName.");
       return;
     }
 
@@ -150,14 +151,14 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
   /// One receive line can be split across several batch serials — e.g. a batch
   /// of 5 entered as 2 + 3 — so each call adds one `{serial, qty, expired_date}`
   /// entry carrying its own batch [qty]. Only used for `manage_sn` + BATCH.
-  void addFilledSerial({required String serial, int qty = 1, String? expiredDate}) {
+  void addFilledSerial({required String serial, num qty = 1, String? expiredDate}) {
     final index = selectedIndex.value;
     if (index >= items.length) return;
 
     final item = items[index];
     final String itemName = item['name'] ?? '(unknown item)';
-    final expectedQty = item['expected'] ?? 0;
-    final receivedQty = item['received'] ?? 0;
+    final expectedQty = safeToNum(item['expected']);
+    final receivedQty = safeToNum(item['received']);
 
     final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
 
@@ -169,15 +170,12 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       return;
     }
 
-    final totalFilledQty = filled.fold<int>(0, (sum, e) {
-      final q = e['qty'];
-      return sum + (q is int ? q : int.tryParse('$q') ?? 0);
-    });
+    final totalFilledQty = sumQty(filled);
 
-    if (totalFilledQty + qty + receivedQty > expectedQty) {
+    if (roundQty(totalFilledQty + qty + receivedQty) > expectedQty) {
       errorAlertBottom(
           title: "Exceeded Quantity",
-          "Adding this serial would exceed the expected qty ($expectedQty) for $itemName.");
+          "Adding this serial would exceed the expected qty (${formatQty(expectedQty)}) for $itemName.");
       return;
     }
 
@@ -190,30 +188,28 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
   /// 🔹 Update a single filled entry (qty / expiry / batch serial) at [index]
   /// for the currently selected item, with the same over-fill protection.
   void updateFilledAt(int index,
-      {required int qty, String? expiredDate, String? serial}) {
+      {required num qty, String? expiredDate, String? serial}) {
     final itemIndex = selectedIndex.value;
     if (itemIndex >= items.length) return;
 
     final item = items[itemIndex];
     final String itemName = item['name'] ?? '(unknown item)';
-    final expectedQty = item['expected'] ?? 0;
-    final receivedQty = item['received'] ?? 0;
+    final expectedQty = safeToNum(item['expected']);
+    final receivedQty = safeToNum(item['received']);
 
     final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
     if (index < 0 || index >= filled.length) return;
 
     // Sum every other entry so the edited value is validated against the rest.
-    final othersTotal = filled.asMap().entries
-        .where((e) => e.key != index)
-        .fold<int>(0, (sum, e) {
-      final q = e.value['qty'];
-      return sum + (q is int ? q : int.tryParse('$q') ?? 0);
-    });
+    final othersTotal = sumQty([
+      for (var i = 0; i < filled.length; i++)
+        if (i != index) filled[i],
+    ]);
 
-    if (othersTotal + qty + receivedQty > expectedQty) {
+    if (roundQty(othersTotal + qty + receivedQty) > expectedQty) {
       errorAlertBottom(
           title: "Exceeded Quantity",
-          "Updating this would exceed the expected qty ($expectedQty) for $itemName.");
+          "Updating this would exceed the expected qty (${formatQty(expectedQty)}) for $itemName.");
       return;
     }
 
@@ -288,9 +284,10 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
 
   /// ✅ Go to the next item if available, else show success message
   void goToNextItem() {
-    final nextIndex = selectedIndex.value + 1;
+    // Lines the backend would refuse are read-only — skip them.
+    final nextIndex = nextOpenLine(items, selectedIndex.value);
 
-    if (nextIndex < items.length) {
+    if (nextIndex != null) {
       selectedIndex.value = nextIndex;
     } else {
       closeRoute(true); // close fill page
@@ -308,20 +305,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     return result;
   }
 
-  int get totalFilled {
-    final allFilledUnified = getAllFilledUnified();
-    return allFilledUnified.values.fold<int>(0, (sum, list) {
-      return sum +
-          list.fold<int>(
-            0,
-            (innerSum, e) =>
-                innerSum +
-                (e['qty'] is int
-                    ? e['qty'] as int
-                    : int.tryParse('${e['qty']}') ?? 0),
-          );
-    });
-  }
+  num get totalFilled => sumQty(getAllFilledUnified().values.expand((list) => list));
 
   void startReceivingItem() async {
     final supplier = currentSupplier;

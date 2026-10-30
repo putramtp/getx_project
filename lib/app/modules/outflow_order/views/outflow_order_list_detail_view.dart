@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -42,7 +43,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                     typeAccent: AppAccent.steel,
                     isIn: false,
                     lines: lines.length,
-                    totalQty: lines.fold<int>(0, (sum, l) => sum + l.qty),
+                    totalQty: roundQty(lines.fold<num>(0, (sum, l) => sum + l.qty)),
                     date: detail?.date,
                     footer: headerFooterText([detail?.customerName, detail?.billNumber]),
                     footerIcon: Icons.groups_rounded,

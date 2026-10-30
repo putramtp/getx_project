@@ -66,7 +66,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
                           subtitle: d.customer,
                           subtitleIcon: Icons.person_outline_rounded,
                           dateText: controller.formatEstimate(d),
-                          trailingBottom: d.statusName,
+                          trailingBottom: d.statusLabel,
                           trailingBottomColor: controller.colorForStatus(d.statusId),
                           onTap: () => controller.openDetail(d),
                         );
@@ -97,7 +97,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
                 () => controller.setStatusFilter(null)),
             ...options.map((s) {
               final color = controller.colorForStatus(s.id);
-              return _chip(size, s.name, selected == s.id, color,
+              return _chip(size, s.label, selected == s.id, color,
                   () => controller.setStatusFilter(s.id));
             }),
           ],

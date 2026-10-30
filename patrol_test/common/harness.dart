@@ -9,9 +9,26 @@ import 'package:patrol/patrol.dart';
 /// Real-backend credentials, passed at run time so they never live in the repo:
 ///   patrol test -t patrol_test/login_test.dart \
 ///     --dart-define=TEST_USERNAME=... --dart-define=TEST_PASSWORD=...
-const testUsername = String.fromEnvironment('TEST_USERNAME');
+///
+/// TEST_USERNAME may list several accounts, comma-separated, that share
+/// TEST_PASSWORD: the backend allows each account only 20 sign-ins an hour,
+/// fewer than the suite's one-per-test, so [loginAsTestUser] spreads the tests
+/// over them ([accountFor]). The form test ([loginViaForm]) uses the first.
+const _testUsernames = String.fromEnvironment('TEST_USERNAME');
 const testPassword = String.fromEnvironment('TEST_PASSWORD');
-const hasCredentials = testUsername != '' && testPassword != '';
+const hasCredentials = _testUsernames != '' && testPassword != '';
+
+final List<String> testUsernames =
+    _testUsernames.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList();
+String get testUsername => testUsernames.isEmpty ? '' : testUsernames.first;
+
+/// The account a test signs in with: picked by a stable hash of its name, so a
+/// test always uses the same one and the suite spreads evenly over the list.
+String accountFor(String testName) {
+  if (testUsernames.length < 2) return testUsername;
+  final hash = testName.codeUnits.fold<int>(0, (h, c) => (h * 31 + c) & 0x7fffffff);
+  return testUsernames[hash % testUsernames.length];
+}
 
 /// Matches AppConfig.apiTimeoutSeconds: a request over the ngrok tunnel can
 /// take ~13s, so a shorter wait flakes before the request itself times out.
@@ -36,8 +53,9 @@ void e2eTest(
   String description,
   Future<void> Function(PatrolIntegrationTester $) body, {
   bool skip = false,
+  Object? tags,
 }) {
-  patrolTest(description, skip: skip, ($) async {
+  patrolTest(description, skip: skip, tags: tags, ($) async {
     try {
       await body($);
     } finally {
@@ -75,11 +93,12 @@ Future<void> launchApp(PatrolIntegrationTester $) async {
 Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
   await initServices();
   final auth = Get.find<AuthService>();
+  final username = accountFor($.tester.testDescription);
   var lastError = '';
   for (var attempt = 1; attempt <= _loginAttempts; attempt++) {
     try {
       final data = (await Get.find<ApiProvider>().postMap('/login', {
-        'username': testUsername,
+        'username': username,
         'password': testPassword,
       }))['data'];
       final token = data?['token'] as String?;
@@ -96,9 +115,13 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
       lastError = e.toString().replaceFirst('Exception: ', '');
       // Wrong credentials won't fix themselves — and retrying could trip a throttle.
       if (lastError.contains('credentials')) fail('Login rejected: $lastError');
-      if (attempt == _loginAttempts) fail('Login failed after $_loginAttempts attempts: $lastError');
+      if (attempt == _loginAttempts) fail('Login failed after $_loginAttempts attempts ($username): $lastError');
       // ignore: avoid_print
       print('loginAsTestUser: attempt $attempt failed ($lastError), retrying');
+      // The per-address limit is 5 sign-ins a minute: wait part of it out.
+      if (lastError.contains('Too many login attempts')) {
+        await Future<void>.delayed(const Duration(seconds: 25));
+      }
     }
   }
   // Home's skeleton shimmer never settles, so wait for its content instead.
@@ -267,6 +290,27 @@ Future<String?> _nextUntriedCard(PatrolIntegrationTester $, Set<String> tried) a
     seen = next;
   }
   return null;
+}
+
+/// Scrolls the screen's vertical list down until [finder] is built, then brings
+/// it on screen; returns whether it was found before the list stopped moving. A
+/// lazy list only builds the rows near the viewport, so `exists` alone misses a
+/// row further down — and a row built in the cache below the viewport can't be tapped.
+Future<bool> scrollUntilExists(PatrolIntegrationTester $, PatrolFinder finder, {int maxScrolls = 10}) async {
+  // hitTestable: the list on the screen in front, not the one of the route under it.
+  final scrollable = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).hitTestable();
+  for (var i = 0; i < maxScrolls && !finder.exists; i++) {
+    if (scrollable.evaluate().isEmpty) return false;
+    final position = $.tester.state<ScrollableState>(scrollable.first).position;
+    final before = position.pixels;
+    await $.tester.drag(scrollable.first, const Offset(0, -300));
+    await $.pumpAndTrySettle();
+    if (position.pixels == before) break; // reached the bottom
+  }
+  if (!finder.exists) return false;
+  await $.tester.ensureVisible(finder.first);
+  await $.pumpAndTrySettle();
+  return true;
 }
 
 /// Pumps until [finder] exists or [timeout] passes; returns whether it showed.

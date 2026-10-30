@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:get/get.dart';
 import '../../config/app_config.dart';
 import '../../services/auth_service.dart';
@@ -85,6 +87,11 @@ class ApiProvider extends GetConnect {
       String? serverMsg;
       if (response.body is Map) {
         final body = response.body as Map;
+        // An outflow that would take expired batches/serials out: the caller
+        // shows the list and resends with `confirm_expired: true`.
+        if (code == 409 && body['error_code'] == ExpiredStockException.errorCode) {
+          throw ExpiredStockException.fromBody(body);
+        }
         serverMsg = body['message']?.toString();
         // Surface the extra detail the backend sends alongside `message`
         // (e.g. errorResponse(..., ["error" => $e->getMessage()]) or a
@@ -93,6 +100,12 @@ class ApiProvider extends GetConnect {
         final detail = _stringifyDetail(body['error'] ?? body['errors']);
         if (detail != null && detail.isNotEmpty && detail != serverMsg) {
           serverMsg = serverMsg == null || serverMsg.isEmpty ? detail : '$serverMsg\n$detail';
+        }
+        // A technical failure is logged server-side and answered with a short
+        // reference instead of its raw message; show it so the user can quote it.
+        final reference = body['reference']?.toString();
+        if (reference != null && reference.isNotEmpty) {
+          serverMsg = '${serverMsg ?? 'HTTP $code'}\nReference: $reference';
         }
       }
       throw Exception(
@@ -145,6 +158,28 @@ class ApiProvider extends GetConnect {
     return Map<String, dynamic>.from(response.body as Map);
   }
 
+  /// GET a file (a delivery proof) as raw bytes. GetConnect decodes every body
+  /// to a string, which mangles binary data, so a successful body is read in
+  /// the response interceptor — before decoding. An error body (JSON) is
+  /// decoded as usual so [checkResponse] reports the server's message.
+  Future<Uint8List> getBytes(String path) async {
+    Future<Response<Object?>> send() => httpClient.get<Object?>(path,
+        responseInterceptor: (request, type, raw) async {
+      if (raw.statusCode < 200 || raw.statusCode >= 300) return null;
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in raw) {
+        bytes.add(chunk);
+      }
+      return Response<Object?>(statusCode: raw.statusCode, body: bytes.takeBytes());
+    });
+    var response = await send();
+    if (response.statusCode == null && isStaleConnection(response.statusText)) {
+      response = await send();
+    }
+    checkResponse(response);
+    return response.body as Uint8List;
+  }
+
   /// POST [body] to an endpoint and return the JSON object response.
   /// Runs `post → checkResponse` and returns the body as a Map.
   Future<Map<String, dynamic>> postMap(String path, dynamic body) async {
@@ -152,4 +187,28 @@ class ApiProvider extends GetConnect {
     checkResponse(response);
     return Map<String, dynamic>.from(response.body as Map);
   }
+}
+
+/// `409 expired_batch`: the outflow would take expired batches or serials out
+/// of stock. [expired] holds one human-readable line per batch/serial
+/// ("Batch LOT-1 (Valve) expired on 3 Oct 2026"); resend with
+/// `confirm_expired: true` once the user confirms.
+class ExpiredStockException implements Exception {
+  static const errorCode = 'expired_batch';
+
+  final String message;
+  final List<String> expired;
+
+  ExpiredStockException(this.message, this.expired);
+
+  factory ExpiredStockException.fromBody(Map body) {
+    final list = body['expired'] is List ? body['expired'] as List : const [];
+    return ExpiredStockException(
+      body['message']?.toString() ?? 'Expired stock is about to leave.',
+      list.whereType<Map>().map((e) => e['message']?.toString() ?? '').where((m) => m.isNotEmpty).toList(),
+    );
+  }
+
+  @override
+  String toString() => message;
 }

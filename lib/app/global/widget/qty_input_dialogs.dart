@@ -15,29 +15,29 @@ import '../functions.dart';
 /// still-mounted `TextField` referencing a disposed controller, throwing
 /// "A TextEditingController was used after being disposed".
 
-/// Prompts for a batch quantity. Returns the parsed int, or `null` if cancelled
-/// or left blank/invalid.
-Future<int?> showBatchQtyDialog() {
-  return Get.dialog<int>(
-    _QtyDialog(
+/// Prompts for a serial-tracked batch quantity (whole units). Returns the qty,
+/// or `null` if cancelled.
+Future<num?> showBatchQtyDialog() {
+  return Get.dialog<num>(
+    const _QtyDialog(
       title: 'Batch Quantity',
       label: 'Enter quantity for this batch',
       confirmText: 'OK',
-      onConfirm: (text) => int.tryParse(text),
+      wholeUnits: true,
     ),
   );
 }
 
-/// Prompts for an item quantity. Returns `{'qty': int}`, or `null` if cancelled.
-/// A blank/invalid entry defaults to a qty of 1.
-Future<Map<String, dynamic>?> showOtherItemDialog({int? initialQty}) async {
-  final qty = await Get.dialog<int>(
+/// Prompts for an item quantity — fractional (kg, metre) unless [wholeUnits].
+/// Returns `{'qty': num}`, or `null` if cancelled.
+Future<Map<String, dynamic>?> showOtherItemDialog({num? initialQty, bool wholeUnits = false}) async {
+  final qty = await Get.dialog<num>(
     _QtyDialog(
       title: 'Enter item quantity',
       label: 'Quantity',
       confirmText: 'Save',
-      initialText: initialQty?.toString() ?? '',
-      onConfirm: (text) => int.tryParse(text) ?? 1,
+      initialText: initialQty == null ? '' : formatQty(initialQty),
+      wholeUnits: wholeUnits,
     ),
   );
   if (qty == null) return null;
@@ -45,13 +45,15 @@ Future<Map<String, dynamic>?> showOtherItemDialog({int? initialQty}) async {
 }
 
 /// Receive-order quantity dialog: quantity plus an optional expiration date
-/// (shown when [manageExpired]). Returns `{'qty': int, 'expired_date': String}`
+/// (shown when [manageExpired]). Returns `{'qty': num, 'expired_date': String}`
 /// or `null` if cancelled. Used by both fill-by-PO and fill-by-supplier.
+/// [wholeUnits] for serial-tracked lines (see `wholeUnitsOnly`).
 Future<Map<String, dynamic>?> showReceiveItemQtyDialog({
   required Color accent,
   String? type,
   bool? manageExpired,
-  int? initialQty,
+  bool wholeUnits = false,
+  num? initialQty,
   String? initialExpired,
 }) {
   return Get.dialog<Map<String, dynamic>>(
@@ -59,6 +61,7 @@ Future<Map<String, dynamic>?> showReceiveItemQtyDialog({
       accent: accent,
       type: type,
       manageExpired: manageExpired,
+      wholeUnits: wholeUnits,
       initialQty: initialQty,
       initialExpired: initialExpired,
     ),
@@ -69,26 +72,65 @@ Future<Map<String, dynamic>?> showReceiveItemQtyDialog({
 /// cancelled. Used by both receive-order detail views.
 Future<String?> showReceiveNumberDialog({String? initialValue}) {
   return Get.dialog<String>(
-    _ReceiveNumberDialog(initialValue: initialValue ?? ''),
+    _TextDialog(
+      title: 'Receive Number',
+      label: 'Enter receive number',
+      icon: Icons.confirmation_number,
+      fieldKey: const Key('receiveNumberField'),
+      initialValue: initialValue ?? '',
+    ),
   );
 }
+
+/// Why a delivery status is stepped back (required by the backend, ≤ 500 chars).
+/// Returns the trimmed reason, or `null` if cancelled.
+Future<String?> showUndoReasonDialog(String backTo) {
+  return Get.dialog<String>(
+    _TextDialog(
+      title: 'Undo status',
+      label: 'Why go back to $backTo?',
+      icon: Icons.undo_rounded,
+      fieldKey: const Key('deliveryUndoReasonField'),
+      confirmText: 'Undo',
+    ),
+  );
+}
+
+/// Who received the goods — the backend requires it on the move to Delivered.
+/// Returns the trimmed name, or `null` if cancelled.
+Future<String?> showReceiverNameDialog() {
+  return Get.dialog<String>(
+    const _TextDialog(
+      title: 'Received by',
+      label: 'Name of the person who received the goods',
+      icon: Icons.person_outline_rounded,
+      fieldKey: Key('deliveryReceiverField'),
+      confirmText: 'Mark Delivered',
+    ),
+  );
+}
+
+void _invalidQtyAlert({required bool wholeUnits}) => errorAlertBottom(
+      title: "Invalid Input",
+      wholeUnits
+          ? "Serial-tracked items count whole units — enter a whole number greater than 0."
+          : "Please enter a quantity greater than 0 (up to 6 decimals).",
+    );
 
 class _QtyDialog extends StatefulWidget {
   const _QtyDialog({
     required this.title,
     required this.label,
     required this.confirmText,
-    required this.onConfirm,
     this.initialText = '',
+    this.wholeUnits = false,
   });
 
   final String title;
   final String label;
   final String confirmText;
   final String initialText;
-
-  /// Maps the raw field text to the value returned via `closeRoute(...)`.
-  final int? Function(String text) onConfirm;
+  final bool wholeUnits;
 
   @override
   State<_QtyDialog> createState() => _QtyDialogState();
@@ -104,6 +146,12 @@ class _QtyDialogState extends State<_QtyDialog> {
     super.dispose();
   }
 
+  void _save() {
+    final qty = parseQty(_controller.text, wholeUnits: widget.wholeUnits);
+    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits);
+    closeRoute(qty);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -112,7 +160,7 @@ class _QtyDialogState extends State<_QtyDialog> {
       content: TextField(
         key: const Key('qtyDialogField'),
         controller: _controller,
-        keyboardType: TextInputType.number,
+        keyboardType: TextInputType.numberWithOptions(decimal: !widget.wholeUnits),
         autofocus: true,
         decoration: InputDecoration(
           labelText: widget.label,
@@ -123,7 +171,7 @@ class _QtyDialogState extends State<_QtyDialog> {
       actions: [
         TextButton(onPressed: () => closeRoute(), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () => closeRoute(widget.onConfirm(_controller.text)),
+          onPressed: _save,
           child: Text(widget.confirmText),
         ),
       ],
@@ -135,6 +183,7 @@ class _ReceiveItemQtyDialog extends StatefulWidget {
   const _ReceiveItemQtyDialog({
     required this.accent,
     required this.manageExpired,
+    required this.wholeUnits,
     this.type,
     this.initialQty,
     this.initialExpired,
@@ -142,8 +191,9 @@ class _ReceiveItemQtyDialog extends StatefulWidget {
 
   final Color accent;
   final bool? manageExpired;
+  final bool wholeUnits;
   final String? type;
-  final int? initialQty;
+  final num? initialQty;
   final String? initialExpired;
 
   @override
@@ -152,7 +202,7 @@ class _ReceiveItemQtyDialog extends StatefulWidget {
 
 class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
   late final TextEditingController _qtyController =
-      TextEditingController(text: widget.initialQty?.toString() ?? '');
+      TextEditingController(text: widget.initialQty == null ? '' : formatQty(widget.initialQty!));
   late final TextEditingController _expController =
       TextEditingController(text: widget.initialExpired ?? '');
 
@@ -188,14 +238,8 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
   }
 
   void _save() {
-    final qty = int.tryParse(_qtyController.text);
-    if (qty == null || qty <= 0) {
-      errorAlertBottom(
-        title: "Invalid Input",
-        "Please enter a valid quantity greater than 0.",
-      );
-      return;
-    }
+    final qty = parseQty(_qtyController.text, wholeUnits: widget.wholeUnits);
+    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits);
     if (widget.manageExpired == true && _expController.text.isEmpty) {
       errorAlertBottom(
         title: "Missing Expiration Date",
@@ -221,7 +265,7 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
             TextField(
               key: const Key('qtyDialogField'),
               controller: _qtyController,
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.numberWithOptions(decimal: !widget.wholeUnits),
               autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Quantity',
@@ -261,16 +305,28 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
   }
 }
 
-class _ReceiveNumberDialog extends StatefulWidget {
-  const _ReceiveNumberDialog({required this.initialValue});
+class _TextDialog extends StatefulWidget {
+  const _TextDialog({
+    required this.title,
+    required this.label,
+    required this.icon,
+    required this.fieldKey,
+    this.initialValue = '',
+    this.confirmText = 'Save',
+  });
 
+  final String title;
+  final String label;
+  final IconData icon;
+  final Key fieldKey;
   final String initialValue;
+  final String confirmText;
 
   @override
-  State<_ReceiveNumberDialog> createState() => _ReceiveNumberDialogState();
+  State<_TextDialog> createState() => _TextDialogState();
 }
 
-class _ReceiveNumberDialogState extends State<_ReceiveNumberDialog> {
+class _TextDialogState extends State<_TextDialog> {
   late final TextEditingController _controller =
       TextEditingController(text: widget.initialValue);
 
@@ -284,22 +340,22 @@ class _ReceiveNumberDialogState extends State<_ReceiveNumberDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Receive Number'),
+      title: Text(widget.title),
       content: TextField(
-        key: const Key('receiveNumberField'),
+        key: widget.fieldKey,
         controller: _controller,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Enter receive number',
-          prefixIcon: Icon(Icons.confirmation_number),
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: widget.label,
+          prefixIcon: Icon(widget.icon),
+          border: const OutlineInputBorder(),
         ),
       ),
       actions: [
         TextButton(onPressed: () => closeRoute(), child: const Text('Cancel')),
         ElevatedButton(
           onPressed: () => closeRoute(_controller.text.trim()),
-          child: const Text('Save'),
+          child: Text(widget.confirmText),
         ),
       ],
     );
