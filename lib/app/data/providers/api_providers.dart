@@ -76,11 +76,12 @@ class ApiProvider extends GetConnect {
           '${reason != null && reason.isNotEmpty ? '\n$reason' : ''}');
     }
     if (code < 200 || code >= 300) {
-      // Session expired: a 401 while we still hold a token means the stored
-      // token is no longer valid. Clear it and bounce to login. Guarded on
-      // `currentToken != null` so a 401 during the login request itself
-      // (bad credentials) doesn't trigger a redirect.
-      if (code == 401 && _authService.currentToken != null) {
+      // Session expired: a 401 for the token we still hold means it is no
+      // longer valid. Clear it and bounce to login. Only when the request
+      // carried the *current* token: not for the login request itself (bad
+      // credentials, no token), and not for a request still in flight from
+      // before a logout or from the previous user's session.
+      if (code == 401 && _sentWithCurrentToken(response)) {
         _authService.clearToken();
         Get.offAllNamed(Routes.LOGIN);
       }
@@ -91,6 +92,12 @@ class ApiProvider extends GetConnect {
         // shows the list and resends with `confirm_expired: true`.
         if (code == 409 && body['error_code'] == ExpiredStockException.errorCode) {
           throw ExpiredStockException.fromBody(body);
+        }
+        // The submit's idempotency key was already spent on a saved submit
+        // (sent with another body): the caller drops the key.
+        if (code == 409 && body['error_code'] == SubmitAlreadySavedException.errorCode) {
+          throw SubmitAlreadySavedException(
+              body['message']?.toString() ?? 'This submit was already saved. Reload the list to see it.');
         }
         serverMsg = body['message']?.toString();
         // Surface the extra detail the backend sends alongside `message`
@@ -118,6 +125,13 @@ class ApiProvider extends GetConnect {
     if (response.body is String) {
       throw Exception('Unexpected response from server. Check the API URL.');
     }
+  }
+
+  bool _sentWithCurrentToken(Response response) {
+    final token = _authService.currentToken;
+    if (token == null || token.isEmpty) return false;
+    final sent = response.request?.headers['Authorization'] ?? response.request?.headers['authorization'];
+    return sent == 'Bearer $token';
   }
 
   /// Flatten an error `detail` payload into a single human-readable string.
@@ -180,13 +194,33 @@ class ApiProvider extends GetConnect {
     return response.body as Uint8List;
   }
 
+  /// Header carrying a submit's idempotency key (see `SubmitKey`). The backend
+  /// replays the saved answer for a key it has seen, so a resend after a lost
+  /// response does not book the document twice.
+  static const idempotencyHeader = 'Idempotency-Key';
+
   /// POST [body] to an endpoint and return the JSON object response.
-  /// Runs `post → checkResponse` and returns the body as a Map.
-  Future<Map<String, dynamic>> postMap(String path, dynamic body) async {
-    final response = await post(path, body);
+  /// Runs `post → checkResponse` and returns the body as a Map. Pass
+  /// [idempotencyKey] on a submit that must not be applied twice.
+  Future<Map<String, dynamic>> postMap(String path, dynamic body, {String? idempotencyKey}) async {
+    final response = await post(path, body,
+        headers: idempotencyKey == null ? null : {idempotencyHeader: idempotencyKey});
     checkResponse(response);
     return Map<String, dynamic>.from(response.body as Map);
   }
+}
+
+/// `409 submit_already_saved`: the submit's idempotency key belongs to a
+/// submit the server already saved with a different body. The key is spent —
+/// drop it and reload the list.
+class SubmitAlreadySavedException implements Exception {
+  static const errorCode = 'submit_already_saved';
+
+  final String message;
+  SubmitAlreadySavedException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 /// `409 expired_batch`: the outflow would take expired batches or serials out

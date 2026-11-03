@@ -3,29 +3,35 @@ import 'package:get/get.dart';
 
 import '../../data/providers/api_providers.dart';
 import '../../global/functions.dart';
+import '../../global/submit_key.dart';
 import '../../global/size_config.dart';
 import '../../global/styles/app_text_style.dart';
 import '../../global/variables.dart';
 import '../../helpers/api_excecutor.dart';
 
+/// Posts an outflow payload with the submit's idempotency key.
+typedef OutflowSend = Future<Map<String, dynamic>> Function(Map<String, dynamic> payload, {String? idempotencyKey});
+
 /// Shared outflow submit for By Request, By Customer (`outflowData`) and By
-/// Work Order (`issue-by-work-order`) — [send] posts the payload.
+/// Work Order (`issue-by-work-order`) — [send] posts the payload with
+/// [submitKey]'s key, so a resend after a lost answer is not booked twice.
 ///
 /// When the backend answers `409 expired_batch` (the scan would take expired
 /// batches or serials out of stock), lists them and resends with
 /// `confirm_expired: true` once the user confirms. Returns the response, or
 /// null when it failed (error already shown) or the user backed out.
 Future<Map<String, dynamic>?> submitOutflowData(
-  Future<Map<String, dynamic>> Function(Map<String, dynamic>) send,
+  OutflowSend send,
   Map<String, dynamic> payload, {
   required RxBool isLoading,
+  required SubmitKey submitKey,
 }) async {
   ExpiredStockException? expired;
   final data = await ApiExecutor.run<Map<String, dynamic>?>(
     isLoading: isLoading,
     task: () async {
       try {
-        return await send(payload);
+        return await submitKey.send((key) => send(payload, idempotencyKey: key));
       } on ExpiredStockException catch (e) {
         expired = e;
         return null;
@@ -38,7 +44,7 @@ Future<Map<String, dynamic>?> submitOutflowData(
 
   return ApiExecutor.run(
     isLoading: isLoading,
-    task: () => send({...payload, 'confirm_expired': true}),
+    task: () => submitKey.send((key) => send({...payload, 'confirm_expired': true}, idempotencyKey: key)),
   );
 }
 

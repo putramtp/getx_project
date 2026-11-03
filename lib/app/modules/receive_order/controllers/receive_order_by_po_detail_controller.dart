@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../global/submit_key.dart';
 
 import '../controllers/receive_order_by_po_controller.dart';
 import '../../../global/alert.dart';
@@ -316,7 +317,8 @@ class ReceiveOrderByPoDetailController extends GetxController {
     };
     final data = await ApiExecutor.run(
       isLoading: isLoadingReceiving,
-      task: () => provider.postPoLineToReceivedData(payload),
+      task: () => SubmitKey(_drafts, _draftScope)
+          .send((key) => provider.postPoLineToReceivedData(payload, idempotencyKey: key)),
     );
     if (data == null) return;
 

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../global/submit_key.dart';
 
 import '../../../global/alert.dart';
 import '../../../global/functions.dart';
@@ -289,7 +290,8 @@ class OutflowOrderByRequestDetailController extends GetxController {
       "or_id": or.id,
       "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
     };
-    final data = await submitOutflowData(provider.postOrLineToOutflowedData, payload, isLoading: isLoadingOutflowing);
+    final data = await submitOutflowData(provider.postOrLineToOutflowedData, payload,
+        isLoading: isLoadingOutflowing, submitKey: SubmitKey(_drafts, _draftScope));
     if (data == null) return;
 
     // Submitted to the server — drop the local in-progress draft.

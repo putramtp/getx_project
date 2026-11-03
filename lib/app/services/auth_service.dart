@@ -31,6 +31,12 @@ class AuthService extends GetxService {
   final RxnString username = RxnString(null);
   final RxnString roles = RxnString(null);
 
+  /// Bumped on every sign-in and sign-out. A request that started under an
+  /// older session belongs to a user who is gone: [ApiExecutor] drops its
+  /// error instead of showing it on the login screen.
+  int _session = 0;
+  int get session => _session;
+
   /// Loads persisted credentials into memory. Must complete before the app
   /// reads [currentToken] (registered via `Get.putAsync` in main()).
   Future<AuthService> init() async {
@@ -59,6 +65,7 @@ class AuthService extends GetxService {
 
   /// Save token to memory and secure storage.
   Future<void> setToken(String newToken) async {
+    _session++;
     token.value = newToken;
     await _secure.write(key: _tokenKey, value: newToken);
   }
@@ -77,6 +84,7 @@ class AuthService extends GetxService {
 
   /// Clear all credentials (used on logout / session expiry).
   Future<void> clearToken() async {
+    _session++;
     token.value = null;
     username.value = null;
     roles.value = null;

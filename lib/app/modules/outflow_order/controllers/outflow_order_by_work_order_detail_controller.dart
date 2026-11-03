@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../global/submit_key.dart';
 
 import '../../../data/models/outflow_request_line_item_model.dart';
 import '../../../global/accent.dart';
@@ -32,6 +33,7 @@ class OutflowOrderByWorkOrderDetailController extends OutflowOrderByCustomerDeta
       provider.issueByWorkOrder,
       workOrderIssuePayload(workOrder.id, items),
       isLoading: isLoadingOutflowing,
+      submitKey: SubmitKey(drafts, draftScope),
     );
     if (data == null) return;
 

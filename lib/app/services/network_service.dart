@@ -52,15 +52,28 @@ class NetworkService extends GetxService {
   static bool _noInterface(List<ConnectivityResult> results) =>
       results.isEmpty || results.every((r) => r == ConnectivityResult.none);
 
-  Future<bool> _hasInternet() async {
+  /// How long the DNS probe may take before it stops gating the request.
+  static const probeTimeout = Duration(seconds: 8);
+
+  /// Only a definite answer blocks: a lookup that fails (no route, host not
+  /// found) means offline. A slow one — a cold resolver, a congested mobile
+  /// link — is not proof of anything, so after [probeTimeout] the request goes
+  /// ahead and its own timeout and error report the real problem. (A 3 s
+  /// timeout that blocked used to show "No internet connection" while the
+  /// network worked.)
+  ///
+  /// A failed lookup is tried once more after a short pause: resolvers on
+  /// Android can fail transiently right after the radio wakes.
+  Future<bool> _hasInternet({bool retry = true}) async {
     try {
-      final result = await InternetAddress.lookup(_probeHost)
-          .timeout(const Duration(seconds: 3));
+      final result = await InternetAddress.lookup(_probeHost).timeout(probeTimeout);
       return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
     } on SocketException catch (_) {
-      return false;
+      if (!retry) return false;
+      await Future.delayed(const Duration(milliseconds: 500));
+      return _hasInternet(retry: false);
     } on TimeoutException catch (_) {
-      return false;
+      return true;
     }
   }
 

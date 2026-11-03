@@ -38,8 +38,8 @@ class ReceiveOrderProvider extends ApiProvider {
     return getList('/purchase-order/$poId/summary', PurchaseOrderLineItemModel.fromJson);
   }
 
-  Future<Map<String, dynamic>> postPoLineToReceivedData(Map<String, dynamic> payload) {
-    return postMap('/purchase-order/receiveData', payload);
+  Future<Map<String, dynamic>> postPoLineToReceivedData(Map<String, dynamic> payload, {String? idempotencyKey}) {
+    return postMap('/purchase-order/receiveData', payload, idempotencyKey: idempotencyKey);
   }
 
   Future<List<PoSupplierModel>> getSuppliers() {

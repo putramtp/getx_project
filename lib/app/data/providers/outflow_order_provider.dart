@@ -32,8 +32,8 @@ class OutflowOrderProvider extends ApiProvider {
     return getList('/outflow-request/$customerId/customer-summary', OutflowRequestLineItemModel.fromJson);
   }
 
-  Future<Map<String, dynamic>> postOrLineToOutflowedData(Map<String, dynamic> payload) {
-    return postMap('/outflow-request/outflowData', payload);
+  Future<Map<String, dynamic>> postOrLineToOutflowedData(Map<String, dynamic> payload, {String? idempotencyKey}) {
+    return postMap('/outflow-request/outflowData', payload, idempotencyKey: idempotencyKey);
   }
 
   Future<List<OrCustomerModel>> getCustomers() {
@@ -51,7 +51,7 @@ class OutflowOrderProvider extends ApiProvider {
 
   /// `POST /outflow-order/issue-by-work-order` — issues reserved material to a
   /// work order (a JC outflow order, no delivery). Body: [workOrderIssuePayload].
-  Future<Map<String, dynamic>> issueByWorkOrder(Map<String, dynamic> payload) {
-    return postMap('/outflow-order/issue-by-work-order', payload);
+  Future<Map<String, dynamic>> issueByWorkOrder(Map<String, dynamic> payload, {String? idempotencyKey}) {
+    return postMap('/outflow-order/issue-by-work-order', payload, idempotencyKey: idempotencyKey);
   }
 }

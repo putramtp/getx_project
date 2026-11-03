@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../global/alert.dart';
+import '../services/auth_service.dart';
 import '../services/network_service.dart';
 
 class ApiExecutor {
@@ -19,6 +20,7 @@ class ApiExecutor {
   }) async {
     if (isLoading.value) return null;
 
+    final session = _session;
     isLoading.value = true;
     hasError?.value = false;
 
@@ -34,6 +36,9 @@ class ApiExecutor {
       return await task();
     } catch (e) {
       hasError?.value = true;
+      // The user signed out (or another user signed in) while this ran: its
+      // failure — typically a 401 for the old token — is no longer theirs.
+      if (_session != session) return null;
       final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
       errorAlert(msg);
       return null;
@@ -42,4 +47,7 @@ class ApiExecutor {
       isLoading.value = false;
     }
   }
+
+  static int? get _session =>
+      Get.isRegistered<AuthService>() ? Get.find<AuthService>().session : null;
 }
