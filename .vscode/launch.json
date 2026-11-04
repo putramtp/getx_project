@@ -1,27 +1,50 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    // Every run passes an env file: the app has no built-in API host (see env/README.md).
+    // The env/*.json files are local (gitignored) — copy one from env/*.example.json first.
+    // "USB" configurations run `adb reverse tcp:80 tcp:80` before launching (tasks.json),
+    // so the phone reaches the local Laragon backend without a tunnel.
     "version": "0.2.0",
     "configurations": [
-        
-
         {
-            "name": "getx_project",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "getx_project (profile mode)",
+            "name": "Dev · workspace (email sign-in, USB)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "program": "lib/main.dart",
+            "args": ["--dart-define-from-file=env/dev-workspace.json"],
+            "preLaunchTask": "adb reverse (USB)"
         },
         {
-            "name": "getx_project (release mode)",
+            "name": "Dev · direct (username sign-in, USB)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release"
+            "program": "lib/main.dart",
+            "args": ["--dart-define-from-file=env/dev-usb.json"],
+            "preLaunchTask": "adb reverse (USB)"
+        },
+        {
+            "name": "Dev · direct (ngrok tunnel)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": ["--dart-define-from-file=env/dev.json"]
+        },
+        {
+            "name": "Profile · workspace (USB)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "profile",
+            "args": ["--dart-define-from-file=env/dev-workspace.json"],
+            "preLaunchTask": "adb reverse (USB)"
+        },
+        {
+            // Release builds ignore DEV_CONNECT_ADDRESS and refuse plain HTTP: needs a real HTTPS central host.
+            "name": "Release · production (env/prod.json)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "release",
+            "args": ["--dart-define-from-file=env/prod.json"]
         }
     ]
 }
