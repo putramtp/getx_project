@@ -176,7 +176,7 @@ Related backend change made alongside (direct mode, not this spec): `POST /login
 - **`api_host` is the tenant's first domain** (`describe()` → `$tenant->domains->first()`). Tenant `mc` has two: `mc.mastersystembackend.test` (id 1) and `allowing-toucan-ghastly.ngrok-free.app` (id 8, **kept for the Accurate webhook** — it was removed once on 2026-11-04 and restored with the same id the same day). While that order holds, the app is sent to the right host. A backend "primary domain" flag would remove the dependency on row order (optional, outside this spec).
 - `adb reverse` is lost when the cable is unplugged or the phone restarts.
 - Users who only have a username cannot use workspace mode; direct mode stays for single-tenant builds.
-- The company chooser (`choose`) is covered by a widget test only: no dev account belongs to two companies with the same password. Add one before release to try it on a device.
+- The company chooser (`choose`) was tried by hand on a device (2026-11-04) with the dev account `choose.tester@example.com`, which exists on `mc` (PT. MC) and `mtp` with the same password — dev only, delete it when no longer needed. Patrol does not cover it (the e2e accounts each belong to one company).
 
 ## 10. Testing (results 2026-11-04, device `140892557H014055`)
 
@@ -200,6 +200,8 @@ Related backend change made alongside (direct mode, not this spec): `POST /login
 Harness (`patrol_test/common/harness.dart`): credentials follow the mode (`TEST_EMAIL` / `TEST_USERNAME`, comma-separated, `accountFor`); `loginAsTestUser` uses `WorkspaceProvider` + `WorkspaceSession` in workspace mode; `loginViaForm` types into `loginAccountFieldKey`; `login_test` is mode-aware; `home_test` checks the company name in the account sheet (workspace only).
 
 **Dev data:** the PO receive test needs a priced, non-serial open line. Re-running `DemoTenantSeeder` does **not** add POs (the deals seeder runs once per tenant behind a `tenant_settings` marker), so `PO-SMP-E2E-20261104` (50 units, non-serial item, price 100,000) was added on `mc`; 48 left after the run.
+
+**Manual on device (2026-11-04):** multi-company sign-in (`choose` → pick a company → Home) with `choose.tester@example.com` — works.
 
 **Manual before release:** single-company user, multi-company user (choose), wrong password, handoff after 60 s (debug delay), suspended company, logout → sign in to another company on the same device (drafts must not cross over), expired token (401) → back to login with the company cleared.
 

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../data/providers/api_providers.dart';
 import '../global/alert.dart';
 import '../services/auth_service.dart';
 import '../services/network_service.dart';
@@ -42,6 +43,8 @@ class ApiExecutor {
       // Pass `sessionBound: false` for the sign-in itself, which changes the
       // session on purpose and must still show why it failed.
       if (sessionBound && _session != session) return null;
+      // The session-ending answer already said why on the login screen.
+      if (e is SessionEndedException) return null;
       final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
       errorAlert(msg);
       return null;

@@ -1,8 +1,10 @@
 {
     // Every run passes an env file: the app has no built-in API host (see env/README.md).
     // The env/*.json files are local (gitignored) — copy one from env/*.example.json first.
-    // "USB" configurations run `adb reverse tcp:80 tcp:80` before launching (tasks.json),
-    // so the phone reaches the local Laragon backend without a tunnel.
+    // "USB" configurations run flutter through tool/flutter_adb_reverse.bat ("customTool"), which
+    // first runs `adb reverse tcp:80 tcp:80` (lost on every unplug/reboot), so the phone reaches the
+    // local Laragon backend without a tunnel. Not a preLaunchTask: starting VS Code's task system
+    // trips an invalid problem matcher shipped by the Gradle for Java extension.
     "version": "0.2.0",
     "configurations": [
         {
@@ -11,7 +13,7 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": ["--dart-define-from-file=env/dev-workspace.json"],
-            "preLaunchTask": "adb reverse (USB)"
+            "customTool": "${workspaceFolder}/tool/flutter_adb_reverse.bat"
         },
         {
             "name": "Dev · direct (username sign-in, USB)",
@@ -19,7 +21,7 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": ["--dart-define-from-file=env/dev-usb.json"],
-            "preLaunchTask": "adb reverse (USB)"
+            "customTool": "${workspaceFolder}/tool/flutter_adb_reverse.bat"
         },
         {
             "name": "Dev · direct (ngrok tunnel)",
@@ -35,7 +37,7 @@
             "program": "lib/main.dart",
             "flutterMode": "profile",
             "args": ["--dart-define-from-file=env/dev-workspace.json"],
-            "preLaunchTask": "adb reverse (USB)"
+            "customTool": "${workspaceFolder}/tool/flutter_adb_reverse.bat"
         },
         {
             // Release builds ignore DEV_CONNECT_ADDRESS and refuse plain HTTP: needs a real HTTPS central host.

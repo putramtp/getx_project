@@ -199,7 +199,7 @@ class ApiProvider extends GetConnect {
         if (notice != null) {
           // A 401 token is already dead; the others are still valid — revoke them.
           signOut(notice: notice, revoke: code != 401);
-          throw Exception(notice);
+          throw SessionEndedException(notice);
         }
       }
       String? serverMsg;
@@ -391,6 +391,18 @@ class ApiProvider extends GetConnect {
 /// `409 submit_already_saved`: the submit's idempotency key belongs to a
 /// submit the server already saved with a different body. The key is spent —
 /// drop it and reload the list.
+/// The answer ended the session (expired token, password change owed,
+/// suspended company, lapsed subscription): [ApiProvider.signOut] already
+/// returned to login and showed [message], so [ApiExecutor] shows nothing
+/// more — not even for the sign-in itself (`sessionBound: false`).
+class SessionEndedException implements Exception {
+  final String message;
+  SessionEndedException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class SubmitAlreadySavedException implements Exception {
   static const errorCode = 'submit_already_saved';
 
