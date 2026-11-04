@@ -7,6 +7,7 @@ import 'package:getx_project/app/global/alert.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/dashboard_model.dart';
 import '../../../data/models/stock_transaction_model.dart';
+import '../../../data/providers/api_providers.dart';
 import '../../../data/providers/home_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../routes/app_pages.dart';
@@ -124,10 +125,9 @@ class HomeController extends GetxController {
     return _authService.currentUserRoles ?? "";
   }
 
-  Future<void> logout() async {
-    await _authService.clearToken();
-    Get.offAllNamed(Routes.LOGIN);
-  }
+  /// Revokes the token on the server too, so the session ends there and not
+  /// only on this device.
+  Future<void> logout() => Get.find<ApiProvider>().signOut();
 
   // ================= GREETING =================
 
@@ -154,6 +154,7 @@ class HomeController extends GetxController {
   void showAccountSheet(String userName) {
     final size = SizeConfig.defaultSize;
     final roles = getRoles();
+    final company = _authService.currentTenantName;
     final initials = getInitials(userName);
 
     Get.bottomSheet(
@@ -207,6 +208,24 @@ class HomeController extends GetxController {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(userName, style: AppTextStyle.h4(size, color: Colors.white)),
+                        // Workspace mode: which company this session is in.
+                        if (company != null && company.isNotEmpty) ...[
+                          SizedBox(height: size * 0.3),
+                          Row(
+                            key: const Key('homeAccountCompany'),
+                            children: [
+                              Icon(Icons.apartment_rounded, color: Colors.white70, size: size * 1.4),
+                              SizedBox(width: size * 0.4),
+                              Flexible(
+                                child: Text(
+                                  company,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyle.body(size, color: Colors.white70),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         SizedBox(height: size * 0.4),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: size * 1, vertical: size * 0.3),

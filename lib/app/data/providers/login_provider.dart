@@ -6,4 +6,10 @@ class LoginProvider extends ApiProvider {
       'password': password,
     });
   }
+
+  /// `POST /send-email-reset` — mails a reset link to the web's reset page.
+  /// Answers the same whether or not an account uses [email].
+  Future<Map<String, dynamic>> sendResetEmail(String email) {
+    return postMap('/send-email-reset', {'email': email});
+  }
 }

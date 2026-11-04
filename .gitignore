@@ -54,3 +54,7 @@ patrol_test/test_bundle.dart
 # Machine-specific editor/tooling files
 .vscode/settings.json
 devtools_options.yaml
+
+# Build-time API config (--dart-define-from-file). Only the examples are committed.
+env/*.json
+!env/*.example.json

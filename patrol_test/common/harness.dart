@@ -1,33 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/config/app_config.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
+import 'package:getx_project/app/data/providers/workspace_provider.dart';
 import 'package:getx_project/app/services/auth_service.dart';
+import 'package:getx_project/app/services/workspace_session.dart';
 import 'package:getx_project/main.dart';
 import 'package:patrol/patrol.dart';
 
-/// Real-backend credentials, passed at run time so they never live in the repo:
-///   patrol test -t patrol_test/login_test.dart \
-///     --dart-define=TEST_USERNAME=... --dart-define=TEST_PASSWORD=...
+/// Real-backend credentials, passed at run time so they never live in the repo.
+/// Which ones depends on the build's mode (the env file):
 ///
-/// TEST_USERNAME may list several accounts, comma-separated, that share
+/// - **workspace** (`CENTRAL_API_URL`, e.g. `env/dev-workspace.json`) — email
+///   sign-in: `--dart-define=TEST_EMAIL=... --dart-define=TEST_PASSWORD=...`
+/// - **direct** (`API_BASE_URL` only) — old `/login`:
+///   `--dart-define=TEST_USERNAME=... --dart-define=TEST_PASSWORD=...`
+///
+/// Either may list several accounts, comma-separated, that share
 /// TEST_PASSWORD: the backend allows each account only 20 sign-ins an hour,
 /// fewer than the suite's one-per-test, so [loginAsTestUser] spreads the tests
 /// over them ([accountFor]). The form test ([loginViaForm]) uses the first.
+const _testEmails = String.fromEnvironment('TEST_EMAIL');
 const _testUsernames = String.fromEnvironment('TEST_USERNAME');
 const testPassword = String.fromEnvironment('TEST_PASSWORD');
-const hasCredentials = _testUsernames != '' && testPassword != '';
 
-final List<String> testUsernames =
-    _testUsernames.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList();
-String get testUsername => testUsernames.isEmpty ? '' : testUsernames.first;
+/// True when the build signs in by email (see [AppConfig.isWorkspaceMode]).
+bool get workspaceMode => AppConfig.isWorkspaceMode;
+
+final List<String> testAccounts = (workspaceMode ? _testEmails : _testUsernames)
+    .split(',')
+    .map((u) => u.trim())
+    .where((u) => u.isNotEmpty)
+    .toList();
+String get testAccount => testAccounts.isEmpty ? '' : testAccounts.first;
+final bool hasCredentials = testAccounts.isNotEmpty && testPassword != '';
+
+/// The login form's account field: Email in workspace mode, else Username.
+Symbol get loginAccountFieldKey => workspaceMode ? #loginEmailField : #loginUsernameField;
+String get loginAccountLabel => workspaceMode ? 'Email' : 'Username';
 
 /// The account a test signs in with: picked by a stable hash of its name, so a
 /// test always uses the same one and the suite spreads evenly over the list.
 String accountFor(String testName) {
-  if (testUsernames.length < 2) return testUsername;
+  if (testAccounts.length < 2) return testAccount;
   final hash = testName.codeUnits.fold<int>(0, (h, c) => (h * 31 + c) & 0x7fffffff);
-  return testUsernames[hash % testUsernames.length];
+  return testAccounts[hash % testAccounts.length];
 }
 
 /// Matches AppConfig.apiTimeoutSeconds: a request over the ngrok tunnel can
@@ -86,40 +104,30 @@ Future<void> launchApp(PatrolIntegrationTester $) async {
 /// Signs in through the API (no login form) and launches the app straight on
 /// Home. clearPackageData wipes the token before every test, but typing into
 /// the form each time is slow; only login_test needs the real form
-/// ([loginViaForm]).
+/// ([loginViaForm]). Workspace mode runs the app's own sequence (central
+/// `workspace/sign-in` → [WorkspaceSession]); direct mode the old `/login`.
 ///
-/// The ngrok tunnel occasionally drops a request outright, so a failed attempt
-/// is retried up to [_loginAttempts] times before the test fails.
+/// A tunnel or flaky network occasionally drops a request outright, so a
+/// failed attempt is retried up to [_loginAttempts] times before the test fails.
 Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
   await initServices();
-  final auth = Get.find<AuthService>();
-  final username = accountFor($.tester.testDescription);
+  final account = accountFor($.tester.testDescription);
   var lastError = '';
   for (var attempt = 1; attempt <= _loginAttempts; attempt++) {
     try {
-      final data = (await Get.find<ApiProvider>().postMap('/login', {
-        'username': username,
-        'password': testPassword,
-      }))['data'];
-      final token = data?['token'] as String?;
-      if (token == null || token.isEmpty) fail('Login response has no token');
-      // Same session LoginController.authLogin stores.
-      await auth.setToken(token);
-      auth.setUsername(data['name'] as String?);
-      final roles = (data['roles'] as List?)?.map((r) => r['name'] as String);
-      if (roles != null && roles.isNotEmpty) auth.setRoles(roles.join(', '));
+      await (workspaceMode ? _signInByEmail(account) : _signInByUsername(account));
       break;
     } on TestFailure {
       rethrow;
     } catch (e) {
       lastError = e.toString().replaceFirst('Exception: ', '');
       // Wrong credentials won't fix themselves — and retrying could trip a throttle.
-      if (lastError.contains('credentials')) fail('Login rejected: $lastError');
-      if (attempt == _loginAttempts) fail('Login failed after $_loginAttempts attempts ($username): $lastError');
+      if (_isRefusal(lastError)) fail('Login rejected ($account): $lastError');
+      if (attempt == _loginAttempts) fail('Login failed after $_loginAttempts attempts ($account): $lastError');
       // ignore: avoid_print
       print('loginAsTestUser: attempt $attempt failed ($lastError), retrying');
-      // The per-address limit is 5 sign-ins a minute: wait part of it out.
-      if (lastError.contains('Too many login attempts')) {
+      // Throttled (5 a minute per address on /login): wait part of it out.
+      if (lastError.contains('Too many')) {
         await Future<void>.delayed(const Duration(seconds: 25));
       }
     }
@@ -130,12 +138,42 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
   await $.pumpAndTrySettle();
 }
 
+/// Workspace mode: the app's own email sign-in, so the harness and the login
+/// screen can never drift apart.
+Future<void> _signInByEmail(String email) async {
+  final answer = await Get.put(WorkspaceProvider()).signIn(email, testPassword);
+  if (!answer.isHandoff) {
+    fail('$email opens ${answer.tenants.length} companies; use an account that belongs to one.');
+  }
+  await WorkspaceSession().complete(answer);
+}
+
+/// Direct mode: the old `POST /login` on the build's one company.
+Future<void> _signInByUsername(String username) async {
+  final auth = Get.find<AuthService>();
+  final data = (await Get.find<ApiProvider>().postMap('/login', {
+    'username': username,
+    'password': testPassword,
+  }))['data'];
+  final token = data?['token'] as String?;
+  if (token == null || token.isEmpty) fail('Login response has no token');
+  // Same session LoginController.authLogin stores.
+  await auth.setToken(token);
+  auth.setUsername(data['name'] as String?);
+  final roles = (data['roles'] as List?)?.map((r) => r['name'] as String);
+  if (roles != null && roles.isNotEmpty) auth.setRoles(roles.join(', '));
+}
+
+/// The backend's "wrong account or password" answers (direct and workspace).
+bool _isRefusal(String error) =>
+    error.contains('credentials') || error.contains('incorrect') || error.contains('must be changed');
+
 /// Launches the app and signs in by typing the dart-define credentials into
 /// the login form. Retries like [loginAsTestUser] (the "Error!" snackbar shows
 /// when the tunnel drops the request).
 Future<void> loginViaForm(PatrolIntegrationTester $) async {
   await launchApp($);
-  await $(#loginUsernameField).enterText(testUsername);
+  await $(loginAccountFieldKey).enterText(testAccount);
   await $(#loginPasswordField).enterText(testPassword);
   var lastError = '';
   for (var attempt = 1; attempt <= _loginAttempts; attempt++) {
@@ -151,9 +189,9 @@ Future<void> loginViaForm(PatrolIntegrationTester $) async {
     }
     lastError = errorSnackbarText($) ?? 'no response within ${apiTimeout.inSeconds}s';
     // Wrong credentials won't fix themselves — and retrying could trip a throttle.
-    if (lastError.contains('credentials')) fail('Login rejected: $lastError');
+    if (_isRefusal(lastError)) fail('Login rejected: $lastError');
     // ignore: avoid_print
-    print('loginAsTestUser: attempt $attempt failed ($lastError), retrying');
+    print('loginViaForm: attempt $attempt failed ($lastError), retrying');
     await closeSnackbars($);
   }
   fail('Login failed after $_loginAttempts attempts: $lastError');

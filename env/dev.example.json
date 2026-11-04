@@ -1,0 +1,4 @@
+{
+  "CENTRAL_API_URL": "http://mastersystembackend.test/api",
+  "DEV_CONNECT_ADDRESS": "127.0.0.1"
+}

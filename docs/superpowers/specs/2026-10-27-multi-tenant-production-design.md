@@ -1,162 +1,226 @@
-# Spec: Production URL & Multi-Tenant Sign-In (Mobile)
+# Spec: Email Sign-In & Multi-Tenant Hosts (Mobile)
 
-- **Tanggal:** 2026-10-27
-- **Status:** Draft — belum dieksekusi
-- **Scope:** `getx_project` (Flutter). Backend (`D:\laravel-project\MasterSystemBackend`) hanya konfigurasi/verifikasi; endpoint yang dibutuhkan sudah ada.
+- **Created:** 2026-10-27 · **Revised:** 2026-11-04 (rev. 3 — as built)
+- **Status:** §12 steps 1–7 **implemented and verified on a device** (2026-11-04, not committed yet). Remaining: step 8 — production infrastructure and backend configuration (§7–8) before the first workspace release.
+- **Scope:** `getx_project` (Flutter). The backend (`D:\laravel-project\MasterSystemBackend`) needed **no code change** for this: every endpoint already existed and is what the web frontend (`D:\PROJECT\MasterSystemFrontEnd-V2`) uses.
 
-## 1. Latar belakang
+**Revision history**
+- **rev. 1 (2026-10-27)** — first draft.
+- **rev. 2 (2026-11-04)** — roles/user from `GET /me` (`/user/currentDetail` had been removed from the app); dev **without ngrok** through `adb reverse` + a `Host` header; the ngrok domain kept for the Accurate webhook.
+- **rev. 3 (2026-11-04)** — as built: real file names, where the implementation differs from rev. 2 (marked **As built** below), decisions taken (§11), test results (§10).
 
-Saat ini app memanggil **satu** base URL yang ditanam saat build (`AppConfig.apiBaseUrl`, `lib/app/config/app_config.dart`), default-nya tunnel ngrok. Login memanggil `POST /login` langsung ke host itu.
+## 1. Background
 
-Backend memakai `stancl/tenancy` dengan `InitializeTenancyByDomain`: **tenant ditentukan oleh host** yang dipanggil (`<tenant>.domain.com/api/...`). Satu URL statis berarti satu tenant per APK — tidak bisa dipakai untuk banyak tenant di production.
+Before this change the app called **one** base URL baked in at build time (`AppConfig.apiBaseUrl`, with an ngrok fallback in code) and signed in with `POST /login` on that host.
 
-## 2. Tujuan
+The backend uses `stancl/tenancy` with `InitializeTenancyByDomain`: **the tenant is chosen by the `Host` of the request** (`<tenant>.<domain>/api/...`, matched against the central `domains` table); each company has its own database, and a token only works on its own company's host. One static URL meant one tenant per APK.
 
-1. **Satu APK untuk semua tenant.** Tenant baru tidak butuh build baru.
-2. User **tidak perlu tahu/mengetik nama tenant** — cukup email + password.
-3. Dev workflow (ngrok, satu tenant) dan Patrol E2E tetap jalan.
-4. Tidak ada URL ngrok/dev yang ikut ter-ship di build production.
+The web frontend has no baked-in URL: the API host is the page's own host (`src/api/index.jsx` → `apiHostFor()`), and its email-first sign-in (`CompanySignIn.jsx` → `SignInHandoff.jsx`) moves the user from the central host to their company's host. The app now does the same.
 
-**Non-goal:** iOS release pipeline, custom domain per tenant (lihat §9), refactor modul lain.
+## 2. Goals
 
-## 3. Alur yang dipakai (sudah ada di backend)
+1. **One APK for every tenant.** A new tenant needs no new build.
+2. Users **never type a company name** — email + password only, as on the web.
+3. A release build knows **one URL: the central API**.
+4. Dev and Patrol run **without ngrok**; no ngrok/dev URL ships in a release build.
+
+**Non-goals:** iOS release pipeline, a custom domain per tenant (works, but DNS/TLS is per domain), a change-password screen (the app points to the web).
+
+## 3. Flow (backend, unchanged)
 
 ```
 App ──POST {CENTRAL}/api/workspace/sign-in {email, password[, tenant_id]}──▶ Central
-      ◀── mode=handoff: {tenant{id,name,host,api_host}, handoff_token, expires_in:60}
-      ◀── mode=choose : {tenants:[{id,name,host}]}   (email ada di >1 tenant)
+      ◀── mode=handoff: {tenant{id,name,host,api_host}, handoff_token, expires_in: 60}
+      ◀── mode=choose : {tenants:[{id,name,host}]}        (the password matches in >1 company)
+      ◀── 401 "The email or password is incorrect."       (every refusal, same body)
+      ◀── 429 {retry_after}                               (30/min per IP, 20/hour per email)
 
-(mode=choose) → user pilih → ulangi sign-in dengan tenant_id → mode=handoff
+(choose) → the user picks a company → sign-in again with tenant_id → handoff
 
-App ──POST https://{api_host}/api/sign-in/handoff {token: handoff_token}──▶ Tenant
-      ◀── {data:{token, name, redirect_url}}
+App ──POST {scheme}://{api_host}/api/sign-in/handoff {token}──▶ Tenant
+      ◀── {data: {token, name, redirect_url}}              (403 + message: used / expired / wrong company / inactive)
 
-App simpan token + api_host → semua request selanjutnya ke https://{api_host}/api
+App ──GET {api_host}/api/me (Bearer)──▶ Tenant
+      ◀── {user{id,name,email,must_change_password}, roles[], permissions[], tenant_id, …}   (no `data` wrapper)
+
+App stores token + api_host → every later request goes to {scheme}://{api_host}/api
 ```
 
-Referensi backend:
-- `routes/central_app_api.php` → `WorkspaceSignInController::signIn` → `App\Services\Central\WorkspaceSignInService::signIn` (bentuk respons, `describe()`).
-- `routes/tenant_api.php:128` → `PassportAuthController::signInHandoff` → `SignInHandoffService::exchange` (handoff sekali pakai, TTL 60 dtk, harus ditukar di host tenant yang benar).
-- Validasi: `email` wajib format email; `tenant_id` opsional (`WorkspaceSignInRequest`).
-- Error: semua kegagalan kredensial = 401 dengan satu pesan konstan. Handoff gagal = 403 dengan pesan (`invalid/used`, `expired`, `not this company`, `no longer active`).
+Backend references:
+- `routes/central_app_api.php` → `WorkspaceSignInController::signIn` → `App\Services\Central\WorkspaceSignInService` (`matchCompanies()`, `describe()`).
+- `routes/tenant_api.php` → `PassportAuthController::signInHandoff` → `SignInHandoffService::exchange` (single use, 60 s TTL, must be redeemed on the right tenant host; throttled with the login routes).
+- `GET /me` → `UserContextController` → `UserContextService::getContext` (reachable while a password change is owed: `withoutMiddleware(['subscription.active', 'password.changed'])`).
+- Forgot password: `POST {CENTRAL}/api/workspace/forgot-password {email}` — mails every company that has the email; always the same answer.
+- Logout: `POST {api_host}/api/logout` revokes **and deletes** the token row.
 
-Catatan perbedaan dengan `/login` lama:
-- `/login` tenant menerima **username atau email**; `workspace/sign-in` **hanya email**.
-- Respons handoff hanya `token` + `name` — **tidak ada `roles`**. Roles + user id harus diambil setelahnya (lihat §5.4).
-- `minimum_app_version` di respons adalah milik app Site Report (`config/site-report.php`) — **abaikan** di app warehouse.
+Differences from the old `/login`:
+- `/login` takes **username or email**; `workspace/sign-in` takes **email only**.
+- The handoff answer has only `token` + `name`; roles and `must_change_password` come from `/me`.
+- `minimum_app_version` in the answer belongs to the Site Report app (`config/site-report.php`) — **ignored** here.
+- Throttle is looser (30/min per IP, 20/hour per email vs. 5/min per IP on `/login`).
 
-## 4. Konfigurasi build (dua mode)
+## 4. Build configuration (two modes)
 
-Ganti `AppConfig` jadi dua define yang saling eksklusif:
+`lib/app/config/app_config.dart`; every run and build passes an env file (`--dart-define-from-file`).
 
-| Define | Mode | Dipakai untuk |
+| Define | Mode | Used for |
 |---|---|---|
-| `CENTRAL_API_URL` (mis. `https://app.domain.com/api`) | **workspace** | Production / staging multi-tenant |
-| `API_BASE_URL` (mis. ngrok) | **direct** | Dev lokal, Patrol E2E — satu tenant, `POST /login` lama |
+| `CENTRAL_API_URL` (e.g. `https://app.<domain>/api`; dev `http://mastersystembackend.test/api`) | **workspace** | Production / staging / dev multi-tenant |
+| `API_BASE_URL` (a tenant host) | **direct** | Single-tenant builds, legacy dev — old `POST /login` |
+| `DEV_CONNECT_ADDRESS` (e.g. `127.0.0.1`, optionally `:port`) | either, **debug builds only** | Connect to this address while sending the real `Host` header (§6) |
+| `API_TIMEOUT_SECONDS` | either | Request timeout (default 30) |
 
-- Jika `CENTRAL_API_URL` diisi → mode workspace. Jika tidak → mode direct (perilaku sekarang).
-- **Hapus** fallback ngrok hard-coded (`_devFallbackBaseUrl`) dari kode; dev menaruh URL ngrok di `--dart-define-from-file=env/dev.json` (gitignored), dengan `env/dev.example.json` ter-commit.
-- Release guard: build `--release` tanpa `CENTRAL_API_URL` maupun `API_BASE_URL` → fail fast saat startup (assert/throw dengan pesan jelas), bukan diam-diam ke host salah.
-- `env/prod.json` → `{"CENTRAL_API_URL": "https://app.<domain>/api"}`. Build: `flutter build apk --release --dart-define-from-file=env/prod.json`.
-- `TENANT_API_SCHEME` tidak perlu: scheme tenant diambil dari scheme `CENTRAL_API_URL`, path `/api` ditambahkan ke `api_host`.
+- `CENTRAL_API_URL` set → workspace mode; otherwise direct mode.
+- The hard-coded ngrok fallback is **gone**. `AppConfig.defaultApiUrl` is the central URL (workspace) or `API_BASE_URL` (direct).
+- **As built — the guard covers every build, not only release:** without either URL (or with one that is not an `http(s)` URL with a host), `main()` shows a "This build is not configured" screen (`Key('configErrorMessage')`) and `initServices()` throws, so a test fails at once. `AppConfig.describeConfigurationError` is the pure, tested check.
+- The tenant scheme comes from `CENTRAL_API_URL`'s scheme (else `API_BASE_URL`'s, else https); `/api` is appended to `api_host`.
 
-## 5. Perubahan di app
+Env files (`env/`, see `env/README.md`; only `*.example.json` is committed, `env/*.json` is gitignored):
 
-### 5.1 `AuthService` — simpan tenant aktif
-Tambah (non-secret → `get_storage`):
-- `tenantId`, `tenantName`, `tenantApiHost` (Rx + key storage), di-load di `init()`, di-clear di `clearToken()`.
-- Getter `String get apiBaseUrl`:
-  - mode direct → `AppConfig.apiBaseUrl`
-  - mode workspace + `tenantApiHost != null` → `'$scheme://$tenantApiHost/api'`
-  - mode workspace tanpa tenant → `AppConfig.centralApiUrl`
-- Migrasi: user yang sudah login di build lama (punya token, tanpa `tenantApiHost`) di mode workspace → `clearToken()` saat `init()` supaya diarahkan login ulang.
+| File | Contents |
+|---|---|
+| `dev.example.json` (committed) | workspace over USB: `CENTRAL_API_URL=http://mastersystembackend.test/api`, `DEV_CONNECT_ADDRESS=127.0.0.1` |
+| `direct.example.json` (committed) | one company host |
+| `prod.example.json` (committed) | `CENTRAL_API_URL=https://app.example.com/api` |
+| `dev.json` (local) | direct mode through the ngrok tunnel (the pre-change workflow) |
+| `dev-usb.json` (local) | direct mode over USB: `API_BASE_URL=http://mc.mastersystembackend.test/api` + `DEV_CONNECT_ADDRESS` |
+| `dev-workspace.json` (local) | same as `dev.example.json` |
 
-### 5.2 `ApiProvider` — base URL dinamis
-Setiap provider adalah instance `GetConnect` sendiri dengan `httpClient.baseUrl` yang di-set sekali di `onInit()`. Base URL harus mengikuti tenant aktif:
-- Di `onInit()`: set `httpClient.baseUrl = _authService.apiBaseUrl` dan pasang `ever(...)` pada Rx tenant (`tenantApiHost`) yang meng-update `httpClient.baseUrl`; dispose worker di `onClose()`.
-- **Verifikasi dulu** di source GetConnect 4.7 bahwa `GetHttpClient.baseUrl` dibaca per request (bukan di-cache saat konstruksi). Jika di-cache, alternatif: provider memanggil path absolut lewat helper `url(path)` di `ApiProvider`.
-- Header `ngrok-skip-browser-warning` hanya dikirim bila host berakhiran `ngrok-free.app` / `ngrok.app` / `ngrok.io`.
-- Penanganan 401 (`checkResponse`) tetap; `clearToken()` kini juga menghapus tenant.
+Release: `flutter build apk --release --dart-define-from-file=env/prod.json`.
 
-### 5.3 Provider baru: `WorkspaceProvider`
-`lib/app/data/providers/workspace_provider.dart`, extends `ApiProvider`, tapi selalu ke central (jangan ikut base URL tenant — override base URL ke `AppConfig.centralApiUrl` atau pakai URL absolut):
-- `Future<Map<String, dynamic>> signIn(String email, String password, {String? tenantId})` → `postMap('/workspace/sign-in', ...)`
-- `Future<Map<String, dynamic>> forgotPassword(String email)` → `postMap('/workspace/forgot-password', ...)` (opsional, lihat §8)
+## 5. App changes (as built)
 
-Dan di `LoginProvider` (tenant):
-- `Future<Map<String, dynamic>> exchangeHandoff(String apiBaseUrl, String token)` → POST absolut ke `'$apiBaseUrl/sign-in/handoff'` (tenant belum disimpan saat ini dipanggil).
+### 5.1 `ApiEndpoints` — `lib/app/services/api_endpoints.dart` (pure, unit-tested)
+- `tenantApiUrl(apiHost)` → `'$scheme://$apiHost/api'` (host trimmed, lower-cased, dots stripped); `tenantScheme`.
+- `apiBaseUrl({tenantApiHost})` → direct URL / company host / central URL by mode and session.
+- `mustDropStoredSession(token, tenantApiHost)` → the old-session rule (§5.2).
+- `connect(Uri)` → `(uri, hostHeader)`: in dev-connect mode the URL pointed at `DEV_CONNECT_ADDRESS` (its port wins, else the URL's) with the original authority as `Host`; otherwise unchanged.
+- `probeHost(apiUrl)` → the dev connect address, else the URL's host (for `NetworkService`).
 
-Model kecil (`data/models/`): `WorkspaceTenant {id, name, host, apiHost?}` dan `WorkspaceSignInResult {mode, tenant?, handoffToken?, tenants}`.
+### 5.2 `AuthService` — the active company
+- New (not secret → `get_storage`): `tenantId`, `tenantName`, `tenantApiHost` (keys `tenant_id_key`, `tenant_name_key`, `tenant_api_host_key`); loaded in `init()`, written by `setTenant(id:, name:, apiHost:)`, cleared by `clearToken()`.
+- `endpoints` (an `ApiEndpoints`, injectable for tests); `apiBaseUrl` and `currentTenantName` getters.
+- Old sessions: a token stored without a company host is cleared once at `init()` **in workspace mode** (the user signs in again — nothing says which company host it belongs to). Direct mode keeps it.
 
-### 5.4 `LoginController.authLogin()`
-```
-if (AppConfig.isDirectMode) → alur lama (/login) — tidak berubah.
-else:
-  r = ApiExecutor.run(signIn(email, pwd, tenantId: _pickedTenantId))
-  if r == null → return
-  if r.mode == 'choose' → tampilkan pilihan tenant (bottom sheet), simpan pilihan, panggil ulang signIn dengan tenant_id
-  if r.mode == 'handoff':
-     base = '$scheme://${r.tenant.apiHost}/api'
-     h = ApiExecutor.run(exchangeHandoff(base, r.handoffToken))   // segera; TTL 60 dtk
-     if h == null → return
-     await auth.setToken(h.token); auth.setUsername(h.name); auth.setTenant(r.tenant)
-     resolve roles + userId via GET /user/currentDetail (provider yang sudah ada) → setRoles/setUserId
-     successAlert; Get.offAllNamed(Routes.HOME)
-```
-- Password tidak boleh disimpan di antara langkah `choose` → `handoff` selain di `TextEditingController` yang sudah ada.
-- Handoff 403 "expired" → pesan "Silakan masuk lagi" (sudah dari backend via `checkResponse`).
-- **Verifikasi** respons `/user/currentDetail` berisi `roles` dalam bentuk yang sama dengan `/login` (`[{name}]`); jika tidak, sesuaikan parsing atau minta backend menambahkannya.
-- `ApiExecutor` memakai satu `isLoading` untuk ketiga call berurutan; pastikan `isLoading` tidak dilepas di antara call sehingga tombol bisa ditekan dua kali (atau kunci tombol dengan flag terpisah).
+### 5.3 `ApiProvider` — dynamic base URL
+- **As built:** GetConnect builds the URL as `baseUrl + path` when a request is created (`GetHttpClient.createUri`, which **always** prefixes the base — an absolute URL does not work). So `ApiProvider` overrides `get`/`post`/`put`/`patch`/`delete`/`request` and `getBytes` to set `httpClient.baseUrl = requestBaseUrl` right before each call. No `ever()` worker per provider instance (nothing to dispose).
+- Hooks for a provider bound to another host: `requestBaseUrl` (default `AuthService.apiBaseUrl`) and `sendsToken` (default true); `authService` is exposed to subclasses.
+- Request modifier: bearer token (when `sendsToken` and not already set), `Accept: application/json`, `ngrok-skip-browser-warning` **only** for ngrok hosts (`isNgrokHost`), and in dev-connect mode `Host` + `request.copyWith(url:)` from `ApiEndpoints.connect`.
+- `signOut()` revokes with `POST /logout` on the company host in the background, then `clearToken()` also clears the company, so the base URL falls back to central.
 
-### 5.5 UI login
-- Mode workspace: label field jadi **Email**, keyboard `emailAddress`, validasi format email sebelum submit. Key tetap `loginUsernameField` (agar Patrol tidak pecah) — atau rename ke `loginEmailField` dan update harness sekaligus.
-- Bottom sheet pilih perusahaan (`mode=choose`): list `name` + `host`, key `loginTenantOption_<index>`. Pakai widget shared yang ada; tutup dengan `closeRoute(...)` (bukan `Get.back()`).
-- Tampilkan nama tenant aktif di Home/AppBar/drawer (mis. di bawah username) supaya user tahu sedang di perusahaan mana.
+### 5.4 `WorkspaceProvider` — `lib/app/data/providers/workspace_provider.dart`
+`requestBaseUrl` = the central URL, `sendsToken` = false:
+- `signIn(email, password, {tenantId})` → `POST /workspace/sign-in` → `WorkspaceSignInResult`.
+- `forgotPassword(email)` → `POST /workspace/forgot-password` → the server's message.
 
-### 5.6 Logout
-- Panggil `POST /logout` ke host **tenant** (revoke token) sebelum `clearToken()`; error diabaikan (tetap logout lokal).
-- `clearToken()` menghapus tenant → base URL kembali ke central.
+Models — `lib/app/data/models/workspace_sign_in_model.dart`: `WorkspaceTenant {id, name, host, apiHost?}`, `WorkspaceSignInResult {mode, tenant?, handoffToken?, tenants}`; an incomplete handoff, an empty choice or an unknown mode is a readable `FormatException`.
 
-### 5.7 `NetworkService`
-`_probeHost` saat ini statis dari `AppConfig.apiBaseUrl`. Ubah jadi getter dari `Uri.parse(authService.apiBaseUrl).host` supaya probe mengikuti tenant aktif.
+### 5.5 `WorkspaceSession` — `lib/app/services/workspace_session.dart`
+One place for the sequence, used by `LoginController` **and** the Patrol harness:
+1. **As built — save the company first** (`setTenant`), so the base URL already is its host (no absolute URL, §5.3).
+2. `POST /sign-in/handoff {token}` → the access token → `setToken`.
+3. `GET /me` → name, roles (names), `must_change_password`.
+4. `must_change_password == true` → revoke the token, `clearToken()`, throw `PasswordChangeRequiredException` (its message is `ApiProvider.passwordChangeNotice`).
+5. Any failure clears what was saved — no half session is left behind.
 
-## 6. Backend — checklist (konfigurasi, tanpa endpoint baru)
+### 5.6 `ApiExecutor` — `sessionBound`
+`ApiExecutor` drops the error of a call that started under an older session (sign-in/out in between). The sign-in itself changes the session on purpose, so **as built** it runs with `ApiExecutor.run(..., sessionBound: false)`, or its failures (expired link, refused account) would never be shown.
 
-- [ ] `.env` production: `APP_URL`, `CENTRAL_APP_DOMAINS=app.<domain>`, `CENTRAL_ADMIN_DOMAINS=admin.<domain>` (lihat komentar di `.env.example` & `config/tenancy.php`). Host central yang tidak terdaftar akan dianggap tenant.
-- [ ] Tiap tenant punya domain `<slug>.<domain>` (`php artisan tenant:create "<name>" <domain>`).
-- [ ] Throttle `workspace-sign-in` cukup longgar untuk banyak user di belakang satu NAT/IP gudang — cek limiter-nya.
-- [ ] Pastikan `/sign-in/handoff` tenant tidak terkena middleware `subscription.active` (sudah di luar group auth per `tenant_api.php:122-128`, verifikasi saja).
-- [ ] Ikuti `docs/deploy-runbook.md` backend untuk sisanya.
+### 5.7 Login UI — `modules/login/`
+- Workspace mode: the field reads **Email** (`Key('loginEmailField')`, email keyboard and autofill, no autocorrect); validation = email format + password ≥ 6 (`loginFieldErrors(..., email: true)`). Direct mode keeps Username (`Key('loginUsernameField')`).
+- `LoginController._workspaceLogin` runs `signIn` + `WorkspaceSession.complete` inside **one** `ApiExecutor` call, so the button stays disabled throughout; a `choose` answer opens `showCompanyChooser` (`views/company_chooser_sheet.dart`, tiles `loginCompanyChoice_<index>`, closed with `closeRoute`) and signs in again with the picked `tenant_id`. The password stays in the field's controller only.
+- Success: "Signed in to `<company>` as `<name>`". Password change owed: the web notice.
+- Forgot password: `WorkspaceProvider.forgotPassword` in workspace mode, `/send-email-reset` in direct mode (same dialog).
+- "Remember me" stores the typed email/username.
+- Home's account sheet shows the company under the name (`Key('homeAccountCompany')`, workspace mode).
+- `LoginBinding` registers `WorkspaceProvider`.
 
-## 7. Infrastruktur production
+### 5.8 `NetworkService`
+The probe host is read on every check: `auth.endpoints.probeHost(auth.apiBaseUrl)` — the session's host, or `DEV_CONNECT_ADDRESS` in dev-connect mode (a `.test` name never resolves on a phone, which would always report "No internet connection").
 
-- **Domain sendiri** + **wildcard DNS** `*.<domain>` → server, plus record `app.` & `admin.`.
-- **Wildcard TLS** (`*.<domain>`) — Let's Encrypt via DNS-01 challenge, atau Cloudflare proxy. Android menolak HTTP biasa secara default; jangan aktifkan cleartext.
-- **Nginx** `server_name .<domain>;` → satu Laravel app (tenancy memilih tenant dari host).
-- **Staging** terpisah (mis. `*.staging.<domain>`) dengan `env/staging.json` — Patrol write-tests (receive/outflow/delivery) jalan di sini, **bukan** di prod.
-- Ngrok hanya untuk dev lokal.
+### 5.9 Drafts per company — `DraftService` (added in rev. 3)
+Document ids only mean something inside one company (PO 42 of one company is not PO 42 of another). `DraftService(namespace:)` stores every scope as `<tenantId>/<scope>` in workspace mode (`keyFor`), so drafts **and** `SubmitKey` idempotency keys are kept apart with no controller change. Direct mode has no company id and keeps the plain scope, so existing drafts stay readable. Wired in `initServices()`: `namespace: () => Get.find<AuthService>().tenantId.value ?? ''`.
 
-## 8. Testing
+## 6. Dev without ngrok
 
-- **Unit (`test/`)**: `AppConfig` mode selection; `AuthService.apiBaseUrl` (direct / workspace tanpa tenant / workspace dengan tenant); migrasi token lama tanpa tenant; parsing `WorkspaceSignInResult` (`handoff` & `choose`); header ngrok hanya untuk host ngrok.
-- **Patrol**: tetap jalan di mode direct (`API_BASE_URL` = ngrok) — tidak ada perubahan perilaku. Tambah `patrol_test/workspace_login_test.dart` yang hanya jalan bila `CENTRAL_API_URL` + `TEST_EMAIL`/`TEST_PASSWORD` di-define (`skip:` seperti `hasCredentials`) dan diarahkan ke staging.
-- **Manual sebelum rilis**: login user 1-tenant, user multi-tenant (choose), password salah, handoff lewat 60 dtk (simulasi dengan delay debug), tenant suspended, logout → login ke tenant lain di device yang sama, token expired (401) → kembali ke login + tenant terhapus.
+The web works on the PC because the hosts file (Laragon) points `*.test` at `127.0.0.1`; a phone does not share that file. The app reproduces it:
 
-## 9. Pertanyaan terbuka (putuskan sebelum eksekusi)
+1. USB: `adb reverse tcp:80 tcp:80` — the phone's `127.0.0.1:80` reaches the PC's web server (lost on unplug/reboot; run it again).
+2. Run: `flutter run --dart-define-from-file=env/dev-workspace.json` (or `env/dev-usb.json` for direct mode).
+3. The app connects to `127.0.0.1` and sends `Host: mastersystembackend.test` (central) or `Host: mc.mastersystembackend.test` (the `api_host` the backend answered) — the server picks the tenant from `Host`.
+4. Plain HTTP is allowed **only in debug builds** (`android/app/src/debug/AndroidManifest.xml`, `usesCleartextTraffic`); release stays HTTPS-only.
 
-1. **Domain tenant**: semua subdomain `<slug>.<domain>`, atau ada tenant yang mau custom domain sendiri? (Alur ini tetap jalan untuk custom domain karena `api_host` datang dari backend — yang berubah hanya TLS/DNS per domain.)
-2. **User yang login pakai username (bukan email)**: apakah semua user warehouse punya email unik? Jika tidak, butuh fallback — mis. field "Kode perusahaan" opsional yang memakai `/login` lama ke `<kode>.<domain>`.
-3. **Hosting production**: VPS / cloud mana? Menentukan cara wildcard TLS.
-4. **Forgot password** di mobile (`/workspace/forgot-password`) — masuk scope ini atau nanti?
-5. Rename key `loginUsernameField` → `loginEmailField` sekarang atau tidak.
+Wi-Fi alternative: `DEV_CONNECT_ADDRESS=<PC LAN IP>` with port 80 open in the Windows firewall.
 
-## 10. Urutan eksekusi yang disarankan
+The ngrok tunnel is no longer needed for the app; its domain stays registered on tenant `mc` for the **Accurate webhook** (§9).
 
-1. `AppConfig` dua mode + env files + release guard (§4) — app tetap jalan di mode direct.
-2. `AuthService` tenant fields + `apiBaseUrl` getter + migrasi (§5.1) + unit test.
-3. `ApiProvider` base URL dinamis + header ngrok kondisional + `NetworkService` (§5.2, §5.7) — verifikasi GetConnect dulu.
-4. `WorkspaceProvider`, `exchangeHandoff`, models (§5.3).
-5. `LoginController` + UI login + tenant chooser (§5.4–5.5), logout (§5.6).
-6. Patrol mode direct tetap hijau (`patrol test -t patrol_test/login_test.dart`), lalu workspace test di staging.
-7. Infra + backend checklist (§6–7), build `--dart-define-from-file=env/prod.json`.
-8. Update `CLAUDE.md` (bagian Backend: ganti "ngrok URL in ApiProvider" dengan penjelasan dua mode).
+## 7. Backend checklist (configuration only)
+
+- [ ] Production `.env`: `APP_URL`, `CENTRAL_APP_DOMAINS=app.<domain>`, `CENTRAL_ADMIN_DOMAINS=admin.<domain>` (see `.env.example` & `config/tenancy.php`). A central host that isn't listed is treated as a tenant.
+- [ ] Every tenant has a `<slug>.<domain>` domain (`php artisan tenant:create "<name>" <domain>`).
+- [ ] `workspace-sign-in` throttle is loose enough for many users behind one warehouse NAT/IP (30/min per IP today); `sign-in/handoff` shares the tenant login throttle (5/min per IP).
+- [ ] Optional: an explicit "primary" domain per tenant (see §9).
+- [ ] Follow the backend's `docs/deploy-runbook.md` for the rest.
+
+Related backend change made alongside (direct mode, not this spec): `POST /login` now also returns `must_change_password`, so the old sign-in refuses such an account at once (`TenantAuthTest`).
+
+## 8. Production infrastructure
+
+- **Own domain** + **wildcard DNS** `*.<domain>` → the server, plus `app.` & `admin.` records.
+- **Wildcard TLS** (`*.<domain>`) — Let's Encrypt via DNS-01, or a Cloudflare proxy. Never enable cleartext in release.
+- **Nginx** `server_name .<domain>;` → one Laravel app (tenancy picks the tenant from the host).
+- **Staging** (`*.staging.<domain>`, `env/staging.json`) — the Patrol write tests (receive/outflow/delivery) run there, **not** in production.
+
+## 9. Risks & notes
+
+- **`api_host` is the tenant's first domain** (`describe()` → `$tenant->domains->first()`). Tenant `mc` has two: `mc.mastersystembackend.test` (id 1) and `allowing-toucan-ghastly.ngrok-free.app` (id 8, **kept for the Accurate webhook** — it was removed once on 2026-11-04 and restored with the same id the same day). While that order holds, the app is sent to the right host. A backend "primary domain" flag would remove the dependency on row order (optional, outside this spec).
+- `adb reverse` is lost when the cable is unplugged or the phone restarts.
+- Users who only have a username cannot use workspace mode; direct mode stays for single-tenant builds.
+- The company chooser (`choose`) is covered by a widget test only: no dev account belongs to two companies with the same password. Add one before release to try it on a device.
+
+## 10. Testing (results 2026-11-04, device `140892557H014055`)
+
+**Unit / widget (`flutter test`) — 164 pass.** New for this spec:
+- `test/services/api_endpoints_test.dart` — config check, tenant URL & scheme, dev-connect rewrite + `Host` (with ports), probe host.
+- `test/services/auth_service_tenant_test.dart` — `AuthService.init()` with mocked storage: old session dropped (workspace) / kept (direct), `setTenant` → restart → `clearToken`.
+- `test/services/workspace_session_test.dart` — handoff + `/me` on the company host, password change owed (token revoked, no session), refused handoff (company cleared), `WorkspaceProvider` requests (central URL, no token, optional `tenant_id`).
+- `test/models/workspace_sign_in_model_test.dart` — `handoff` / `choose` / malformed answers.
+- `test/services/draft_service_db_test.dart` — drafts per company, plain scope in direct mode.
+- `test/widgets/company_chooser_sheet_test.dart` — pick a company, dismiss.
+- `test/helpers/…` — ngrok host check, email validation.
+
+**Patrol (real backend over `adb reverse`, no tunnel):**
+
+| Run | Result |
+|---|---|
+| Full suite, **workspace mode** (`env/dev-workspace.json`, `TEST_EMAIL`) | 45 ✅ / 2 ❌ → both fixed and re-run green: `home_test` 6/6 (the new company-name test used `waitUntilVisible` on a text row), `receive_order_test` 8/8 (dev data had run out — see below) |
+| `login` + `home`, direct mode over USB (`env/dev-usb.json`) | 10 ✅, 1 skipped (workspace-only test) |
+| `login` + `home`, direct mode over ngrok (`env/dev.json`) | 10 ✅ |
+
+Harness (`patrol_test/common/harness.dart`): credentials follow the mode (`TEST_EMAIL` / `TEST_USERNAME`, comma-separated, `accountFor`); `loginAsTestUser` uses `WorkspaceProvider` + `WorkspaceSession` in workspace mode; `loginViaForm` types into `loginAccountFieldKey`; `login_test` is mode-aware; `home_test` checks the company name in the account sheet (workspace only).
+
+**Dev data:** the PO receive test needs a priced, non-serial open line. Re-running `DemoTenantSeeder` does **not** add POs (the deals seeder runs once per tenant behind a `tenant_settings` marker), so `PO-SMP-E2E-20261104` (50 units, non-serial item, price 100,000) was added on `mc`; 48 left after the run.
+
+**Manual before release:** single-company user, multi-company user (choose), wrong password, handoff after 60 s (debug delay), suspended company, logout → sign in to another company on the same device (drafts must not cross over), expired token (401) → back to login with the company cleared.
+
+## 11. Decisions
+
+Taken (2026-11-04):
+1. **Username sign-in** only in direct-mode builds; workspace builds sign in by email.
+2. **Existing sessions** in workspace builds are signed out once (no company host to keep them on).
+3. **Drafts are kept per company** (§5.9).
+
+Still open (needed for release only):
+1. **Production central host** (`app.<domain>`) and the tenant domain pattern.
+2. **Hosting provider** — decides how the wildcard TLS certificate is issued.
+
+## 12. Execution order
+
+1. ✅ `AppConfig` two modes + `DEV_CONNECT_ADDRESS` + env files + configuration guard (§4); `ApiEndpoints` (§5.1).
+2. ✅ `AuthService` company fields + `apiBaseUrl` + old-session migration (§5.2).
+3. ✅ `ApiProvider` per-request base + dev-connect `Host` + ngrok header only for ngrok + `NetworkService` (§5.3, §5.8). Direct mode verified unchanged.
+4. ✅ `WorkspaceProvider`, models, `WorkspaceSession`, `ApiExecutor.sessionBound`, drafts per company (§5.4–5.6, §5.9).
+5. ✅ Login UI + company chooser + forgot password + company name on Home (§5.7).
+6. ✅ Patrol harness + tests over `adb reverse`; direct-mode Patrol still green (§10).
+7. ✅ `CLAUDE.md` (Commands/API config, Testing, Backend → "How the app reaches a tenant").
+8. ⏳ Infra + backend checklist (§7–8); build with `--dart-define-from-file=env/prod.json`.

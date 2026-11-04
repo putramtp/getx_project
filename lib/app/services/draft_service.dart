@@ -18,7 +18,25 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart' show databaseFactoryFfi, sq
 ///
 /// Registered permanently and opened asynchronously in main() via
 /// `Get.putAsync`, mirroring [AuthService].
+///
+/// **Per company:** document ids only mean something inside one company
+/// (PO 42 of company A is not PO 42 of company B), so in workspace mode every
+/// scope is stored under the signed-in company's id ([namespace]):
+/// `<tenantId>/receive_po_42`. Direct mode has no company id and keeps the
+/// plain scope, so drafts saved before workspace mode stay readable there.
 class DraftService extends GetxService {
+  DraftService({this.namespace});
+
+  /// The signed-in company's id, or '' (direct mode / signed out).
+  final String Function()? namespace;
+
+  /// The stored key of [scope] for the current company.
+  @visibleForTesting
+  String keyFor(String scope) {
+    final ns = namespace?.call().trim() ?? '';
+    return ns.isEmpty ? scope : '$ns/$scope';
+  }
+
   static const String _dbName = 'warehouse_drafts.db';
   static const String _table = 'drafts';
 
@@ -64,7 +82,7 @@ class DraftService extends GetxService {
     await _db.insert(
       _table,
       {
-        'scope': scope,
+        'scope': keyFor(scope),
         'payload': jsonEncode(jsonValue),
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
@@ -78,7 +96,7 @@ class DraftService extends GetxService {
       _table,
       columns: ['payload'],
       where: 'scope = ?',
-      whereArgs: [scope],
+      whereArgs: [keyFor(scope)],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -89,7 +107,7 @@ class DraftService extends GetxService {
 
   /// Delete the draft under [scope] (no-op if absent).
   Future<void> remove(String scope) async {
-    await _db.delete(_table, where: 'scope = ?', whereArgs: [scope]);
+    await _db.delete(_table, where: 'scope = ?', whereArgs: [keyFor(scope)]);
   }
 }
 

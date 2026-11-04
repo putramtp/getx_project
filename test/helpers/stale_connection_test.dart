@@ -17,4 +17,11 @@ void main() {
     expect(ApiProvider.isStaleConnection('TimeoutException after 0:00:30.000000'), isFalse);
     expect(ApiProvider.isStaleConnection('Failed host lookup: example.com'), isFalse);
   });
+
+  test('only ngrok hosts get the browser-warning header', () {
+    expect(ApiProvider.isNgrokHost('allowing-toucan-ghastly.ngrok-free.app'), isTrue);
+    expect(ApiProvider.isNgrokHost('X.NGROK.IO'), isTrue);
+    expect(ApiProvider.isNgrokHost('mc.mastersystembackend.test'), isFalse);
+    expect(ApiProvider.isNgrokHost('app.example.com'), isFalse);
+  });
 }

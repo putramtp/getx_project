@@ -17,6 +17,7 @@ class ApiExecutor {
     required RxBool isLoading,
     required Future<T> Function() task,
     RxBool? hasError,
+    bool sessionBound = true,
   }) async {
     if (isLoading.value) return null;
 
@@ -38,7 +39,9 @@ class ApiExecutor {
       hasError?.value = true;
       // The user signed out (or another user signed in) while this ran: its
       // failure — typically a 401 for the old token — is no longer theirs.
-      if (_session != session) return null;
+      // Pass `sessionBound: false` for the sign-in itself, which changes the
+      // session on purpose and must still show why it failed.
+      if (sessionBound && _session != session) return null;
       final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
       errorAlert(msg);
       return null;

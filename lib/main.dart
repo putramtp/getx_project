@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:getx_project/app/config/app_config.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
 import 'package:getx_project/app/helpers/crash_reporter.dart';
 import 'package:getx_project/app/services/auth_service.dart';
@@ -29,6 +30,14 @@ void main() {
     ErrorWidget.builder = CrashReporter.errorWidgetBuilder;
     await CrashReporter.init();
 
+    // A build without an API URL cannot do anything: say so on screen
+    // instead of failing on the first request.
+    final configError = AppConfig.configurationError();
+    if (configError != null) {
+      runApp(_ConfigErrorApp(configError));
+      return;
+    }
+
     await initServices();
     runApp(const MyApp());
   });
@@ -38,13 +47,19 @@ void main() {
 /// the Patrol E2E tests (patrol_test/), which boot the app without the
 /// CrashReporter zone/error hooks that would clash with the test harness.
 Future<void> initServices() async {
+  final configError = AppConfig.configurationError();
+  if (configError != null) throw StateError(configError);
   await GetStorage.init(); // ✅ REQUIRED
   // AuthService loads the token from secure storage asynchronously; await it so
   // the token is in memory before any route/middleware/request reads it.
   await Get.putAsync<AuthService>(() => AuthService().init(), permanent: true);
   // Durable draft store for in-progress scans/fills — opened async before any
   // fill/scan screen can read/write a draft.
-  await Get.putAsync<DraftService>(() => DraftService().init(), permanent: true);
+  // Drafts are kept per company (workspace mode): see DraftService.
+  await Get.putAsync<DraftService>(
+    () => DraftService(namespace: () => Get.find<AuthService>().tenantId.value ?? '').init(),
+    permanent: true,
+  );
   Get.put(ApiProvider(), permanent: true);
   Get.put(NetworkService(), permanent: true);
 }
@@ -93,5 +108,34 @@ class MyApp extends StatelessWidget {
                 backgroundColor: Color.fromARGB(255, 84, 123, 206))),
         initialRoute: AppPages.homePage,
         getPages: AppPages.routes);
+  }
+}
+
+/// Shown instead of the app when the build has no API configured
+/// ([AppConfig.configurationError]) — a build mistake, never a user state.
+class _ConfigErrorApp extends StatelessWidget {
+  const _ConfigErrorApp(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Text(
+                'This build is not configured.\n\n$message',
+                key: const Key('configErrorMessage'),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

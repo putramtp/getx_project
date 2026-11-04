@@ -6,4 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Debug only: the dev backend is reached over plain HTTP through `adb reverse`
+         (DEV_CONNECT_ADDRESS). Release builds keep Android's HTTPS-only default. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

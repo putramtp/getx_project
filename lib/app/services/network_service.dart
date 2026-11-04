@@ -3,16 +3,26 @@ import 'dart:io';
 
 import 'package:get/get.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:getx_project/app/config/app_config.dart';
+import 'package:getx_project/app/services/api_endpoints.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/global/alert.dart';
 
 class NetworkService extends GetxService {
   final connectivity = Connectivity();
   final RxBool isConnected = true.obs;
 
-  /// Host used for the reachability probe — the actual API host, so a positive
-  /// result means we can likely reach the backend (not just "some" network).
-  late final String _probeHost = _hostFrom(AppConfig.apiBaseUrl);
+  /// Host used for the reachability probe — the API host of the current
+  /// session (the company once signed in, the central host before), or the
+  /// dev connect address, so a positive result means we can likely reach the
+  /// backend (not just "some" network). Read per check: it changes on sign-in.
+  String get _probeHost {
+    if (Get.isRegistered<AuthService>()) {
+      final auth = Get.find<AuthService>();
+      return auth.endpoints.probeHost(auth.apiBaseUrl);
+    }
+    final endpoints = ApiEndpoints.fromConfig();
+    return endpoints.probeHost(endpoints.apiBaseUrl());
+  }
 
   @override
   void onInit() {
@@ -77,8 +87,4 @@ class NetworkService extends GetxService {
     }
   }
 
-  static String _hostFrom(String url) {
-    final host = Uri.tryParse(url)?.host ?? '';
-    return host.isNotEmpty ? host : 'example.com';
-  }
 }

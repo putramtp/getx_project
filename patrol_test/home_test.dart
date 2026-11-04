@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/modules/home/controllers/home_controller.dart';
+import 'package:getx_project/app/services/auth_service.dart';
 
 import 'common/harness.dart';
 
@@ -70,6 +71,16 @@ void main() {
     expect($('Role'), findsOneWidget);
     await $('Close').tap();
     expect($('Account Info'), findsNothing);
+  });
+
+  e2eTest('the account sheet names the signed-in company', skip: !hasCredentials || !workspaceMode, ($) async {
+    await loginAsTestUser($);
+
+    await $(#homeAccountButton).tap();
+    // A plain text row is never hit-testable: wait for it to exist, not be "visible".
+    await $(#homeAccountCompany).waitUntilExists(timeout: apiTimeout);
+    final company = Get.find<AuthService>().currentTenantName!;
+    expect($(#homeAccountCompany).$(company), findsOneWidget);
   });
 
   e2eTest('logout returns to the login screen', skip: !hasCredentials, ($) async {
