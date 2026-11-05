@@ -1,3 +1,4 @@
+import '../outflow_batch_check.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../global/widget/app_header.dart';
@@ -65,6 +66,7 @@ class ScanPageByCustomer
                     targetLabel: "Reserved",
                     target: reserved,
                     received: received,
+                    receivedLabel: "Outflowed",
                     doneLabel: "Scanned",
                     done: scannedQty,
                   ),
@@ -127,8 +129,12 @@ class ScanPageByCustomer
     if (barcode == null) return;
 
     if (serialType == 'BATCH') {
+      // Check the label against stock first: an unknown label or a used-up
+      // batch is refused here, and the qty is held to what the batch has left.
+      final left = await controller.batchLeft(barcode);
+      if (left == null) return;
       final qty = await showBatchQtyDialog();
-      if (qty != null && qty > 0) {
+      if (qty != null && qty > 0 && batchQtyFits(barcode, qty, left)) {
         controller.addScannedCode(barcode, batchQty: qty);
       }
     } else if (serialType == 'OTHER') {

@@ -211,6 +211,7 @@ Taken (2026-11-04):
 1. **Username sign-in** only in direct-mode builds; workspace builds sign in by email.
 2. **Existing sessions** in workspace builds are signed out once (no company host to keep them on).
 3. **Drafts are kept per company** (§5.9).
+4. **Drafts from a direct build are not migrated** (2026-11-05). Direct builds store drafts under the plain scope, workspace builds under `<tenantId>/<scope>`, so an unsent draft from a direct build is not shown after the update (it stays in the database, unread). The release notes say instead: *"Before updating, submit or finish every receive / outflow still in progress — unsent scans and fills from the old version are not carried over."* Revisit (move plain scopes into the first company signed in to) only if direct builds are in daily use when the workspace build ships.
 
 Still open (needed for release only):
 1. **Production central host** (`app.<domain>`) and the tenant domain pattern.

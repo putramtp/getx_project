@@ -121,6 +121,15 @@ num sumQty(Iterable<Map> entries) =>
 
 String formatQty(num value) => '${roundQty(value)}';
 
+/// Snackbar text after Clear on a fill/scan screen: how many entries went and
+/// the quantity they held ("Removed 1 entry (qty 3) from …") — an entry count
+/// alone read as a quantity.
+String clearedEntriesMessage(List? entries, String name) {
+  final list = List<Map>.from(entries ?? const []);
+  final noun = list.length == 1 ? 'entry' : 'entries';
+  return 'Removed ${list.length} $noun (qty ${formatQty(sumQty(list))}) from $name';
+}
+
 /// Parses a typed quantity ("2.5" or "2,5"). Null when blank, not above 0,
 /// beyond 6 decimals, or a fraction where [wholeUnits] are required.
 num? parseQty(String text, {bool wholeUnits = false}) {

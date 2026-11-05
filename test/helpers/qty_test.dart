@@ -59,4 +59,18 @@ void main() {
       expect(wholeUnitsOnly({'manage_sn': false, 'serialNumberType': 'UNIQUE'}), isFalse);
     });
   });
+
+  group('clearedEntriesMessage', () {
+    test('names the entries and the quantity they held', () {
+      expect(
+        clearedEntriesMessage([{'serial_number': 'B1', 'qty': 3}], 'Paste'),
+        'Removed 1 entry (qty 3) from Paste',
+      );
+      expect(
+        clearedEntriesMessage([{'qty': 2}, {'qty': 0.5}], 'Paste'),
+        'Removed 2 entries (qty 2.5) from Paste',
+      );
+      expect(clearedEntriesMessage(null, 'Paste'), 'Removed 0 entries (qty 0) from Paste');
+    });
+  });
 }

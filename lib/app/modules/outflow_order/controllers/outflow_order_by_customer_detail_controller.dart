@@ -11,6 +11,7 @@ import '../../../data/models/outflow_request_line_item_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_customer_controller.dart';
 import '../../../modules/delivery/delivery_actions.dart';
 import '../outflow_submit.dart';
+import '../outflow_batch_check.dart';
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../global/scan_feedback.dart';
 import '../../../services/draft_service.dart';
@@ -110,6 +111,17 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     } else {
       drafts.saveJson(draftScope, map);
     }
+  }
+
+  /// Busy flag of the BATCH label check ([batchLeft]).
+  final isCheckingBatch = false.obs;
+
+  /// What can still be drawn from BATCH label [code] on the selected line, or
+  /// null when it can't (reason shown) — checked at the scan, before the qty.
+  Future<num?> batchLeft(String code) {
+    final index = selectedIndex.value;
+    if (index >= items.length) return Future.value(null);
+    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch);
   }
 
   void addScannedCode(String code,

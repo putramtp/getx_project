@@ -21,6 +21,7 @@ Widget orderFillItemHeader(
   required String targetLabel,
   required num target,
   required num received,
+  String receivedLabel = 'Received',
   required String doneLabel,
   required num done,
 }) {
@@ -39,7 +40,7 @@ Widget orderFillItemHeader(
     ),
     stats: [
       HeaderStat(targetLabel, formatQty(target), color: Colors.grey.shade700),
-      HeaderStat('Received', formatQty(received), color: navyMid),
+      HeaderStat(receivedLabel, formatQty(received), color: navyMid),
       HeaderStat(doneLabel, formatQty(done), color: accent.base),
       HeaderStat(
         'Remaining',
@@ -53,7 +54,7 @@ Widget orderFillItemHeader(
         ProgressSegment(target > 0 ? done / target : 0, accent.base),
       ],
       caption:
-          '${formatQty(received)} received · ${formatQty(done)} ${doneLabel.toLowerCase()} of ${formatQty(target)}',
+          '${formatQty(received)} ${receivedLabel.toLowerCase()} · ${formatQty(done)} ${doneLabel.toLowerCase()} of ${formatQty(target)}',
     ),
   );
 }

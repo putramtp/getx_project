@@ -8,6 +8,7 @@ import '../../../data/models/outlfow_request_model.dart';
 import '../../../modules/outflow_order/controllers/outflow_order_by_request_controller.dart';
 import '../../../modules/delivery/delivery_actions.dart';
 import '../outflow_submit.dart';
+import '../outflow_batch_check.dart';
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../global/scan_feedback.dart';
 import '../../../services/draft_service.dart';
@@ -75,6 +76,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
       return {
         "line_id": item.lineId,
+        "item_id": item.itemId,
         "name": item.name,
         "serialNumberType": item.serialNumberType,
         "manageExpired": item.manageExpired,
@@ -98,6 +100,17 @@ class OutflowOrderByRequestDetailController extends GetxController {
     } else {
       _drafts.saveJson(_draftScope, map);
     }
+  }
+
+  /// Busy flag of the BATCH label check ([batchLeft]).
+  final isCheckingBatch = false.obs;
+
+  /// What can still be drawn from BATCH label [code] on the selected line, or
+  /// null when it can't (reason shown) — checked at the scan, before the qty.
+  Future<num?> batchLeft(String code) {
+    final index = selectedIndex.value;
+    if (index >= items.length) return Future.value(null);
+    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch);
   }
 
   void addScannedCode(String code,
@@ -247,7 +260,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
       final item = items[index];
       final name = item["name"] ?? "Unknown";
 
-      final cleared = (item["scanned"] as List?)?.length ?? 0;
+      final message = clearedEntriesMessage(item["scanned"] as List?, name);
 
       item["scanned"] = [];
       items[index] = Map<String, dynamic>.from(item);
@@ -255,7 +268,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
       errorAlertBottom(
         title: "Cleared",
-        "Removed $cleared scanned qty from $name",
+        message,
       );
     }
   }

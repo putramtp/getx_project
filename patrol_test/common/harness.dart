@@ -25,6 +25,16 @@ const _testEmails = String.fromEnvironment('TEST_EMAIL');
 const _testUsernames = String.fromEnvironment('TEST_USERNAME');
 const testPassword = String.fromEnvironment('TEST_PASSWORD');
 
+/// Workspace mode only: an email that belongs to two or more companies, so the
+/// sign-in answers `choose` and the company chooser opens
+/// (`--dart-define=TEST_MULTI_EMAIL=...`). Its password is TEST_MULTI_PASSWORD,
+/// or TEST_PASSWORD when that is not given. [loginAsTestUser] refuses such an
+/// account on purpose, so it is never part of TEST_EMAIL.
+const testMultiEmail = String.fromEnvironment('TEST_MULTI_EMAIL');
+const _testMultiPassword = String.fromEnvironment('TEST_MULTI_PASSWORD');
+String get testMultiPassword => _testMultiPassword.isNotEmpty ? _testMultiPassword : testPassword;
+bool get hasMultiCompanyAccount => workspaceMode && testMultiEmail.isNotEmpty && testMultiPassword.isNotEmpty;
+
 /// True when the build signs in by email (see [AppConfig.isWorkspaceMode]).
 bool get workspaceMode => AppConfig.isWorkspaceMode;
 
@@ -143,7 +153,8 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
 Future<void> _signInByEmail(String email) async {
   final answer = await Get.put(WorkspaceProvider()).signIn(email, testPassword);
   if (!answer.isHandoff) {
-    fail('$email opens ${answer.tenants.length} companies; use an account that belongs to one.');
+    fail('$email opens ${answer.tenants.length} companies; use an account that belongs to one '
+        '(a multi-company account goes in TEST_MULTI_EMAIL).');
   }
   await WorkspaceSession().complete(answer);
 }

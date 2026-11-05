@@ -26,13 +26,12 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
       appBar: appHeader('Receive Order', accent: AppAccent.navy, icon: Icons.assignment_turned_in_rounded),
       floatingActionButton: Obx(() {
         // Offer a re-open entry into the serial-confirm pass only when this RO
-        // actually carries serial numbers.
-        final detail = controller.receiveOrderDetail.value;
-        final hasSerials = detail?.receiveOrderLines
-                .any((l) => l.serialNumbers.isNotEmpty) ??
-            false;
-        if (!hasSerials) return const SizedBox.shrink();
+        // carries labels of manage_sn items — the only ones that pass scans.
+        if (!controller.hasConfirmableSerials.value) {
+          return const SizedBox.shrink();
+        }
         return FloatingActionButton.extended(
+          key: const Key('receiveDetailConfirmSerialsFab'),
           backgroundColor: navyDark,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.qr_code_scanner_rounded),

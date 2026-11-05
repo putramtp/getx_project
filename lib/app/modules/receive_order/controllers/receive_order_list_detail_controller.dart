@@ -13,6 +13,12 @@ class ReceiveOrderListDetailController extends GetxController {
   var isLoading = false.obs;
   late final ReceiveOrderModel currentReceiveOrder;
 
+  /// Whether this RO has labels of `manage_sn` items — the only ones the
+  /// Confirm Serials pass scans. The detail response doesn't say which item is
+  /// `manage_sn`, so it is read from the RO's serial list.
+  final hasConfirmableSerials = false.obs;
+  final isLoadingSerials = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -36,6 +42,22 @@ class ReceiveOrderListDetailController extends GetxController {
     // If network failed or exception handled, data is null
     if (data == null) return;
     receiveOrderDetail.value = data;
+    await _loadConfirmableSerials(data);
+  }
 
+  Future<void> _loadConfirmableSerials(ReceiveOrderDetailModel detail) async {
+    final hasSerials =
+        detail.receiveOrderLines.any((l) => l.serialNumbers.isNotEmpty);
+    if (!hasSerials) {
+      hasConfirmableSerials.value = false;
+      return;
+    }
+    final serials = await ApiExecutor.run(
+      isLoading: isLoadingSerials,
+      task: () => provider.getReceiveOrderSerials(currentReceiveOrder.id),
+    );
+    if (serials == null) return;
+    hasConfirmableSerials.value =
+        serials.any((s) => s.manageSn);
   }
 }

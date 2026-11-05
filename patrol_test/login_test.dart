@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/services/auth_service.dart';
@@ -87,4 +88,62 @@ void main() {
       expect($('Sign in to continue'), findsOneWidget);
     },
   );
+
+  // Workspace mode, TEST_MULTI_EMAIL: the password opens several companies, so
+  // the central sign-in answers `choose` and the app asks which one to open.
+  e2eTest(
+    'an email in several companies signs in to the one picked',
+    skip: !hasMultiCompanyAccount,
+    tags: 'chooser',
+    ($) async {
+      await _openCompanyChooser($);
+
+      final tiles = find.byWidgetPredicate((w) => w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('loginCompanyChoice_'));
+      expect(tiles.evaluate().length, greaterThanOrEqualTo(2),
+          reason: '$testMultiEmail should belong to at least two companies');
+
+      // The second company: the handoff must follow the pick, not the list's first row.
+      final picked = $.tester
+          .widget<Text>(find.descendant(of: find.byKey(const Key('loginCompanyChoice_1')), matching: find.byType(Text)).first)
+          .data!;
+      await $(#loginCompanyChoice_1).tap(settlePolicy: SettlePolicy.noSettle);
+      await waitForSuccess($, $('Start a task'));
+      await $.pumpAndTrySettle();
+
+      final auth = Get.find<AuthService>();
+      expect(auth.currentTenantName, picked);
+      expect(auth.apiBaseUrl, isNot(auth.endpoints.centralApiUrl));
+      // The company is named on the account sheet (a plain row: wait to exist, not be visible).
+      await $(#homeAccountButton).tap();
+      await $(#homeAccountCompany).waitUntilExists(timeout: apiTimeout);
+      expect($(#homeAccountCompany).$(picked), findsOneWidget);
+    },
+  );
+
+  e2eTest(
+    'dismissing the company chooser stays signed out',
+    skip: !hasMultiCompanyAccount,
+    tags: 'chooser',
+    ($) async {
+      await _openCompanyChooser($);
+
+      await $.tester.tapAt(const Offset(10, 10)); // the barrier above the sheet
+      await $.pumpAndTrySettle();
+
+      expect($('Choose a company'), findsNothing);
+      expect($('Sign in to continue'), findsOneWidget);
+      expect(Get.find<AuthService>().currentToken, isNull);
+    },
+  );
+}
+
+/// Types TEST_MULTI_EMAIL into the login form and waits for the chooser.
+Future<void> _openCompanyChooser(PatrolIntegrationTester $) async {
+  await launchApp($);
+  await $(#loginEmailField).enterText(testMultiEmail);
+  await $(#loginPasswordField).enterText(testMultiPassword);
+  await $('Sign In').tap(settlePolicy: SettlePolicy.noSettle);
+  await waitForSuccess($, $('Choose a company'));
+  await $.pumpAndTrySettle();
 }

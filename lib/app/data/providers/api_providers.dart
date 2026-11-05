@@ -35,6 +35,12 @@ class ApiProvider extends GetConnect {
     httpClient.timeout = const Duration(seconds: AppConfig.apiTimeoutSeconds);
 
     httpClient.addRequestModifier<dynamic>((request) async {
+      // A multipart body is encoded before GetConnect joins the URL, so a
+      // sign-out in between would send it to the next session's host: drop it.
+      final startedIn = request.headers.remove(sessionHeader);
+      if (startedIn != null && startedIn != '${_authService.session}') {
+        throw const SessionChangedException();
+      }
       // Skip ngrok-free's browser-warning interstitial so the tunnel
       // returns real JSON instead of an HTML page (which would make
       // response.body a String and break `body['data']` parsing). Only for
@@ -66,6 +72,20 @@ class ApiProvider extends GetConnect {
   /// built (GetConnect joins `baseUrl + path` when the request is created).
   void _syncBaseUrl() => httpClient.baseUrl = requestBaseUrl;
 
+  /// Internal header naming the [AuthService.session] a multipart request
+  /// started in; the request modifier strips it and refuses to send the
+  /// request once the session has moved on ([SessionChangedException]).
+  @visibleForTesting
+  static const sessionHeader = 'x-app-session';
+
+  /// Stamps [sessionHeader] on a [FormData] body. GetConnect awaits
+  /// `FormData.toBytes()` before it builds the URL from `baseUrl`, so a
+  /// sign-out during that wait would resolve the URL against the central host
+  /// (without a token). JSON bodies build the URL at once and are not stamped —
+  /// [signOut]'s `POST /logout` must still go out after the session changes.
+  Map<String, String>? _stampSession(dynamic body, Map<String, String>? headers) =>
+      body is FormData ? {...?headers, sessionHeader: '${_authService.session}'} : headers;
+
   /// True for the ngrok tunnel hosts that need `ngrok-skip-browser-warning`.
   static bool isNgrokHost(String host) {
     final h = host.toLowerCase();
@@ -84,7 +104,7 @@ class ApiProvider extends GetConnect {
   }) {
     _syncBaseUrl();
     return super.post<T>(url, body,
-        contentType: contentType, headers: headers, query: query, decoder: decoder, uploadProgress: uploadProgress);
+        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
   }
 
   @override
@@ -99,7 +119,7 @@ class ApiProvider extends GetConnect {
   }) {
     _syncBaseUrl();
     return super.put<T>(url, body,
-        contentType: contentType, headers: headers, query: query, decoder: decoder, uploadProgress: uploadProgress);
+        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
   }
 
   @override
@@ -114,7 +134,7 @@ class ApiProvider extends GetConnect {
   }) {
     _syncBaseUrl();
     return super.patch<T>(url, body,
-        contentType: contentType, headers: headers, query: query, decoder: decoder, uploadProgress: uploadProgress);
+        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
   }
 
   @override
@@ -142,7 +162,7 @@ class ApiProvider extends GetConnect {
   }) {
     _syncBaseUrl();
     return super.request<T>(url, method,
-        body: body, contentType: contentType, headers: headers, query: query, decoder: decoder, uploadProgress: uploadProgress);
+        body: body, contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
   }
 
   /// GETs are resent once when they died on a stale keep-alive socket: the
@@ -395,6 +415,17 @@ class ApiProvider extends GetConnect {
 /// suspended company, lapsed subscription): [ApiProvider.signOut] already
 /// returned to login and showed [message], so [ApiExecutor] shows nothing
 /// more — not even for the sign-in itself (`sessionBound: false`).
+/// A multipart request whose session ended (sign-out, or another sign-in)
+/// before it was sent: the request modifier drops it so it never reaches the
+/// next session's host. GetConnect turns it into a null-status response, and
+/// [ApiExecutor] hides the error because the session changed.
+class SessionChangedException implements Exception {
+  const SessionChangedException();
+
+  @override
+  String toString() => 'The session ended before the upload was sent.';
+}
+
 class SessionEndedException implements Exception {
   final String message;
   SessionEndedException(this.message);

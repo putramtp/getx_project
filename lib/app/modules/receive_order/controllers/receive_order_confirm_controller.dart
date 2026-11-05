@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../controllers/receive_order_by_po_controller.dart';
 import '../controllers/receive_order_by_supplier_controller.dart';
+import '../controllers/receive_order_list_detail_controller.dart';
 import '../../../global/alert.dart';
 import '../../../helpers/api_excecutor.dart';
 import '../../../data/models/receive_confirm_serial_model.dart';
@@ -12,8 +13,9 @@ import '../../../services/draft_service.dart';
 import '../../../routes/app_pages.dart';
 
 /// Drives the "scan to confirm" pass that runs immediately after a receive
-/// order is created. Only UNIQUE items carry per-unit serial labels, so only
-/// those are grouped into the scan loop; BATCH/OTHER lines need no confirmation.
+/// order is created. Only `manage_sn` items carry printed SKU labels (one per
+/// unit for UNIQUE, one per batch entry for BATCH), so only those are grouped
+/// into the scan loop; quantity-only lines need no confirmation.
 class ReceiveOrderConfirmController extends GetxController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
 
@@ -30,7 +32,7 @@ class ReceiveOrderConfirmController extends GetxController {
   /// by-PO list; the by-supplier flow passes its own route in.
   String backRoute = AppPages.receiveOrderByPoPage;
 
-  /// One entry per UNIQUE item: {item_id, item_name, serials: List<...>}.
+  /// One entry per manage_sn item: {item_id, item_name, serials: List<...>}.
   final groups = <Map<String, dynamic>>[].obs;
   final selectedIndex = 0.obs;
   final isLoading = false.obs;
@@ -57,14 +59,16 @@ class ReceiveOrderConfirmController extends GetxController {
     );
     if (data == null) return;
 
-    // Keep only UNIQUE serials and group them by item, preserving order.
+    // Keep only labels of manage_sn items (UNIQUE: one per unit, BATCH: one per
+    // batch entry) and group them by item, preserving order.
     final Map<int, Map<String, dynamic>> byItem = {};
-    for (final serial in data.where((s) => s.serialNumberType == 'UNIQUE')) {
+    for (final serial in data.where((s) => s.manageSn)) {
       final group = byItem.putIfAbsent(
         serial.itemId,
         () => {
           'item_id': serial.itemId,
           'item_name': serial.itemName,
+          'serial_number_type': serial.serialNumberType,
           'serials': <ReceiveConfirmSerialModel>[],
         },
       );
@@ -112,19 +116,34 @@ class ReceiveOrderConfirmController extends GetxController {
   int confirmedIn(Map<String, dynamic> group) =>
       serialsOf(group).where((s) => s.isScanned).length;
 
-  /// Total serials across every UNIQUE item.
+  /// Total labels across every manage_sn item.
   int get totalSerials =>
       groups.fold<int>(0, (sum, g) => sum + serialsOf(g).length);
 
-  /// Total confirmed across every UNIQUE item.
+  /// Total confirmed across every manage_sn item.
   int get totalConfirmed =>
       groups.fold<int>(0, (sum, g) => sum + confirmedIn(g));
 
   bool get allConfirmed =>
       groups.isNotEmpty && totalConfirmed >= totalSerials;
 
+  /// Labels still waiting for a scan, across every manage_sn item.
+  int get totalPending => totalSerials - totalConfirmed;
+
+  /// True when this pass was reopened from the Receive Order detail (history)
+  /// rather than entered straight after a receive submit.
+  bool get openedFromDetail => backRoute == AppPages.receiveOrderListPage;
+
+  /// Reload the Receive Order detail underneath, so its confirm progress and
+  /// "Confirm Serials" button reflect the scans just made.
+  void _reloadDetail() {
+    if (Get.isRegistered<ReceiveOrderListDetailController>()) {
+      Get.find<ReceiveOrderListDetailController>().loadReceiveOrderDetail();
+    }
+  }
+
   /// Confirm a scanned label in continuous batch mode: match [rawCode] against
-  /// ANY UNIQUE serial across every item (batch scanning isn't scoped to the
+  /// ANY label of this RO across every item (batch scanning isn't scoped to the
   /// selected tab), POST it, and return [ScanFeedback] for the scanner overlay
   /// instead of showing a snackbar. Persisted + idempotent server-side.
   Future<ScanFeedback> confirmAnyScan(String rawCode) async {
@@ -165,7 +184,7 @@ class ReceiveOrderConfirmController extends GetxController {
     return ScanFeedback.error("Server did not accept \"$code\".");
   }
 
-  /// Advance to the next UNIQUE item, or finish when on the last one.
+  /// Advance to the next manage_sn item, or finish when on the last one.
   void goToNextItem() {
     // Don't navigate while a scan is still being confirmed — wait for the save.
     if (isConfirming.value) return;
@@ -187,6 +206,7 @@ class ReceiveOrderConfirmController extends GetxController {
       return;
     }
     closeRoute();
+    _reloadDetail();
     if (Get.isRegistered<ReceiveOrderByPoController>()) {
       Get.find<ReceiveOrderByPoController>().loadPurchaseOrders();
     }
@@ -195,11 +215,19 @@ class ReceiveOrderConfirmController extends GetxController {
     }
   }
 
-  /// Leave the confirm flow and return to whichever list opened it, with a
-  /// fresh controller so the just-received order reflects its new state.
+  /// Leave the confirm flow. Reopened from the Receive Order detail, it pops
+  /// back to that detail (pushing the list again would stack a second list on
+  /// top of list → detail). After a receive submit it replaces itself with the
+  /// list that opened it, with a fresh controller so the just-received order
+  /// reflects its new state.
   void finish() {
     // Fully confirmed and persisted server-side — drop the local safety cache.
     if (allConfirmed) _drafts.remove(_draftScope);
+    if (openedFromDetail) {
+      closeRoute();
+      _reloadDetail();
+      return;
+    }
     if (Get.isRegistered<ReceiveOrderByPoController>()) {
       Get.delete<ReceiveOrderByPoController>(force: true);
     }

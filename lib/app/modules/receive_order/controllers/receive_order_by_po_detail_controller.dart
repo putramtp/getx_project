@@ -273,12 +273,12 @@ class ReceiveOrderByPoDetailController extends GetxController {
       final item = items[index];
       final name = item["name"] ?? "Unknown";
 
-      final clearedCount = (item["filled"] as List?)?.length ?? 0;
+      final message = clearedEntriesMessage(item["filled"] as List?, name);
       item["filled"] = [];
       items[index] = Map<String, dynamic>.from(item); // trigger update
       items.refresh();
       infoAlertBottom(
-          title: "Cleared", "Removed $clearedCount filled qty from $name");
+          title: "Cleared", message);
     }
   }
 

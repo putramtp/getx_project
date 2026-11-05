@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../global/accent.dart';
 import '../../../global/widget/accent_header_card.dart';
+import '../../../global/widget/accent_pill.dart';
 import '../../../global/widget/app_header.dart';
 
 import 'package:getx_project/app/global/styles/app_text_style.dart';
@@ -10,6 +11,7 @@ import 'package:getx_project/app/global/styles/app_text_style.dart';
 import '../controllers/receive_order_confirm_controller.dart';
 import '../../../data/models/receive_confirm_serial_model.dart';
 import '../../../global/alert.dart';
+import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
@@ -69,7 +71,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
               return skeletonLineList(size, accent: _accent);
             }
 
-            // No UNIQUE items => nothing to scan-confirm.
+            // No manage_sn items => nothing to scan-confirm.
             if (controller.groups.isEmpty) {
               return _buildNothingToConfirm(size);
             }
@@ -174,7 +176,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
           Text("Nothing to confirm", style: AppTextStyle.h5(size)),
           const SizedBox(height: 6),
           Text(
-            "This receive order has no serial-tracked (UNIQUE) items.",
+            "This receive order has no serial-tracked items.",
             textAlign: TextAlign.center,
             style: AppTextStyle.body(size, color: Colors.grey),
           ),
@@ -261,7 +263,8 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    onPressed: saving ? null : controller.goToNextItem,
+                    key: const Key('receiveConfirmNextButton'),
+                    onPressed: saving ? null : () => _onNextOrFinish(size),
                     icon: Icon(
                       isLast
                           ? Icons.check_circle_rounded
@@ -290,6 +293,67 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
     });
   }
 
+  /// Next Item, or — on the last item — Finish. Finishing with labels still
+  /// pending asks first: the scans made so far stay saved, and the pass can be
+  /// resumed from the Receive Order detail.
+  Future<void> _onNextOrFinish(double size) async {
+    final isLast =
+        controller.selectedIndex.value >= controller.groups.length - 1;
+    final pending = controller.totalPending;
+    if (isLast && pending > 0) {
+      final ok = await _confirmFinishWithPending(size, pending);
+      if (ok != true) return;
+    }
+    controller.goToNextItem();
+  }
+
+  Future<bool?> _confirmFinishWithPending(double size, int pending) {
+    final labels = pending == 1 ? 'label is' : 'labels are';
+    return Get.dialog<bool>(
+      AlertDialog(
+        key: const Key('receiveConfirmPendingDialog'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Icon(Icons.pending_actions_rounded, color: amberDark, size: size * 4),
+        title: Text("Finish with pending labels?", style: AppTextStyle.h5(size)),
+        content: Text(
+          "$pending $labels not confirmed yet. Confirmed scans are saved — "
+          "you can finish the rest later from the Receive Order detail.",
+          textAlign: TextAlign.center,
+          style: AppTextStyle.body(size, color: Colors.grey.shade700),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => closeRoute(false),
+            child: Text("Keep Scanning",
+                style: AppTextStyle.bodyBold(size, color: navyDark)),
+          ),
+          TextButton(
+            onPressed: () => closeRoute(true),
+            child: Text("Finish Anyway",
+                style: AppTextStyle.bodyBold(size, color: stockOutColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static bool _isBatch(String? type) => type?.toUpperCase() == 'BATCH';
+
+  /// "Batch" / "Unique" pill on the item card, so the worker knows whether
+  /// one label covers a whole batch entry or a single unit.
+  Widget _serialTypePill(double size, String? type) {
+    final batch = _isBatch(type);
+    return KeyedSubtree(
+      key: const Key('receiveConfirmSerialType'),
+      child: accentPill(
+        size,
+        batch ? 'Batch' : 'Unique',
+        accent: _appAccent,
+        icon: batch ? Icons.inventory_2_rounded : Icons.qr_code_2_rounded,
+      ),
+    );
+  }
+
   Widget _buildHeaderCard(
     double size,
     Map<String, dynamic> group,
@@ -302,6 +366,7 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
       accent: _appAccent,
       icon: Icons.qr_code_scanner_rounded,
       label: 'RO #${controller.roCode}',
+      badge: _serialTypePill(size, group['serial_number_type']?.toString()),
       title: group['item_name'].toString(),
       stats: [
         HeaderStat('Total', '$total'),
@@ -356,16 +421,23 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                 color: scanned ? Colors.black87 : Colors.black54,
               ).copyWith(fontFamily: 'monospace'),
             ),
-            subtitle: (scanned && s.scannedByName != null)
-                ? Text(
-                    "by ${s.scannedByName}",
-                    style: AppTextStyle.custom(
-                      size,
-                      scale: 1.2,
-                      color: Colors.grey.shade600,
-                    ),
-                  )
-                : null,
+            // The label's serial type (a BATCH label stands for its whole
+            // batch entry, so it shows how many units it covers), then who
+            // confirmed it.
+            subtitle: Text(
+              [
+                _isBatch(s.serialNumberType)
+                    ? "Batch · qty ${s.qty}"
+                    : "Unique · 1 unit",
+                if (scanned && s.scannedByName != null) "by ${s.scannedByName}",
+              ].join(' · '),
+              key: const Key('receiveConfirmLabelType'),
+              style: AppTextStyle.custom(
+                size,
+                scale: 1.2,
+                color: Colors.grey.shade600,
+              ),
+            ),
             trailing: Text(
               scanned ? "Confirmed" : "Pending",
               style: AppTextStyle.custom(

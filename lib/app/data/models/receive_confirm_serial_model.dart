@@ -7,6 +7,10 @@ class ReceiveConfirmSerialModel {
   final int itemId;
   final String itemName;
   final String serialNumberType;
+
+  /// The item's serial-tracking gate — the Confirm Serials pass scans the
+  /// labels of `manage_sn` items, whatever their `serialNumberType`.
+  final bool manageSn;
   final int qty;
   final String? scannedByName;
 
@@ -21,6 +25,7 @@ class ReceiveConfirmSerialModel {
     required this.itemId,
     required this.itemName,
     required this.serialNumberType,
+    required this.manageSn,
     required this.qty,
     required this.isScanned,
     this.scannedByName,
@@ -34,6 +39,7 @@ class ReceiveConfirmSerialModel {
       itemId: json['item_id'] ?? 0,
       itemName: json['item_name'] ?? '-',
       serialNumberType: json['serial_number_type'] ?? 'OTHER',
+      manageSn: json['manage_sn'] ?? false,
       qty: safeToInt(json['qty']), // DECIMAL pivot qty: "1.000000"
       isScanned: json['is_scanned'] ?? false,
       scannedByName: (json['scanned_by_name'] as String?)?.isEmpty ?? true
