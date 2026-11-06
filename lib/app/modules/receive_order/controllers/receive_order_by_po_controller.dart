@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ import '../../../data/models/purchase_order_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class ReceiveOrderByPoController extends GetxController  implements TopFilterController {
+class ReceiveOrderByPoController extends GetxController with ListReloadGuard implements TopFilterController {
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -77,7 +78,9 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
   }
 
   // FIRST LOAD
-  Future<void> loadPurchaseOrders() async {
+  Future<void> loadPurchaseOrders() => guardReload(isLoading, _loadPurchaseOrders);
+
+  Future<void> _loadPurchaseOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
@@ -110,6 +113,8 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
@@ -119,7 +124,8 @@ class ReceiveOrderByPoController extends GetxController  implements TopFilterCon
       task: () => provider.getPurchaseOrders(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => PurchaseOrderModel.fromJson(e)).toList();

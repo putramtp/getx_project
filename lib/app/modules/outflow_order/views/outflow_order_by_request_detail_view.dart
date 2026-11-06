@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'scan_page_by_request.dart';
 import '../controllers/outflow_order_by_request_detail_controller.dart';
 import '../../../global/accent.dart';
+import '../../../global/alert.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/widget/accent_header_card.dart';
 import '../../../global/widget/app_buttons.dart';
@@ -157,6 +158,14 @@ class OutflowOrderByRequestDetailView
             // Use the unified scanned data
             final allScannedUnified = controller.getAllScannedUnified();
             final totalScanned = controller.totalScanned;
+
+            if (totalScanned == 0) {
+              warningAlertBottom(
+                title: "No Items Scanned",
+                "Please scan or fill at least one item before continuing.",
+              );
+              return;
+            }
 
             final confirm = await Get.dialog<bool>(
               _buildConfirmDialog(allScannedUnified, totalScanned),

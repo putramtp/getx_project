@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../styles/app_text_style.dart';
+import '../functions.dart';
 import '../variables.dart';
 
 /// Stock status of a product by its remaining qty. `low` uses the same cut-off
@@ -16,7 +17,7 @@ enum StockLevel {
 
   static const lowThreshold = 10;
 
-  static StockLevel of(int remaining) => remaining <= 0
+  static StockLevel of(num remaining) => remaining <= 0
       ? StockLevel.out
       : remaining < lowThreshold
           ? StockLevel.low
@@ -25,7 +26,7 @@ enum StockLevel {
 
 /// Square leading for product rows: the remaining qty over its status label,
 /// tinted and outlined in the [StockLevel] color.
-Widget stockLevelTile(double size, int remaining) {
+Widget stockLevelTile(double size, num remaining) {
   final level = StockLevel.of(remaining);
   return Container(
     key: const Key('productStockLevel'),
@@ -42,7 +43,7 @@ Widget stockLevelTile(double size, int remaining) {
       children: [
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text('$remaining', maxLines: 1, style: AppTextStyle.h4(size, color: level.color, weight: FontWeight.w800)),
+          child: Text(formatQty(remaining), maxLines: 1, style: AppTextStyle.h4(size, color: level.color, weight: FontWeight.w800)),
         ),
         Text(
           level.label,

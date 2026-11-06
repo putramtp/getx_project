@@ -67,7 +67,12 @@ Future<void> _confirmFirstPendingLabel(PatrolIntegrationTester $, String listTit
 /// the first fillable line, submits it and finishes Confirm Serials, which
 /// returns to [listTitle]. With [poNumber] it searches for that PO instead,
 /// and then requires labels to confirm (a serial-tracked line).
-Future<void> _receiveOneLine(PatrolIntegrationTester $, {required String listTitle, String? poNumber}) async {
+Future<void> _receiveOneLine(
+  PatrolIntegrationTester $, {
+  required String listTitle,
+  String? poNumber,
+  Future<void> Function()? onConfirmSerials,
+}) async {
   if (poNumber == null) {
     await openOrderWithAction(
       $,
@@ -114,12 +119,17 @@ Future<void> _receiveOneLine(PatrolIntegrationTester $, {required String listTit
     await expectScreen($, listTitle);
     return;
   }
+  // A test's own checks on Confirm Serials, before a label is confirmed.
+  if (onConfirmSerials != null) await onConfirmSerials();
   await _confirmFirstPendingLabel($, listTitle);
 }
 
 /// Seeded by the backend's SerialTrackedFlowSampleSeeder: a PO line for a
 /// serial-tracked (manage_sn, UNIQUE) item, still open to receive.
 const _serialPo = 'PO-SMP-SN-OPEN';
+
+/// The same for its BATCH item (one label per batch entry).
+const _batchPo = 'PO-SMP-SNB-OPEN';
 
 void main() {
   e2eTest('menu shows the receiving entries', skip: !hasCredentials, ($) async {
@@ -208,5 +218,27 @@ void main() {
     await expectScreen($, 'Suppliers');
     await waitForList($);
     await _receiveOneLine($, listTitle: 'Suppliers');
+  });
+
+  e2eTest('receiving a batch line shows its batch label and asks before finishing', skip: !hasCredentials, tags: 'batch', ($) async {
+    await _openPurchaseOrders($);
+    await _receiveOneLine(
+      $,
+      listTitle: 'Purchase Orders',
+      poNumber: _batchPo,
+      onConfirmSerials: () async {
+        // A manage_sn BATCH line: one label for the batch entry, marked Batch with its qty.
+        expect($(#receiveConfirmSerialType).$('Batch'), findsOneWidget);
+        expect($('Batch · qty 1'), findsWidgets);
+
+        // Finishing with the label still pending asks first; Keep Scanning stays.
+        await $(#receiveConfirmNextButton).tap();
+        await $(#receiveConfirmPendingDialog).waitUntilVisible();
+        await $('Keep Scanning').tap();
+        await expectScreen($, 'Confirm Serials');
+        expect($(#receiveConfirmPendingDialog), findsNothing);
+        expect($('Pending'), findsWidgets);
+      },
+    );
   });
 }

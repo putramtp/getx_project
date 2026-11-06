@@ -110,7 +110,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
   Future<num?> batchLeft(String code) {
     final index = selectedIndex.value;
     if (index >= items.length) return Future.value(null);
-    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch);
+    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch, lines: items);
   }
 
   void addScannedCode(String code,
@@ -188,7 +188,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     final received = safeToNum(item['received']);
 
     final scanned = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
-    if (scanned.any((e) => e['serial_number'] == code)) {
+    if (scanned.any((e) => e['serial_number'] == code) || scannedOnOtherLine(items, item, code)) {
       return ScanFeedback.duplicate("\"$code\" already scanned.");
     }
 
@@ -232,18 +232,29 @@ class OutflowOrderByRequestDetailController extends GetxController {
     items.refresh();
   }
 
-  void editScannedCode({required String oldCode, required String newCode}) {
+  /// "Edit Code" on a scanned row — refused (reason shown) when the new code is
+  /// a duplicate or, on a BATCH line, not in stock / too small for the row's qty.
+  Future<void> editScannedCode({required String oldCode, required String newCode}) async {
     final index = selectedIndex.value;
-    final item = items[index];
-
-    final scanned = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
-
-    final foundIndex = scanned.indexWhere((e) => e['serial_number'] == oldCode);
-    if (foundIndex != -1) {
-      scanned[foundIndex]['serial_number'] = newCode;
-      item['scanned'] = scanned;
-      items.refresh();
+    if (index >= items.length) return;
+    newCode = newCode.trim();
+    if (!await canRenameScan(provider, items[index], oldCode, newCode, isLoading: isCheckingBatch, lines: items)) {
+      return;
     }
+
+    // Re-read the line: Clear or Remove may have replaced it during the lookup.
+    if (index >= items.length) return;
+    final item = items[index];
+    final scanned = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
+    final foundIndex = scanned.indexWhere((e) => e['serial_number'] == oldCode);
+    if (foundIndex == -1) {
+      warningAlertBottom('"$oldCode" was removed while its new code was checked.', title: 'Not Renamed');
+      return;
+    }
+    scanned[foundIndex]['serial_number'] = newCode;
+    item['scanned'] = scanned;
+    items[index] = item;
+    items.refresh();
   }
 
   void removeScannedCode(String code) {
@@ -316,14 +327,15 @@ class OutflowOrderByRequestDetailController extends GetxController {
     final wantsDelivery = createdId != null && await confirmCreateDelivery();
 
     await Future.delayed(const Duration(milliseconds: 400));
-    if (Get.isRegistered<OutflowOrderByRequestController>()) {
-      Get.delete<OutflowOrderByRequestController>(force: true);
-    }
-
     if (wantsDelivery) {
+      // Unwinds to the Outflow menu, list included — its controller goes with it.
+      if (Get.isRegistered<OutflowOrderByRequestController>()) {
+        Get.delete<OutflowOrderByRequestController>(force: true);
+      }
       await createDeliveryForOutflow(createdId, replace: true);
     } else {
-      Get.offAndToNamed(AppPages.outflowOrderByRequestPage);
+      returnToListAfterSubmit(AppPages.outflowOrderByRequestPage,
+          refresh: () => Get.find<OutflowOrderByRequestController>().loadRequestOrders());
     }
   }
 

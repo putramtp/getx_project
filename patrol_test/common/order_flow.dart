@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
+import 'package:getx_project/app/global/functions.dart';
 import 'package:patrol/patrol.dart';
 
 import 'harness.dart';
@@ -100,7 +101,32 @@ Future<List<String>> inStockSerialsForRequest(String requestCode) async {
   final line = lines.cast<Map>().where((l) => l['manage_sn'] == true).firstOrNull;
   if (line == null) fail('$requestCode has no serial-tracked line');
 
-  final item = (await api.getMap('/item/${line['item_id']}/serial-number'))['data'] as Map;
+  return _inStockLabels(api, line['item_id']);
+}
+
+/// By Work Order's serial-tracked reservation line (OR-SMP-SN-WO-01, seeded by
+/// the backend's SerialTrackedFlowSampleSeeder on the first open work order):
+/// that work order's code (its card's subtitle), the line's item and the SKU
+/// labels of that item still in stock ([inStockLabels] reads them again).
+/// Read-only, like [inStockSerialsForRequest].
+Future<({String code, Object? itemId, List<String> labels})> inStockSerialsForWorkOrder() async {
+  final api = Get.find<ApiProvider>();
+  final workOrders = (await api.getMap('/outflow-request/work-order-summary'))['data'] as List;
+  for (final wo in workOrders.cast<Map>()) {
+    final lines = (await api.getMap('/outflow-request/${wo['id']}/work-order-summary'))['data'] as List;
+    final line = lines.cast<Map>().where((l) => l['manage_sn'] == true && l['can_issue'] == true).firstOrNull;
+    if (line != null) {
+      return (code: wo['code'] as String, itemId: line['item_id'], labels: await inStockLabels(line['item_id']));
+    }
+  }
+  fail('No work order has a serial-tracked line to issue — run SerialTrackedFlowSampleSeeder');
+}
+
+/// SKU labels of item [itemId] still in stock (`GET /item/{id}/serial-number`).
+Future<List<String>> inStockLabels(Object? itemId) => _inStockLabels(Get.find<ApiProvider>(), itemId);
+
+Future<List<String>> _inStockLabels(ApiProvider api, Object? itemId) async {
+  final item = (await api.getMap('/item/$itemId/serial-number'))['data'] as Map;
   return [for (final s in item['serials'] as List) s['internal_code'] as String];
 }
 
@@ -111,4 +137,21 @@ Future<void> continueBackToSummary(PatrolIntegrationTester $, String pageTitle) 
     await $('Continue').tap();
   }
   await expectScreen($, 'Item Summary');
+}
+
+/// Request [requestCode]'s BATCH line: each in-stock batch label of its item
+/// with the units left in it (`GET /item/{id}/serial-number`, read-only).
+/// Seeded by the backend's SerialTrackedFlowSampleSeeder (OR-SMP-SNB-01).
+Future<Map<String, num>> inStockBatchesForRequest(String requestCode) async {
+  final api = Get.find<ApiProvider>();
+  final requests = (await api.getMap('/outflow-request/pagination', query: {'limit': '100'}))['data'] as List;
+  final request = requests.cast<Map>().where((r) => r['code'] == requestCode).firstOrNull;
+  if (request == null) fail('No outflow request $requestCode — run SerialTrackedFlowSampleSeeder');
+
+  final lines = (await api.getMap('/outflow-request/${request['id']}/summary'))['data'] as List;
+  final line = lines.cast<Map>().where((l) => l['manage_sn'] == true).firstOrNull;
+  if (line == null) fail('$requestCode has no serial-tracked line');
+
+  final item = (await api.getMap('/item/${line['item_id']}/serial-number'))['data'] as Map;
+  return {for (final s in item['serials'] as List) s['internal_code'] as String: safeToNum(s['qty'])};
 }

@@ -6,6 +6,7 @@ import '../scan_feedback.dart';
 import '../size_config.dart';
 import '../styles/app_text_style.dart';
 import '../functions.dart';
+import '../variables.dart';
 
 /// Open the scanner in single-shot mode and return the first scanned code
 /// (or null if the worker backed out). For flows that need a follow-up dialog
@@ -321,12 +322,12 @@ class _ScannerPageState extends State<ScannerPage> {
   Color _statusColor(ScanStatus s) {
     switch (s) {
       case ScanStatus.ok:
-        return const Color(0xFF3BB273);
+        return stockInColor;
       case ScanStatus.duplicate:
-        return const Color(0xFFE0A72E);
+        return amber;
       case ScanStatus.unknown:
       case ScanStatus.error:
-        return const Color(0xFFE05B5B);
+        return stockOutColor;
     }
   }
 

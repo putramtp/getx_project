@@ -142,10 +142,13 @@ class DeliveryListController extends GetxController {
 
   String formatYmd(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
-  void openDetail(DeliveryModel delivery) {
+  /// Open a delivery; reload the list once the user is back, since the detail
+  /// may have moved its status (the card and the status filter must follow).
+  Future<void> openDetail(DeliveryModel delivery) async {
     if (Get.isRegistered<DeliveryDetailController>()) {
       Get.delete<DeliveryDetailController>(force: true);
     }
-    Get.toNamed(AppPages.deliveryDetailPage, arguments: delivery);
+    await Get.toNamed(AppPages.deliveryDetailPage, arguments: delivery);
+    if (!isClosed) await loadDeliveries();
   }
 }

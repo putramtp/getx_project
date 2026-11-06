@@ -236,7 +236,7 @@ class ReceiveOrderFillBySupplierView
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: Colors.blueAccent),
+              leading: const Icon(Icons.edit, color: navyMid),
               title: Text(isSerial ? "Edit Serial" : "Edit Quantity"),
               onTap: () async {
                 closeRoute();

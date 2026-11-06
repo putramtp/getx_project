@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,7 +14,7 @@ import '../../../data/models/product_summary_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../data/providers/product_provider.dart';
 
-class ProductController extends GetxController  implements TopFilterController{
+class ProductController extends GetxController with ListReloadGuard implements TopFilterController{
   Timer? _debounce;
   final provider = Get.find<ProductProvider>();
 
@@ -30,7 +31,7 @@ class ProductController extends GetxController  implements TopFilterController{
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
   var totalProducts = 0.obs;
-  var stockInHand = 0.obs;
+  final stockInHand = RxNum(0); // DECIMAL total — 0.5 kg is not 0
   var lowStock = 0.obs; // whole catalogue, from the API (not just the loaded page)
   final lastUpdated = Rxn<DateTime>();
   var isSearching = false.obs;
@@ -67,6 +68,7 @@ class ProductController extends GetxController  implements TopFilterController{
 
   @override
   void onClose() {
+    _debounce?.cancel(); // a search typed just before Back must not fire
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -89,7 +91,9 @@ class ProductController extends GetxController  implements TopFilterController{
     filterList("");
   }
 
-  Future<void> loadProducts() async {
+  Future<void> loadProducts() => guardReload(isLoading, _loadProducts);
+
+  Future<void> _loadProducts() async {
     cursorNext.value = null;
     hasMore.value = true;
 
@@ -106,7 +110,7 @@ class ProductController extends GetxController  implements TopFilterController{
 
     final List rawList = res['data'] ?? [];
     totalProducts.value = res['total'] ?? 0;
-    stockInHand.value = safeToInt(res['stock_in_hand']);
+    stockInHand.value = safeToNum(res['stock_in_hand']);
     lowStock.value = safeToInt(res['low_stock']);
     lastUpdated.value = DateTime.now();
 
@@ -121,6 +125,8 @@ class ProductController extends GetxController  implements TopFilterController{
 
     // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value || cursorNext.value == null || isLoadingMore.value) return;
 
     final res = await ApiExecutor.run(
@@ -128,7 +134,8 @@ class ProductController extends GetxController  implements TopFilterController{
       task: () => provider.getProductSummaries(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newProducts = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();

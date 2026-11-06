@@ -60,24 +60,33 @@ Widget orderFillItemHeader(
 }
 
 /// The big circular scan/fill action button (centre-docked FAB): white with a
-/// navy ring, the icon in the page accent [color].
+/// navy ring, the icon in the page accent [color]. While [busy] (a scan is being
+/// checked with the server) it is disabled and shows a spinner, so a second
+/// scan can't start before the first is answered.
 Widget orderScanFab({
   required double size,
   required Color color,
   required IconData icon,
   required VoidCallback onPressed,
+  bool busy = false,
 }) {
   return SizedBox(
     width: size * 6.5,
     height: size * 6.5,
     child: FloatingActionButton(
       key: const Key('orderFillFab'),
-      backgroundColor: Colors.white,
+      backgroundColor: busy ? Colors.grey.shade300 : Colors.white,
       foregroundColor: color,
       elevation: 5,
       shape: const CircleBorder(side: BorderSide(color: navyDark, width: 3)),
-      onPressed: onPressed,
-      child: Icon(icon, size: size * 3.4, color: color),
+      onPressed: busy ? null : onPressed,
+      child: busy
+          ? SizedBox(
+              width: size * 3,
+              height: size * 3,
+              child: const CircularProgressIndicator(color: navyDark, strokeWidth: 2.6),
+            )
+          : Icon(icon, size: size * 3.4, color: color),
     ),
   );
 }

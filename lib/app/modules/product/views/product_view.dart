@@ -12,6 +12,7 @@ import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/widget/product_tile.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
+import '../../../global/functions.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../global/variables.dart';
@@ -49,7 +50,7 @@ class ProductView extends GetView<ProductController> {
                         metrics: [
                           HeaderMetric('Total products', '${controller.totalProducts.value}',
                               icon: Icons.inventory_2_rounded, accent: AppAccent.navy),
-                          HeaderMetric('Stock in hand', '${controller.stockInHand.value}',
+                          HeaderMetric('Stock in hand', formatQty(controller.stockInHand.value),
                               icon: Icons.layers_rounded, accent: AppAccent.sage),
                         ],
                         footer: _summaryFooter(size),

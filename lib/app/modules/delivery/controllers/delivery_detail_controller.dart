@@ -99,7 +99,8 @@ class DeliveryDetailController extends GetxController {
       );
       return false;
     }
-    await submitUpdate(
+    // True only when the server accepted the change.
+    return submitUpdate(
       statusId: statusId,
       estimateAt: d.estimateAt!,
       estimateTime: d.estimateTime,
@@ -107,7 +108,6 @@ class DeliveryDetailController extends GetxController {
       description: d.description,
       receiverName: receiverName,
     );
-    return true;
   }
 
   /// Full update — used by both the quick status buttons and the edit form.

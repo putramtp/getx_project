@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +10,7 @@ import 'package:getx_project/app/helpers/api_excecutor.dart';
 import 'package:getx_project/app/modules/product-brand/controllers/product_by_brand_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
 
-class ProductBrandController extends GetxController {
+class ProductBrandController extends GetxController with ListReloadGuard {
   final ProductProvider provider = Get.find<ProductProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -84,7 +85,9 @@ class ProductBrandController extends GetxController {
   }
 
   // FIRST LOAD
-  Future<void> loadBrands() async {
+  Future<void> loadBrands() => guardReload(isLoading, _loadBrands);
+
+  Future<void> _loadBrands() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
@@ -118,16 +121,19 @@ class ProductBrandController extends GetxController {
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getProductBrands(cursor: cursorNext.value),
+      task: () => provider.getProductBrands(cursor: cursorNext.value, params: buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => ProductBrandModel.fromJson(e)).toList();

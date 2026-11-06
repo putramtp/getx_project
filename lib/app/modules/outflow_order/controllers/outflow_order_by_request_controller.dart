@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,7 @@ import '../../../modules/outflow_order/controllers/outflow_order_by_request_deta
 import '../../../data/providers/outflow_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class OutflowOrderByRequestController extends GetxController  implements TopFilterController {
+class OutflowOrderByRequestController extends GetxController with ListReloadGuard implements TopFilterController {
   final OutflowOrderProvider provider = Get.find<OutflowOrderProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -82,7 +83,9 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
     loadRequestOrders();
   }
 
-  Future<void> loadRequestOrders() async {
+  Future<void> loadRequestOrders() => guardReload(isLoading, _loadRequestOrders);
+
+  Future<void> _loadRequestOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
@@ -115,6 +118,8 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
@@ -124,7 +129,8 @@ class OutflowOrderByRequestController extends GetxController  implements TopFilt
       task: () => provider.getOutflowRequests(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => OutflowRequestModel.fromJson(e)).toList();

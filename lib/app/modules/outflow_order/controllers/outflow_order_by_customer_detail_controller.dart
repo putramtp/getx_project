@@ -121,7 +121,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
   Future<num?> batchLeft(String code) {
     final index = selectedIndex.value;
     if (index >= items.length) return Future.value(null);
-    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch);
+    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch, lines: items);
   }
 
   void addScannedCode(String code,
@@ -185,7 +185,7 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     final received = safeToNum(item["received"]);
 
     final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
-    if (scanned.any((e) => e['serial_number'] == code)) {
+    if (scanned.any((e) => e['serial_number'] == code) || scannedOnOtherLine(items, item, code)) {
       return ScanFeedback.duplicate("\"$code\" already scanned.");
     }
 
@@ -225,17 +225,29 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     items.refresh();
   }
 
-  void editScannedCode({required String oldCode, required String newCode}) {
-    final item = items[selectedIndex.value];
+  /// "Edit Code" on a scanned row — refused (reason shown) when the new code is
+  /// a duplicate or, on a BATCH line, not in stock / too small for the row's qty.
+  Future<void> editScannedCode({required String oldCode, required String newCode}) async {
+    final index = selectedIndex.value;
+    if (index >= items.length) return;
+    newCode = newCode.trim();
+    if (!await canRenameScan(provider, items[index], oldCode, newCode, isLoading: isCheckingBatch, lines: items)) {
+      return;
+    }
 
+    // Re-read the line: Clear or Remove may have replaced it during the lookup.
+    if (index >= items.length) return;
+    final item = items[index];
     final scanned = List<Map<String, dynamic>>.from(item["scanned"] ?? []);
     final idx = scanned.indexWhere((e) => e["serial_number"] == oldCode);
-
-    if (idx != -1) {
-      scanned[idx]["serial_number"] = newCode;
-      item["scanned"] = scanned;
-      items.refresh();
+    if (idx == -1) {
+      warningAlertBottom('"$oldCode" was removed while its new code was checked.', title: 'Not Renamed');
+      return;
     }
+    scanned[idx]["serial_number"] = newCode;
+    item["scanned"] = scanned;
+    items[index] = item;
+    items.refresh();
   }
 
   void removeScannedCode(String code) {
@@ -299,14 +311,15 @@ class OutflowOrderByCustomerDetailController extends GetxController {
     final wantsDelivery = createdId != null && await confirmCreateDelivery();
 
     await Future.delayed(const Duration(milliseconds: 300));
-    if (Get.isRegistered<OutflowOrderByCustomerController>()) {
-      Get.delete<OutflowOrderByCustomerController>(force: true);
-    }
-
     if (wantsDelivery) {
+      // Unwinds to the Outflow menu, list included — its controller goes with it.
+      if (Get.isRegistered<OutflowOrderByCustomerController>()) {
+        Get.delete<OutflowOrderByCustomerController>(force: true);
+      }
       await createDeliveryForOutflow(createdId, replace: true);
     } else {
-      Get.offAndToNamed(AppPages.outflowOrderByCustomerPage);
+      returnToListAfterSubmit(AppPages.outflowOrderByCustomerPage,
+          refresh: () => Get.find<OutflowOrderByCustomerController>().loadCustomers());
     }
   }
 

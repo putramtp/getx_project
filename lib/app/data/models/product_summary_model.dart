@@ -5,11 +5,11 @@ class ProductSummaryModel {
   final String itemName;
   final String itemCode;
 
-  final int qtyRemaining;
-  final int qtyIn;
-  final int qtyOut;
+  // DECIMAL on the backend (kg, metre…): 0.5 kg in stock is not 0.
+  final num qtyRemaining;
+  final num qtyIn;
+  final num qtyOut;
   final bool lowStock;
-
 
   ProductSummaryModel({
     required this.itemId,
@@ -22,15 +22,15 @@ class ProductSummaryModel {
   });
 
   factory ProductSummaryModel.fromJson(Map<String, dynamic> json) {
-
+    final remaining = safeToNum(json['qty_remaining']);
     return ProductSummaryModel(
-      itemId: json['item_id'] ?? 0,
+      itemId: safeToInt(json['item_id']),
       itemName: json['item_name'] ?? '',
       itemCode: json['item_code'] ?? '',
-      qtyRemaining: safeToInt(json['qty_remaining']),
-      qtyIn: safeToInt(json['qty_in']),
-      qtyOut: safeToInt(json['qty_out']),
-      lowStock: safeToInt(json['qty_remaining']) < 10 ,
+      qtyRemaining: remaining,
+      qtyIn: safeToNum(json['qty_in']),
+      qtyOut: safeToNum(json['qty_out']),
+      lowStock: remaining < 10,
     );
   }
 
@@ -41,6 +41,5 @@ class ProductSummaryModel {
         "qty_remaining": qtyRemaining,
         "qty_in": qtyIn,
         "qty_out": qtyOut,
-  };
-   
+      };
 }

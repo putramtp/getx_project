@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'dart:async';
 import 'package:getx_project/app/data/providers/stock_transaction_provider.dart';
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
@@ -10,7 +11,7 @@ import '../../../global/alert.dart';
 import '../../../global/functions.dart';
 import '../../../helpers/api_excecutor.dart';
 
-class StockTransactionController extends GetxController implements TopFilterController {
+class StockTransactionController extends GetxController with ListReloadGuard implements TopFilterController {
   final StockTransactionProvider provider = Get.find<StockTransactionProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -75,7 +76,9 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
 
   // FIRST LOAD
-  Future<void> loadstockTransactions() async {
+  Future<void> loadstockTransactions() => guardReload(isLoading, _loadstockTransactions);
+
+  Future<void> _loadstockTransactions() async {
     cursorNext.value = null;
     hasMore.value = true;
     final res = await ApiExecutor.run(
@@ -102,6 +105,8 @@ class StockTransactionController extends GetxController implements TopFilterCont
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value || cursorNext.value == null || isLoadingMore.value) return;
 
     final res = await ApiExecutor.run(
@@ -109,7 +114,8 @@ class StockTransactionController extends GetxController implements TopFilterCont
       task: () => provider.getStockTransactions(cursor: cursorNext.value,params: buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => StockTransactionModel.fromJson(e)).toList();

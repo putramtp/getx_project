@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +12,16 @@ import '../../../data/models/receive_order_model.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
 
-class ReceiveOrderListController extends GetxController  implements TopFilterController  {
+class ReceiveOrderListController extends GetxController with ListReloadGuard implements TopFilterController  {
+  ReceiveOrderListController({this.pendingSerialOnly = false});
+
   final ReceiveOrderProvider provider = Get.find<ReceiveOrderProvider>();
+
+  /// The Receive home's "Serials to confirm" queue: only orders that still hold
+  /// unscanned labels (`serial_status=pending`); a tap opens Confirm Serials.
+  /// Set once by [ReceiveOrderListBinding] from the route's
+  /// `{'serial_status': 'pending'}` arguments.
+  final bool pendingSerialOnly;
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
 
@@ -76,7 +85,9 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
   }
 
   // FIRST LOAD
-  Future<void> loadReceiveOrders() async {
+  Future<void> loadReceiveOrders() => guardReload(isLoading, _loadReceiveOrders);
+
+  Future<void> _loadReceiveOrders() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
@@ -110,6 +121,8 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
@@ -119,7 +132,8 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
       task: () => provider.getReceiveOrders(cursor: cursorNext.value, params:buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => ReceiveOrderModel.fromJson(e)).toList();
@@ -163,7 +177,8 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
       'limit': limit.value.toString(),
       if (searchQuery.value.isNotEmpty) 'search': searchQuery.value,
       if (startDate.value != null) 'start_date': getDateString(startDate.value!),
-      if (endDate.value != null) 'end_date': getDateString(endDate.value!), 
+      if (endDate.value != null) 'end_date': getDateString(endDate.value!),
+      if (pendingSerialOnly) 'serial_status': 'pending',
     };
   }
 
@@ -194,6 +209,17 @@ class ReceiveOrderListController extends GetxController  implements TopFilterCon
       Get.delete<ReceiveOrderListDetailController>(force: true);
     }
     Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
+  }
+
+  /// From the pending queue: straight into Confirm Serials (it pops back here
+  /// when done, as from the detail), then reload so a finished order drops out.
+  Future<void> openSerialConfirm(ReceiveOrderModel order) async {
+    await Get.toNamed(AppPages.receiveOrderConfirmPage, arguments: {
+      'ro_id': order.id,
+      'ro_code': order.code,
+      'back_route': AppPages.receiveOrderListPage,
+    });
+    await loadReceiveOrders();
   }
 
 }

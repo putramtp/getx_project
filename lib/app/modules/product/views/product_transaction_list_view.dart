@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 
 import '../controllers/product_transaction_list_controller.dart';
 import '../../../global/accent.dart';
+import '../../../global/functions.dart';
+import '../../../global/widget/app_buttons.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/widget/stock_direction_icon.dart';
 import '../../../global/size_config.dart';
@@ -181,43 +183,27 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton.icon(
+                            child: accentOutlineButton(
+                              SizeConfig.defaultSize,
+                              "Clear",
+                              color: navyDark,
+                              icon: Icons.clear,
                               onPressed: () {
                                 controller.clearDateFilter();
-                                Navigator.pop(context);
+                                closeRoute();
                               },
-                              icon: const Icon(Icons.clear),
-                              label: const Text("Clear"),
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: ElevatedButton.icon(
+                            child: navyButton(
+                              SizeConfig.defaultSize,
+                              "Apply",
+                              icon: Icons.check,
                               onPressed: () {
                                 controller.applyDateFilter();
-                                Navigator.pop(context);
+                                closeRoute();
                               },
-                              icon:
-                                  const Icon(Icons.check, color: Colors.white),
-                              label: Text(
-                                "Apply",
-                                style: AppTextStyle.plain(color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
                             ),
                           ),
                         ],
@@ -306,7 +292,7 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "${isIn ? '+' : '-'}${transaction.qty % 1 == 0 ? transaction.qty.toInt() : transaction.qty}",
+              "${isIn ? '+' : '-'}${formatQty(transaction.qty)}",
               style: AppTextStyle.bodyBold(size, color: color, weight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -316,15 +302,12 @@ class ProductTransactionListView extends GetView<ProductTransactionListControlle
                 vertical: 2,
               ),
               decoration: BoxDecoration(
-                color: isIn
-                    ? Colors.blue.withValues(alpha: 0.1)
-                    : Colors.orange.withValues(alpha: 0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 transaction.type,
-                style: AppTextStyle.body(size,
-                    color: isIn ? Colors.blue : Colors.orange),
+                style: AppTextStyle.body(size, color: color),
               ),
             ),
           ],

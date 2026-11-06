@@ -31,7 +31,9 @@ class HomeController extends GetxController {
   Timer? _timer;
 
   final GetStorage _box = GetStorage();
-  static const String _dashboardKey = 'dashboard_cache';
+  /// Cached counts per company: after signing in to another company, Home must
+  /// not show the previous one's numbers (nor keep them when the call fails).
+  String get _dashboardKey => 'dashboard_cache:${_authService.tenantId.value ?? ''}';
 
   @override
   void onInit() {

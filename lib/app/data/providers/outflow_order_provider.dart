@@ -8,19 +8,8 @@ class OutflowOrderProvider extends ApiProvider {
   /// What is left of each in-stock label of [itemId] (`GET /item/{id}/serial-number`,
   /// which lists only serials with stock remaining), keyed by both its
   /// `internal_code` and `serial_number` — the two ways a label is scanned.
-  Future<Map<String, num>> getSerialStock(int itemId) async {
-    final body = await getMap('/item/$itemId/serial-number');
-    final serials = (body['data'] as Map?)?['serials'] as List? ?? const [];
-    final stock = <String, num>{};
-    for (final s in serials.whereType<Map>()) {
-      final qty = safeToNum(s['qty']);
-      for (final key in [s['internal_code'], s['serial_number']]) {
-        final code = key?.toString().trim() ?? '';
-        if (code.isNotEmpty) stock[code] = qty;
-      }
-    }
-    return stock;
-  }
+  Future<Map<String, num>> getSerialStock(int itemId) async =>
+      serialStockFrom(await getMap('/item/$itemId/serial-number'));
 
   Future<Map<String, dynamic>> getOutflowOrders({String? cursor, Map<String, String>? params}) {
     return getMap('/outflow-order/pagination', query: {
@@ -72,4 +61,20 @@ class OutflowOrderProvider extends ApiProvider {
   Future<Map<String, dynamic>> issueByWorkOrder(Map<String, dynamic> payload, {String? idempotencyKey}) {
     return postMap('/outflow-order/issue-by-work-order', payload, idempotencyKey: idempotencyKey);
   }
+}
+
+/// [OutflowOrderProvider.getSerialStock]'s parse of `GET /item/{id}/serial-number`
+/// (`{data: {serials: [{internal_code, serial_number, qty}]}}`): units left per
+/// label code, under both codes.
+Map<String, num> serialStockFrom(Map<String, dynamic> body) {
+  final serials = (body['data'] as Map?)?['serials'] as List? ?? const [];
+  final stock = <String, num>{};
+  for (final s in serials.whereType<Map>()) {
+    final qty = safeToNum(s['qty']);
+    for (final key in [s['internal_code'], s['serial_number']]) {
+      final code = key?.toString().trim() ?? '';
+      if (code.isNotEmpty) stock[code] = qty;
+    }
+  }
+  return stock;
 }

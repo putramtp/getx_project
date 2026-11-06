@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/variables.dart';
+import 'package:getx_project/app/global/widget/app_buttons.dart';
 
 class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget {
   const TopDateFilterPopup({super.key, required this.controller,  this.showPrice = false , this.showDateRange = true, this.children});
@@ -120,7 +122,8 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                           style: AppTextStyle.custom(SizeConfig.defaultSize, px: 14, weight: FontWeight.w600),
                         ),
                         Obx(() => Switch(
-                          activeThumbColor: Colors.blue[300],
+                          activeThumbColor: navyMid,
+                          activeTrackColor: Colors.white,
                           inactiveTrackColor: Colors.white,
                           value: controller.enablePriceRange.value,
                           onChanged: (value) {
@@ -144,7 +147,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                             style: AppTextStyle.plain(color: Colors.grey.shade600),
                           ),
                           RangeSlider(
-                            activeColor: Colors.blue[300],
+                            activeColor: navyMid,
                             min: 0,
                             max: 100000000,
                             divisions: 1000,
@@ -169,36 +172,31 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: accentOutlineButton(
+                          SizeConfig.defaultSize,
+                          "Clear",
+                          color: navyDark,
+                          icon: Icons.clear,
                           onPressed: () {
                             controller.clearFilter();
-                            Navigator.pop(context);
+                            closeRoute();
                           },
-                          icon: const Icon(Icons.clear),
-                          label: const Text("Clear"),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: ElevatedButton.icon(
+                        child: navyButton(
+                          SizeConfig.defaultSize,
+                          "Apply",
+                          icon: Icons.check,
                           onPressed: () {
                             controller.applyFilter();
-                            Navigator.pop(context);
+                            closeRoute();
                           },
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          label: Text(
-                            "Apply",
-                            style: AppTextStyle.plain(color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                          ),
                         ),
                       ),
                     ],
                   ),
-                  /// 👇 injected children
-                
                 ],
               )
           ),

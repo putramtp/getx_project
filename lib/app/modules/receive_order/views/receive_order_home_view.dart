@@ -7,8 +7,9 @@ import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/order_menu_widgets.dart';
 import '../../../routes/app_pages.dart';
+import '../controllers/receive_order_home_controller.dart';
 
-class ReceiveOrderHomeView extends GetView {
+class ReceiveOrderHomeView extends GetView<ReceiveOrderHomeController> {
   const ReceiveOrderHomeView({super.key});
 
   @override
@@ -31,8 +32,29 @@ class ReceiveOrderHomeView extends GetView {
                 subtitle: "View all receiving history",
                 icon: Icons.move_to_inbox_rounded,
                 gradientColors: const [navyDark, navyMid],
-                onTap: () => Get.toNamed(AppPages.receiveOrderListPage),
+                onTap: () => controller.open(AppPages.receiveOrderListPage),
               ),
+              // Shown only while some receive order still holds unscanned labels.
+              Obx(() {
+                final summary = controller.serialSummary.value;
+                if (summary == null || !summary.hasPending) return const SizedBox.shrink();
+                final orders = summary.pendingOrders == 1 ? '1 order' : '${summary.pendingOrders} orders';
+                final labels = summary.pendingLabels == 1 ? '1 label' : '${summary.pendingLabels} labels';
+                return Padding(
+                  padding: EdgeInsets.only(top: size * 2),
+                  child: KeyedSubtree(
+                    key: const Key('receiveHomeSerialQueueCard'),
+                    child: orderMenuInfoCard(
+                      size: size,
+                      title: "Serials to Confirm",
+                      subtitle: "$orders · $labels not scanned",
+                      icon: Icons.qr_code_scanner_rounded,
+                      accent: AppAccent.navy,
+                      onTap: controller.openSerialQueue,
+                    ),
+                  ),
+                );
+              }),
               SizedBox(height: size * 3),
               orderMenuSectionHeader(
                   size, "Create Receiving", Icons.add_circle_outline_rounded, navyDark),
@@ -48,7 +70,7 @@ class ReceiveOrderHomeView extends GetView {
                         subtitle: "Receive against a PO",
                         icon: Icons.request_page_rounded,
                         color: skyBlue,
-                        onTap: () => Get.toNamed(AppPages.receiveOrderByPoPage),
+                        onTap: () => controller.open(AppPages.receiveOrderByPoPage),
                       ),
                     ),
                     SizedBox(width: size * 1.6),
@@ -59,8 +81,7 @@ class ReceiveOrderHomeView extends GetView {
                         subtitle: "Receive from a supplier",
                         icon: Icons.groups_rounded,
                         color: sageTeal,
-                        onTap: () =>
-                            Get.toNamed(AppPages.receiveOrderBySupplierPage),
+                        onTap: () => controller.open(AppPages.receiveOrderBySupplierPage),
                       ),
                     ),
                   ],

@@ -5,12 +5,16 @@ class ReceiveOrderModel {
   final String supplier;
   final DateTime date;
 
+  /// Labels of manage_sn items not scanned yet (`pending_serial_count`).
+  final int pendingSerialCount;
+
   ReceiveOrderModel({
     required this.id,
     required this.code,
     required this.type,
     required this.supplier,
     required this.date,
+    this.pendingSerialCount = 0,
   });
 
   factory ReceiveOrderModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,7 @@ class ReceiveOrderModel {
       type: json['type']?.toString() ?? '-',
       supplier: json['supplier_name'] ?? 'N/A',
       date: parsedDate ?? DateTime.now(),
+      pendingSerialCount: (json['pending_serial_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -33,6 +38,7 @@ class ReceiveOrderModel {
       'type': type,
       'supplier_name': supplier,
       'date': date.toIso8601String(),
+      'pending_serial_count': pendingSerialCount,
     };
   }
 }

@@ -91,6 +91,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
           color: mutedPurple,
           icon: manageSn ? Icons.qr_code_scanner : Icons.edit_note_rounded,
           onPressed: _onScanTap,
+          busy: controller.isCheckingBatch.value,
         );
       }),
       bottomNavigationBar: _buildBottomBar(size),
@@ -231,7 +232,7 @@ class ScanPageByRequest extends GetView<OutflowOrderByRequestDetailController> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: Colors.blueAccent),
+              leading: const Icon(Icons.edit, color: navyMid),
               title: Text(isQtyOnly ? "Edit Quantity" : "Edit Code"),
               onTap: () async {
                 closeRoute();

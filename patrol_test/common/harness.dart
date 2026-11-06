@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/config/app_config.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
+import 'package:getx_project/app/data/models/workspace_sign_in_model.dart';
 import 'package:getx_project/app/data/providers/workspace_provider.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import 'package:getx_project/app/services/workspace_session.dart';
@@ -34,6 +35,13 @@ const testMultiEmail = String.fromEnvironment('TEST_MULTI_EMAIL');
 const _testMultiPassword = String.fromEnvironment('TEST_MULTI_PASSWORD');
 String get testMultiPassword => _testMultiPassword.isNotEmpty ? _testMultiPassword : testPassword;
 bool get hasMultiCompanyAccount => workspaceMode && testMultiEmail.isNotEmpty && testMultiPassword.isNotEmpty;
+
+/// Workspace mode only: the company [loginAsTestUser] picks when a TEST_EMAIL
+/// account belongs to several (`--dart-define=TEST_COMPANY=mc`) — matched
+/// against the tenant id, the first label of its host (`mc` for
+/// `mc.mastersystembackend.test`) or its name, ignoring case. Without it such
+/// an account fails the test, since the harness can't guess the company.
+const testCompany = String.fromEnvironment('TEST_COMPANY');
 
 /// True when the build signs in by email (see [AppConfig.isWorkspaceMode]).
 bool get workspaceMode => AppConfig.isWorkspaceMode;
@@ -151,12 +159,49 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
 /// Workspace mode: the app's own email sign-in, so the harness and the login
 /// screen can never drift apart.
 Future<void> _signInByEmail(String email) async {
-  final answer = await Get.put(WorkspaceProvider()).signIn(email, testPassword);
+  final provider = Get.put(WorkspaceProvider());
+  var answer = await provider.signIn(email, testPassword);
   if (!answer.isHandoff) {
-    fail('$email opens ${answer.tenants.length} companies; use an account that belongs to one '
-        '(a multi-company account goes in TEST_MULTI_EMAIL).');
+    final names = answer.tenants.map((t) => t.name).join(', ');
+    if (testCompany.isEmpty) {
+      fail('$email opens ${answer.tenants.length} companies ($names); pass '
+          '--dart-define=TEST_COMPANY=<company> or use an account that belongs to one.');
+    }
+    final company = answer.tenants.where(_isTestCompany).firstOrNull;
+    if (company == null) fail('$email has no company matching TEST_COMPANY=$testCompany ($names).');
+    // The chooser's second step: sign in again with the picked company.
+    answer = await provider.signIn(email, testPassword, tenantId: company.id);
   }
   await WorkspaceSession().complete(answer);
+}
+
+/// The company chooser's tile for TEST_COMPANY, matched on the texts it shows
+/// (the company name, and its host — whose first label is `mc` for
+/// `mc.mastersystembackend.test`). Fails when TEST_COMPANY is unset or matches none.
+Finder _chooserTileForTestCompany() {
+  final wanted = testCompany.trim().toLowerCase();
+  final shown = <String>[];
+  for (var i = 0; find.byKey(Key('loginCompanyChoice_$i')).evaluate().isNotEmpty; i++) {
+    final tile = find.byKey(Key('loginCompanyChoice_$i'));
+    final texts = [
+      for (final e in find.descendant(of: tile, matching: find.byType(Text)).evaluate())
+        ((e.widget as Text).data ?? '').trim().toLowerCase(),
+    ];
+    shown.add(texts.join(' / '));
+    if (wanted.isNotEmpty && texts.any((t) => t == wanted || t.split('.').first == wanted)) return tile;
+  }
+  if (wanted.isEmpty) {
+    fail('$testAccount opens the company chooser (${shown.join(', ')}); pass --dart-define=TEST_COMPANY=<company>.');
+  }
+  fail('No company in the chooser matches TEST_COMPANY=$testCompany (${shown.join(', ')}).');
+}
+
+bool _isTestCompany(WorkspaceTenant tenant) {
+  final wanted = testCompany.trim().toLowerCase();
+  return tenant.id.toLowerCase() == wanted ||
+      tenant.host.toLowerCase().split('.').first == wanted ||
+      (tenant.apiHost?.toLowerCase().split('.').first ?? '') == wanted ||
+      tenant.name.toLowerCase() == wanted;
 }
 
 /// Direct mode: the old `POST /login` on the build's one company.
@@ -197,6 +242,11 @@ Future<void> loginViaForm(PatrolIntegrationTester $) async {
         return;
       }
       if ($('Error!').exists) break;
+      // A multi-company account opens the chooser: pick TEST_COMPANY's tile.
+      if (find.byKey(const Key('loginCompanyChoice_0')).evaluate().isNotEmpty) {
+        await $.tester.tap(_chooserTileForTestCompany());
+        await $.pump(const Duration(milliseconds: 250));
+      }
     }
     lastError = errorSnackbarText($) ?? 'no response within ${apiTimeout.inSeconds}s';
     // Wrong credentials won't fix themselves — and retrying could trip a throttle.
@@ -282,9 +332,12 @@ Future<void> tapListCard(PatrolIntegrationTester $, [int index = 0]) async {
 /// screen; after each miss, Back must return to [listTitle]. Returns false
 /// when none of the first [maxCards] matches.
 ///
-/// Cards are tracked by title, not index: the list only builds the cards on
-/// screen and reloads from the top after Back, so an index counted once goes
-/// stale. The list is scrolled to build the cards not tried yet.
+/// Cards are tracked by their texts, not index: the list only builds the cards
+/// on screen and reloads from the top after Back, so an index counted once goes
+/// stale. All of a card's texts (title, code, date…) identify it, so cards that
+/// share a title — work orders named "Phase 1 — work 1" on several projects —
+/// are still told apart. The list is scrolled to build the cards not tried yet.
+/// A card whose title is in [skipTitles] is never opened.
 Future<bool> openFirstCardWhere(
   PatrolIntegrationTester $, {
   required String listTitle,
@@ -292,14 +345,14 @@ Future<bool> openFirstCardWhere(
   int maxCards = 8,
   Set<String> skipTitles = const {},
 }) async {
-  // Cards in [skipTitles] count as already tried, so they are never opened.
-  final tried = <String>{...skipTitles};
-  while (tried.length < maxCards + skipTitles.length) {
-    final title = await _nextUntriedCard($, tried);
-    if (title == null) return false;
-    tried.add(title);
+  final tried = <String>{};
+  while (tried.length < maxCards) {
+    final key = await _nextUntriedCard($, tried, skipTitles);
+    if (key == null) return false;
+    tried.add(key);
 
-    final card = find.ancestor(of: find.text(title), matching: listCards()).first;
+    final card = _builtCardWithKey($, key);
+    if (card == null) return false;
     await $.tester.ensureVisible(card);
     await $.tester.tap(card);
     await $.pumpAndTrySettle();
@@ -312,17 +365,38 @@ Future<bool> openFirstCardWhere(
   return false;
 }
 
-/// Title of the first built card not in [tried], scrolling the list down to
-/// build more; null once a scroll shows nothing new (end of the list).
-Future<String?> _nextUntriedCard(PatrolIntegrationTester $, Set<String> tried) async {
-  List<String> titles() => [
-        for (var i = 0; i < listCards().evaluate().length; i++) listCardTitle($, i),
-      ];
+/// The [index]-th built card's identity texts, joined — what tells two cards
+/// apart. Only the main column of `orderListCard` (title, subtitle, date)
+/// counts: its trailing count / status changes once the test has visited the
+/// card, and a changed key would make the card look untried again.
+String _cardKey(PatrolIntegrationTester $, int index) {
+  final card = listCards().at(index);
+  final main = find.descendant(of: card, matching: find.byType(Expanded));
+  final scope = main.evaluate().isNotEmpty ? main.first : card;
+  return [
+    for (final e in find.descendant(of: scope, matching: find.byType(Text)).evaluate())
+      (e.widget as Text).data ?? '',
+  ].join(' · ');
+}
 
-  var seen = titles();
+Finder? _builtCardWithKey(PatrolIntegrationTester $, String key) {
+  for (var i = 0; i < listCards().evaluate().length; i++) {
+    if (_cardKey($, i) == key) return listCards().at(i);
+  }
+  return null;
+}
+
+/// Key ([_cardKey]) of the first built card not in [tried] and not titled in
+/// [skipTitles], scrolling the list down to build more; null once a scroll
+/// shows nothing new (end of the list).
+Future<String?> _nextUntriedCard(PatrolIntegrationTester $, Set<String> tried, Set<String> skipTitles) async {
+  List<String> keys() => [for (var i = 0; i < listCards().evaluate().length; i++) _cardKey($, i)];
+  bool skipped(int i) => skipTitles.contains(listCardTitle($, i));
+
+  var seen = keys();
   for (var scroll = 0; scroll < 10; scroll++) {
-    for (final t in seen) {
-      if (t.isNotEmpty && !tried.contains(t)) return t;
+    for (var i = 0; i < seen.length && i < listCards().evaluate().length; i++) {
+      if (seen[i].isNotEmpty && !tried.contains(seen[i]) && !skipped(i)) return seen[i];
     }
     if (seen.isEmpty) return null;
 
@@ -334,7 +408,7 @@ Future<String?> _nextUntriedCard(PatrolIntegrationTester $, Set<String> tried) a
     // Room for an infinite-scroll page to arrive.
     await $.pump(const Duration(seconds: 1));
 
-    final next = titles();
+    final next = keys();
     if (next.every(seen.contains)) return null;
     seen = next;
   }

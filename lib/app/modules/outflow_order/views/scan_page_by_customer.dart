@@ -5,6 +5,7 @@ import '../../../global/widget/app_header.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 
 import '../../../global/size_config.dart';
+import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/order_fill_widgets.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
@@ -90,6 +91,7 @@ class ScanPageByCustomer
           color: controller.accent.base,
           icon: manageSn ? Icons.qr_code_scanner : Icons.edit_note_rounded,
           onPressed: _onScanTap,
+          busy: controller.isCheckingBatch.value,
         );
       }),
       bottomNavigationBar: _buildBottomBar(size),
@@ -230,7 +232,7 @@ class ScanPageByCustomer
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: Colors.blueAccent),
+              leading: const Icon(Icons.edit, color: navyMid),
               title: Text(isQtyOnly ? "Edit Quantity" : "Edit Code"),
               onTap: () async {
                 closeRoute();

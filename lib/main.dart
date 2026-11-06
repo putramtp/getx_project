@@ -87,6 +87,17 @@ class MyApp extends StatelessWidget {
               bodySmall:   TextStyle(fontSize: SizeConfig.fontSize(1.2)),
             ),
             useMaterial3: true,
+            // Without a colorScheme Material 3 falls back to its purple
+            // baseline, which tints every Scaffold/Card/Dialog lavender. The
+            // container tones are pinned to white too: Card (Low) and Dialog /
+            // date picker (High) would otherwise keep a navy-grey tint.
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: navyDark,
+              surface: Colors.white,
+              surfaceContainerLow: Colors.white,
+              surfaceContainerHigh: Colors.white,
+            ),
+            scaffoldBackgroundColor: Colors.white,
             primaryColor: const Color(0xff90AEFF),
             primaryColorLight: const Color(0xffF9F7F7),
             primaryColorDark: const Color(0xff2D6187),

@@ -35,6 +35,7 @@ import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_by_supplier_detail_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_confirm_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_detail_binding.dart';
+import 'package:getx_project/app/modules/receive_order/bindings/receive_order_home_binding.dart';
 import 'package:getx_project/app/modules/receive_order/bindings/receive_order_list_binding.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_po_detail_view.dart';
 import 'package:getx_project/app/modules/receive_order/views/receive_order_by_supplier_detail_view.dart';
@@ -146,7 +147,8 @@ class AppPages {
         binding: StockTransactionBinding()),
 
     // RECEIVE ORDER
-    _guard(_Paths.RECEIVE_ORDER_HOME, () => const ReceiveOrderHomeView()),
+    _guard(_Paths.RECEIVE_ORDER_HOME, () => const ReceiveOrderHomeView(),
+        binding: ReceiveOrderHomeBinding()),
     _guard(_Paths.RECEIVE_ORDER_LIST, () => const ReceiveOrderListView(),
         binding: ReceiveOrderListBinding()),
     _guard(_Paths.RECEIVE_ORDER_LIST_DETAIL,

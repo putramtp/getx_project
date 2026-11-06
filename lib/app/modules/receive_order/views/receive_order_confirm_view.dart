@@ -15,6 +15,7 @@ import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/order_fill_widgets.dart';
 import '../../../global/widget/scanner_page.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../../../routes/app_pages.dart';
@@ -106,10 +107,12 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeaderCard(size, group, total, confirmed, remaining),
-                  const SizedBox(height: 20),
-                  Text("Serial Labels", style: AppTextStyle.h5(size)),
-                  const SizedBox(height: 8),
-                  Expanded(child: _buildSerialList(size, serials)),
+                  SizedBox(height: size * 2),
+                  _buildSerialListTitle(size, remaining),
+                  SizedBox(height: size),
+                  // Flexible, not Expanded: a short list's white box hugs its
+                  // rows instead of stretching empty down to the bottom bar.
+                  Flexible(child: _buildSerialList(size, serials)),
                 ],
               ),
             );
@@ -339,6 +342,9 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
 
   static bool _isBatch(String? type) => type?.toUpperCase() == 'BATCH';
 
+  /// More rows than this already reach the bottom bar on a phone.
+  static const int _hugRowLimit = 20;
+
   /// "Batch" / "Unique" pill on the item card, so the worker knows whether
   /// one label covers a whole batch entry or a single unit.
   Widget _serialTypePill(double size, String? type) {
@@ -383,6 +389,20 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
     );
   }
 
+  /// "Serial Labels" heading with how many labels of this item still wait.
+  Widget _buildSerialListTitle(double size, int remaining) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text("Serial Labels", style: AppTextStyle.h5(size, weight: FontWeight.w700)),
+        ),
+        remaining == 0
+            ? statusPill(size, "All confirmed", Colors.green, icon: Icons.verified_rounded)
+            : accentPill(size, "$remaining pending", accent: _appAccent),
+      ],
+    );
+  }
+
   Widget _buildSerialList(
     double size,
     List<ReceiveConfirmSerialModel> serials,
@@ -396,57 +416,67 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
       );
     }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return orderFillResultsContainer(
+      size: size,
       child: ListView.separated(
-        padding: const EdgeInsets.all(12),
+        // Only a short list hugs its rows (shrinkWrap lays out every row on
+        // each scan); a long one fills the space anyway, so it stays lazy.
+        shrinkWrap: serials.length <= _hugRowLimit,
+        padding: EdgeInsets.symmetric(vertical: size * 0.6),
         itemCount: serials.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
+        separatorBuilder: (_, _) => Divider(
+          height: 1,
+          indent: size * 1.6,
+          endIndent: size * 1.6,
+          color: Colors.grey.shade200,
+        ),
         itemBuilder: (_, i) {
           final s = serials[i];
           final scanned = s.isScanned;
+          final tileColor = scanned ? Colors.green : _accent;
           return ListTile(
-            leading: Icon(
-              scanned
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: scanned ? Colors.green : Colors.grey.shade400,
-              size: size * 3,
+            contentPadding: EdgeInsets.symmetric(horizontal: size * 1.6, vertical: size * 0.2),
+            leading: Container(
+              width: size * 4,
+              height: size * 4,
+              decoration: BoxDecoration(
+                color: tileColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(size * 1.2),
+              ),
+              child: Icon(
+                scanned ? Icons.check_rounded : Icons.qr_code_2_rounded,
+                color: tileColor,
+                size: size * 2.2,
+              ),
             ),
             title: Text(
               s.internalCode.isNotEmpty ? s.internalCode : s.serialNumber,
-              style: AppTextStyle.plain(
-                weight: FontWeight.w600,
-                color: scanned ? Colors.black87 : Colors.black54,
-              ).copyWith(fontFamily: 'monospace'),
+              style: AppTextStyle.custom(
+                size,
+                scale: 1.2,
+                weight: FontWeight.w700,
+                color: scanned ? navyDark : Colors.black87,
+              ),
             ),
             // The label's serial type (a BATCH label stands for its whole
             // batch entry, so it shows how many units it covers), then who
             // confirmed it.
-            subtitle: Text(
-              [
-                _isBatch(s.serialNumberType)
-                    ? "Batch · qty ${s.qty}"
-                    : "Unique · 1 unit",
-                if (scanned && s.scannedByName != null) "by ${s.scannedByName}",
-              ].join(' · '),
-              key: const Key('receiveConfirmLabelType'),
-              style: AppTextStyle.custom(
-                size,
-                scale: 1.2,
-                color: Colors.grey.shade600,
+            subtitle: Padding(
+              padding: EdgeInsets.only(top: size * 0.3),
+              child: Text(
+                [
+                  _isBatch(s.serialNumberType)
+                      ? "Batch · qty ${s.qty}"
+                      : "Unique · 1 unit",
+                  if (scanned && s.scannedByName != null) "by ${s.scannedByName}",
+                ].join(' · '),
+                key: const Key('receiveConfirmLabelType'),
+                style: AppTextStyle.small(size, color: Colors.grey.shade600),
               ),
             ),
-            trailing: Text(
-              scanned ? "Confirmed" : "Pending",
-              style: AppTextStyle.custom(
-                size,
-                scale: 1.3,
-                weight: FontWeight.w600,
-                color: scanned ? Colors.green : Colors.orange,
-              ),
-            ),
+            trailing: scanned
+                ? statusPill(size, "Confirmed", Colors.green, icon: Icons.check_circle_rounded)
+                : statusPill(size, "Pending", Colors.orange, icon: Icons.schedule_rounded),
           );
         },
       ),

@@ -426,10 +426,8 @@ void showSerialNumbersDialog(
                           SizedBox(width: size * 0.6),
                           Expanded(
                             child: Text("SN: ${sn.serialNumber}",
-                                style: TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: size * 1.3)),
+                                style: AppTextStyle.custom(size, scale: 1.3, weight: FontWeight.w600)
+                                    .copyWith(fontFamily: 'monospace')),
                           ),
                         ],
                       ),

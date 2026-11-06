@@ -4,6 +4,7 @@ import '../../../global/submit_key.dart';
 
 import '../../../data/models/outflow_request_line_item_model.dart';
 import '../../../global/accent.dart';
+import '../../../global/functions.dart';
 import '../../../global/alert.dart';
 import '../../../routes/app_pages.dart';
 import '../outflow_submit.dart';
@@ -42,9 +43,8 @@ class OutflowOrderByWorkOrderDetailController extends OutflowOrderByCustomerDeta
     successAlertBottom("Material issued to ${workOrder.customerCode}.");
 
     await Future.delayed(const Duration(milliseconds: 300));
-    if (Get.isRegistered<OutflowOrderByCustomerController>()) {
-      Get.delete<OutflowOrderByCustomerController>(force: true);
-    }
-    Get.offAndToNamed(AppPages.outflowOrderByWorkOrderPage);
+    // The work-order list runs under the By Customer controller type.
+    returnToListAfterSubmit(AppPages.outflowOrderByWorkOrderPage,
+        refresh: () => Get.find<OutflowOrderByCustomerController>().loadCustomers());
   }
 }

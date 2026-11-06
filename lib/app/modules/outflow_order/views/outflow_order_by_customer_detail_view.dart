@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../global/alert.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/widget/app_buttons.dart';
 import '../../../global/widget/accent_pill.dart';
@@ -148,6 +149,14 @@ class OutflowOrderByCustomerDetailView
             // Use the unified scanned data
             final allScannedUnified = controller.getAllScannedUnified();
             final totalScanned = controller.totalScanned;
+
+            if (totalScanned == 0) {
+              warningAlertBottom(
+                title: "No Items Scanned",
+                "Please scan or fill at least one item before continuing.",
+              );
+              return;
+            }
 
             final confirm = await Get.dialog<bool>(
               _buildConfirmDialog(allScannedUnified, totalScanned),

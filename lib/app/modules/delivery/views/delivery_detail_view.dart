@@ -9,6 +9,7 @@ import '../../../global/accent.dart';
 import '../../../global/alert.dart';
 import '../../../global/widget/accent_header_card.dart';
 import '../../../global/widget/accent_pill.dart';
+import '../../../global/widget/app_buttons.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
@@ -241,9 +242,6 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     if (d == null) return;
     final size = SizeConfig.defaultSize;
 
-    final addressCtrl = TextEditingController(text: d.address);
-    final descCtrl = TextEditingController(text: d.description ?? '');
-    final receiverCtrl = TextEditingController();
     // Only the current status and the ones it may move to are offered.
     final choices = [
       ...controller.statuses.where((s) => s.id == d.statusId),
@@ -254,7 +252,15 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     TimeOfDay? time = _parseTime(d.estimateTime);
 
     Get.bottomSheet(
-      StatefulBuilder(builder: (context, setSheet) {
+      // The fields' controllers live in _SheetTextControllers, which disposes
+      // them only once the sheet has left the tree (after its close animation).
+      _SheetTextControllers(
+        initialTexts: [d.address, d.description ?? '', ''],
+        builder: (ctrls) {
+      final addressCtrl = ctrls[0];
+      final descCtrl = ctrls[1];
+      final receiverCtrl = ctrls[2];
+      return StatefulBuilder(builder: (context, setSheet) {
         return Container(
           padding: EdgeInsets.fromLTRB(size * 2, size * 2, size * 2,
               MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom + size * 2),
@@ -368,57 +374,35 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
                   decoration: _fieldDecoration(size, hint: "Optional notes"),
                 ),
                 SizedBox(height: size * 2),
-                SizedBox(
-                  width: double.infinity,
-                  height: size * 4.4,
-                  child: Obx(() => ElevatedButton(
-                        onPressed: controller.isUpdating.value
-                            ? null
-                            : () async {
-                                if (date == null) {
-                                  return;
-                                }
-                                final saved = await controller.submitUpdate(
-                                  statusId: statusId,
-                                  estimateAt:
-                                      DateFormat('yyyy-MM-dd').format(date!),
-                                  estimateTime: time != null
-                                      ? _fmtTime(time!)
-                                      : null,
-                                  address: addressCtrl.text,
-                                  description: descCtrl.text,
-                                  receiverName: receiverCtrl.text,
-                                );
-                                if (saved) closeRoute();
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: steelBlue,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(size * 1.2)),
-                        ),
-                        child: controller.isUpdating.value
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 3, color: Colors.white))
-                            : Text("Save changes",
-                                style: AppTextStyle.bodyBold(size,
-                                    color: Colors.white)),
-                      )),
-                ),
+                Obx(() => navyButton(
+                      size,
+                      "Save changes",
+                      loading: controller.isUpdating.value,
+                      onPressed: () async {
+                        if (date == null) {
+                          warningAlertBottom("Pick an ETA date first.", title: "ETA Missing");
+                          return;
+                        }
+                        final saved = await controller.submitUpdate(
+                          statusId: statusId,
+                          estimateAt: DateFormat('yyyy-MM-dd').format(date!),
+                          estimateTime: time != null ? _fmtTime(time!) : null,
+                          address: addressCtrl.text,
+                          description: descCtrl.text,
+                          receiverName: receiverCtrl.text,
+                        );
+                        if (saved) closeRoute();
+                      },
+                    )),
               ],
             ),
           ),
         );
-      }),
+      });
+        },
+      ),
       isScrollControlled: true,
-    ).whenComplete(() {
-      addressCtrl.dispose();
-      descCtrl.dispose();
-      receiverCtrl.dispose();
-    });
+    );
   }
 
   InputDecoration _fieldDecoration(double size, {String? hint}) {
@@ -485,4 +469,35 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
 
   String _fmtTime(TimeOfDay t) =>
       "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
+}
+
+/// Owns the text controllers of a bottom sheet and disposes them in
+/// [State.dispose] — after the sheet's close animation, while its TextFields
+/// are still mounted. Disposing when `Get.bottomSheet` completes throws
+/// "A TextEditingController was used after being disposed".
+class _SheetTextControllers extends StatefulWidget {
+  const _SheetTextControllers({required this.initialTexts, required this.builder});
+
+  final List<String> initialTexts;
+  final Widget Function(List<TextEditingController> controllers) builder;
+
+  @override
+  State<_SheetTextControllers> createState() => _SheetTextControllersState();
+}
+
+class _SheetTextControllersState extends State<_SheetTextControllers> {
+  late final List<TextEditingController> _controllers = [
+    for (final text in widget.initialTexts) TextEditingController(text: text),
+  ];
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_controllers);
 }

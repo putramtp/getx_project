@@ -9,6 +9,9 @@ import '../../../data/models/product_summary_model.dart';
 import '../../../data/models/stock_transaction_model.dart';
 import '../../../data/providers/product_provider.dart';
 
+/// Stock transactions of one product (`GET /stock-transaction/product/{itemId}`,
+/// cursor-paginated). Search, the date range and the sort are applied on the
+/// loaded rows by [_applyFilters], so a newly loaded page keeps them.
 class ProductTransactionListController extends GetxController {
   final ProductProvider provider = Get.find<ProductProvider>();
   final searchController = TextEditingController();
@@ -22,7 +25,7 @@ class ProductTransactionListController extends GetxController {
   var isLoading = false.obs;
   var hasError = false.obs;
   var isLoadingMore = false.obs;
-  var hasMore = true.obs; // ⭐ add no-more-data indicator
+  var hasMore = true.obs;
   var isAscending = true.obs;
   var isSearchFocused = false.obs;
 
@@ -31,10 +34,11 @@ class ProductTransactionListController extends GetxController {
   final RxnString cursorNext = RxnString();
   final RxnString cursorPrev = RxnString();
 
-  // 🗓️ Date filter fields
+  // Date filter — applied only once "Apply" is tapped.
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
-
+  DateTimeRange? _appliedRange;
+  String _query = '';
 
   @override
   void onInit() {
@@ -53,114 +57,87 @@ class ProductTransactionListController extends GetxController {
     super.onClose();
   }
 
-void toggleSort() {
-  isAscending.value = !isAscending.value;
-  filteredTransactions.sort((a, b) {
-    final codeA = a.order?.code ?? ''; 
-    final codeB = b.order?.code ?? '';
-    return isAscending.value
-        ? codeA.compareTo(codeB)
-        : codeB.compareTo(codeA);
-  });
+  void toggleSort() {
+    isAscending.value = !isAscending.value;
+    _applyFilters();
+  }
 
-  filteredTransactions.refresh();
-}
   void clearSearch() {
     searchController.clear();
     searchFocus.unfocus();
+    filterList('');
   }
 
-  void onSearchChanged(String value) {
-    filterList(value);
-  }
+  void onSearchChanged(String value) => filterList(value);
 
   // FIRST LOAD
   Future<void> loadProductTrans() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
-      task: () => provider.getStockTransactionByProduct(productId: 1 ,cursor: null),
+      task: () => provider.getStockTransactionByProduct(productId: currentProduct.itemId),
     );
-    // If network failed or exception handled, data is null
     if (res == null) return;
 
-    // Reset hasMore
-    hasMore.value = true;
-
-    if (res['data'] == null) {
-      transactions.clear();
-      filteredTransactions.clear();
-      cursorNext.value = null;
-      cursorPrev.value = null;
-      hasMore.value = false;
-      return;
-    }
-
     final List rawList = res['data'] ?? [];
-
-    // Assign cursors ⭐
     cursorNext.value = res['next_cursor'];
     cursorPrev.value = res['prev_cursor'];
-
-    // If backend says no more pages
     hasMore.value = cursorNext.value != null;
 
-    final mapped = rawList.map((e) => StockTransactionModel.fromJson(e)).toList();
-
-    transactions.assignAll(mapped);
-    filteredTransactions.assignAll(mapped);
+    transactions.assignAll(rawList.map((e) => StockTransactionModel.fromJson(e)));
+    _applyFilters();
   }
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (!hasMore.value) return; // ⭐ stop if no more data
-    if (cursorNext.value == null) return; // no cursor → stop
-    if (isLoadingMore.value) return; // avoid double loads
+    final cursor = cursorNext.value;
+    if (!hasMore.value || cursor == null || isLoadingMore.value || isLoading.value) return;
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getStockTransactionByProduct(productId: 1 ,cursor: null),
+      task: () => provider.getStockTransactionByProduct(productId: currentProduct.itemId, cursor: cursor),
     );
-    // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload replaced the list meanwhile: this page belongs to the old one.
+    if (res == null || cursorNext.value != cursor) return;
 
     final List rawList = res['data'] ?? [];
-    final newOrders = rawList.map((e) => StockTransactionModel.fromJson(e)).toList();
-
-    // ⭐ Update next cursor
     cursorNext.value = res['next_cursor'];
     cursorPrev.value = res['prev_cursor'];
+    hasMore.value = cursorNext.value != null;
 
-    // If response returns null cursor → no more data
-    if (cursorNext.value == null) {
-      hasMore.value = false;
-    }
-
-    transactions.addAll(newOrders);
-    filteredTransactions.assignAll(transactions);
+    transactions.addAll(rawList.map((e) => StockTransactionModel.fromJson(e)));
+    _applyFilters();
   }
 
-  String formatYmd(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date).toString();
-  }
+  String formatYmd(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
-  /// 🔍 Filter list by PO number
+  /// Filter the loaded rows by document code (case-insensitive).
   void filterList(String query) {
-    if (query.isEmpty) {
-      filteredTransactions.assignAll(transactions);
-    } else {
-      final lowerQuery = query.toLowerCase();
-
-      filteredTransactions.assignAll(
-        transactions.where((trans) {
-          final codeTrans = trans.order?.code ?? ''; 
-          return codeTrans.contains(lowerQuery) ;
-        }).toList(),
-      );
-    }
+    _query = query.trim().toLowerCase();
+    _applyFilters();
   }
 
-  // 📅 Pick start date
+  /// Search + applied date range + sort over every loaded row.
+  void _applyFilters() {
+    final range = _appliedRange;
+    final rows = transactions.where((trans) {
+      if (_query.isNotEmpty && !(trans.order?.code ?? '').toLowerCase().contains(_query)) return false;
+      if (range != null) {
+        final date = trans.order?.date;
+        if (date == null || date.isBefore(range.start) || date.isAfter(range.end)) return false;
+      }
+      return true;
+    }).toList();
+
+    rows.sort((a, b) {
+      final codeA = a.order?.code ?? '';
+      final codeB = b.order?.code ?? '';
+      return isAscending.value ? codeA.compareTo(codeB) : codeB.compareTo(codeA);
+    });
+    filteredTransactions.assignAll(rows);
+  }
+
+  // Pick start date
   Future<void> pickStartDate(BuildContext context) async {
     final picked = await pickDate(context, initialDate: startDate.value);
     if (picked != null) startDate.value = picked;
@@ -176,40 +153,26 @@ void toggleSort() {
     final end = endDate.value;
 
     if (start == null || end == null) {
-      infoAlertBottom(
-        title: 'Filter Tanggal',
-        'Please select both dates first.',
-      );
+      infoAlertBottom(title: 'Date Filter', 'Please select both dates first.');
       return;
     }
 
-    // Normalized to midnight (00:00) and end of day (23:59)
-    final startOfDay = DateTime(start.year, start.month, start.day);
-    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    filteredTransactions.assignAll(
-      transactions.where((trans) {
-        final orderDate = trans.order?.date;
-        if (orderDate == null) return false; // skip if null
-
-        return orderDate.isAtSameMomentAs(startOfDay) ||
-           orderDate.isAtSameMomentAs(endOfDay) ||
-           (orderDate.isAfter(startOfDay) && orderDate.isBefore(endOfDay));
-        }).toList(),
+    // Whole days: from 00:00 of the start to 23:59:59 of the end.
+    _appliedRange = DateTimeRange(
+      start: DateTime(start.year, start.month, start.day),
+      end: DateTime(end.year, end.month, end.day, 23, 59, 59),
     );
-
+    _applyFilters();
   }
 
-  /// ♻️ Clear date filter
+  /// Clear the date filter (the search stays).
   void clearDateFilter() {
     startDate.value = null;
     endDate.value = null;
-    filteredTransactions.assignAll(transactions);
-    infoAlertBottom(title: 'Filter Dihapus', 'Filter tanggal telah direset');
+    _appliedRange = null;
+    _applyFilters();
+    infoAlertBottom(title: 'Filter Cleared', 'The date filter has been reset.');
   }
 
-  String formatDate(DateTime date) {
-    return DateFormat('dd MMM yyyy').format(date);
-  }
-
+  String formatDate(DateTime date) => DateFormat('dd MMM yyyy').format(date);
 }

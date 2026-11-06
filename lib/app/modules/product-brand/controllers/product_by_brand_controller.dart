@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,7 @@ import 'package:getx_project/app/modules/product/controllers/product_transaction
 import 'package:getx_project/app/routes/app_pages.dart';
 import 'package:getx_project/app/data/providers/product_provider.dart';
 
-class ProductByBrandController extends GetxController {
+class ProductByBrandController extends GetxController with ListReloadGuard {
   Timer? _debounce;
   final provider = Get.find<ProductProvider>();
 
@@ -50,6 +51,7 @@ class ProductByBrandController extends GetxController {
 
   @override
   void onClose() {
+    _debounce?.cancel(); // a search typed just before Back must not fire
     searchController.dispose();
     searchFocus.dispose();
     super.onClose();
@@ -72,7 +74,9 @@ class ProductByBrandController extends GetxController {
     filterList("");
   }
 
-  Future<void> loadProducts() async {
+  Future<void> loadProducts() => guardReload(isLoading, _loadProducts);
+
+  Future<void> _loadProducts() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
@@ -101,6 +105,8 @@ class ProductByBrandController extends GetxController {
 
     // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
@@ -110,7 +116,8 @@ class ProductByBrandController extends GetxController {
       task: () => provider.getProductSummariesByBrand(brandId: currentBrand.id,cursor: cursorNext.value),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();

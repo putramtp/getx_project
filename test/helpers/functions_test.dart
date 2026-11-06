@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getx_project/app/global/functions.dart';
 
@@ -46,19 +45,6 @@ void main() {
     test('is case- and space-insensitive substring match', () {
       expect(searchString('AB', 'x a  b y'), isTrue);
       expect(searchString('zz', 'abc'), isFalse);
-    });
-  });
-
-  group('color helpers', () {
-    test('getAccentColor is deterministic and in range', () {
-      expect(getAccentColor('CODE'), getAccentColor('CODE'));
-      // Should always return one of the palette colors (no crash / index error).
-      expect(getAccentColor(''), isA<Color>());
-    });
-
-    test('getReadableTextColor contrasts the background', () {
-      expect(getReadableTextColor(Colors.white), Colors.black);
-      expect(getReadableTextColor(Colors.black), Colors.white);
     });
   });
 

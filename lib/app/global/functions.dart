@@ -185,31 +185,6 @@ String formatPrice(dynamic value) {
 }
 
 
-Color getAccentColor(String code) {
-  const  colors = [
-    Color(0xFF124076), // Navy
-    Color(0xFF7F9F80), // Olive
-    Color(0xFF4CAF50), // Green
-    Color(0xFF2196F3), // Blue
-    Color(0xFF9C27B0), // Purple
-    Color(0xFFFF9800), // Orange
-    Color(0xFF009688), // Teal
-    Color(0xFFE91E63), // Pink
-    Color(0xFF3F51B5), // Indigo
-    Color(0xFF795548), // Brown
-    Color(0xFF607D8B), // Blue Grey
-    Color(0xFF8BC34A), // Light Green
-  ];
-
-  return colors[code.hashCode.abs() % colors.length];
-}
-
-Color getReadableTextColor(Color bg) {
-  return bg.computeLuminance() > 0.5
-      ? Colors.black
-      : Colors.white;
-}
-
 /// Closes the top route (dialog, bottom sheet or page), optionally returning
 /// [result]. Use this instead of `Get.back()`: in GetX 4.7, `Get.back()` only
 /// closes an open snackbar when one is showing, leaving the route up. Snackbars
@@ -219,4 +194,26 @@ Color getReadableTextColor(Color bg) {
 void closeRoute<T>([T? result]) {
   final navigator = Get.key.currentState;
   if (navigator != null && navigator.canPop()) navigator.pop<T>(result);
+}
+
+/// After a submit: pop back to the [listRoute] the flow started from and let
+/// [refresh] reload it, so it shows the document's new state.
+///
+/// The list keeps its controller — never delete it first. Pushing a second
+/// copy failed both ways: `offAndToNamed` left the old list underneath with a
+/// deleted controller (Back landed on a dead page), and `offNamedUntil`
+/// disposed the old list right away, which deleted the new list's controller
+/// of the same type ("OutflowOrderByCustomerController not found").
+/// When [listRoute] isn't on the stack, it's opened instead.
+void returnToListAfterSubmit(String listRoute, {required VoidCallback refresh}) {
+  var found = false;
+  Get.key.currentState?.popUntil((route) {
+    if (route.settings.name == listRoute) found = true;
+    return found || route.isFirst;
+  });
+  if (found) {
+    refresh();
+  } else {
+    Get.toNamed(listRoute);
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // ============ INTERNAL IMPORTS ============
 import 'package:getx_project/app/global/accent.dart';
+import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/variables.dart';
@@ -160,84 +161,118 @@ class MasterListView<T> extends StatelessWidget {
   }
 
   void _showLimitDialog(BuildContext context, double size) {
-    final TextEditingController tController =
-        TextEditingController(text: limit.value.toString());
-
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Limit Dialog',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (_, _, _) {
-        return Center(
-          child: Material(
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Set Limit', style: AppTextStyle.h4(size)),
-                    const SizedBox(height: 12),
-                    TextField(
-                      key: const Key('masterLimitField'),
-                      controller: tController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Limit',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            onClearFilter();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Clear'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: navyDark),
-                          onPressed: () {
-                            final value = int.tryParse(tController.text);
-                            if (value == null || value <= 0) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter a valid number'),
-                                ),
-                              );
-                              return;
-                            }
-                            onApplyLimit(value);
-                            Navigator.pop(context);
-                          },
-                          child: Text('Apply',
-                              style: AppTextStyle.plain(color: Colors.white)),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+      pageBuilder: (_, _, _) => _LimitDialog(
+        size: size,
+        initialLimit: limit.value,
+        onApply: onApplyLimit,
+        onClear: onClearFilter,
+      ),
       transitionBuilder: (_, animation, _, child) {
         return ScaleTransition(
           scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
           child: child,
         );
       },
-    ).whenComplete(tController.dispose);
+    );
+  }
+}
+
+/// "Set Limit" dialog of the master lists. It owns its TextEditingController
+/// and disposes it in [State.dispose] — only after the 250 ms exit animation,
+/// while the TextField is still mounted (see `qty_input_dialogs.dart`).
+class _LimitDialog extends StatefulWidget {
+  const _LimitDialog({
+    required this.size,
+    required this.initialLimit,
+    required this.onApply,
+    required this.onClear,
+  });
+
+  final double size;
+  final int initialLimit;
+  final void Function(int) onApply;
+  final VoidCallback onClear;
+
+  @override
+  State<_LimitDialog> createState() => _LimitDialogState();
+}
+
+class _LimitDialogState extends State<_LimitDialog> {
+  late final TextEditingController _limit =
+      TextEditingController(text: widget.initialLimit.toString());
+
+  @override
+  void dispose() {
+    _limit.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Set Limit', style: AppTextStyle.h4(widget.size)),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('masterLimitField'),
+                  controller: _limit,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Limit',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        widget.onClear();
+                        closeRoute();
+                      },
+                      child: const Text('Clear'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: navyDark),
+                      onPressed: () {
+                        final value = int.tryParse(_limit.text);
+                        if (value == null || value <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter a valid number')),
+                          );
+                          return;
+                        }
+                        widget.onApply(value);
+                        closeRoute();
+                      },
+                      child: Text('Apply', style: AppTextStyle.plain(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

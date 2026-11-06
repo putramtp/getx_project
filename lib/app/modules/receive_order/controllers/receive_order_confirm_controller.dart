@@ -217,9 +217,9 @@ class ReceiveOrderConfirmController extends GetxController {
 
   /// Leave the confirm flow. Reopened from the Receive Order detail, it pops
   /// back to that detail (pushing the list again would stack a second list on
-  /// top of list → detail). After a receive submit it replaces itself with the
-  /// list that opened it, with a fresh controller so the just-received order
-  /// reflects its new state.
+  /// top of list → detail). After a receive submit it pops back to the list
+  /// that opened it and reloads it, so the just-received order shows its new
+  /// state (see returnToListAfterSubmit).
   void finish() {
     // Fully confirmed and persisted server-side — drop the local safety cache.
     if (allConfirmed) _drafts.remove(_draftScope);
@@ -228,12 +228,12 @@ class ReceiveOrderConfirmController extends GetxController {
       _reloadDetail();
       return;
     }
-    if (Get.isRegistered<ReceiveOrderByPoController>()) {
-      Get.delete<ReceiveOrderByPoController>(force: true);
-    }
-    if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
-      Get.delete<ReceiveOrderBySupplierController>(force: true);
-    }
-    Get.offAndToNamed(backRoute);
+    returnToListAfterSubmit(backRoute, refresh: () {
+      if (backRoute == AppPages.receiveOrderBySupplierPage) {
+        Get.find<ReceiveOrderBySupplierController>().loadSuppliers();
+      } else {
+        Get.find<ReceiveOrderByPoController>().loadPurchaseOrders();
+      }
+    });
   }
 }

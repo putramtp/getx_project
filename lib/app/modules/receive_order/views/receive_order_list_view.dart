@@ -21,7 +21,10 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
     final size = SizeConfig.defaultSize;
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: appHeader('Receive Orders', accent: AppAccent.navy, icon: Icons.history_rounded, subtitle: 'Receiving history'),
+      appBar: controller.pendingSerialOnly
+          ? appHeader('Serials to Confirm', accent: AppAccent.navy, icon: Icons.qr_code_scanner_rounded,
+              subtitle: 'Labels not scanned yet')
+          : appHeader('Receive Orders', accent: AppAccent.navy, icon: Icons.history_rounded, subtitle: 'Receiving history'),
       body: RefreshIndicator(
         onRefresh: controller.loadReceiveOrders,
         child: SafeArea(
@@ -50,7 +53,10 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                       return errorRetry(size, onRetry: controller.loadReceiveOrders, accent: navyDark);
                     }
                     if (orders.isEmpty) {
-                      return textNoData(size, message: "No receive order data.");
+                      return textNoData(size,
+                          message: controller.pendingSerialOnly
+                              ? "Every recent receive order is confirmed."
+                              : "No receive order data.");
                     }
                     return NotificationListener(
                       onNotification: (ScrollNotification notification) {
@@ -73,9 +79,13 @@ class ReceiveOrderListView extends GetView<ReceiveOrderListController> {
                               subtitle: order.supplier,
                               subtitleIcon: Icons.store_outlined,
                               dateText: controller.formatYmd(order.date),
-                              trailingBottom: order.type,
+                              trailingBottom: controller.pendingSerialOnly
+                                  ? '${order.pendingSerialCount} to scan'
+                                  : order.type,
                               trailingBottomColor: navyDark,
-                              onTap: () => controller.openDetail(order),
+                              onTap: () => controller.pendingSerialOnly
+                                  ? controller.openSerialConfirm(order)
+                                  : controller.openDetail(order),
                             );
                           }
                           return orderListFooter(

@@ -76,7 +76,7 @@ Future<void> showRemoveDialog(
                   style: AppTextStyle.custom(SizeConfig.defaultSize,
                     px: 17,
                     weight: FontWeight.bold,
-                    color: Colors.blue.shade700,
+                    color: navyDark,
                     height: 1.4,
                   ),
                 ),

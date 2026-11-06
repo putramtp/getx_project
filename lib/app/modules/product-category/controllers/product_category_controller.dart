@@ -1,3 +1,4 @@
+import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/modules/product-category/controllers/product_by_category_controller.dart';
 import 'package:getx_project/app/routes/app_pages.dart';
@@ -8,7 +9,7 @@ import 'package:getx_project/app/data/models/product_category_model.dart';
 import 'package:getx_project/app/data/providers/product_provider.dart';
 import 'package:getx_project/app/helpers/api_excecutor.dart';
 
-class ProductCategoryController extends GetxController {
+class ProductCategoryController extends GetxController with ListReloadGuard {
   final ProductProvider provider = Get.find<ProductProvider>();
   final searchController = TextEditingController();
   final FocusNode searchFocus = FocusNode();
@@ -83,7 +84,9 @@ class ProductCategoryController extends GetxController {
   }
 
   // FIRST LOAD
-  Future<void> loadCategories() async {
+  Future<void> loadCategories() => guardReload(isLoading, _loadCategories);
+
+  Future<void> _loadCategories() async {
     final res = await ApiExecutor.run(
       isLoading: isLoading,
       hasError: hasError,
@@ -119,16 +122,19 @@ class ProductCategoryController extends GetxController {
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
+    if (isLoading.value) return; // a reload owns the list
+    final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
     if (isLoadingMore.value) return; // avoid double loads
 
     final res = await ApiExecutor.run(
       isLoading: isLoadingMore,
-      task: () => provider.getProductCategories(cursor: cursorNext.value),
+      task: () => provider.getProductCategories(cursor: cursorNext.value, params: buildParams()),
     );
     // If network failed or exception handled, data is null
-    if (res == null) return;
+    // A reload started meanwhile: this page belongs to the old query.
+    if (res == null || !isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders =

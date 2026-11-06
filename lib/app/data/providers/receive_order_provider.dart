@@ -4,6 +4,7 @@ import '../models/purchase_order_line_item_model.dart';
 import '../models/purchase_order_supplier_model.dart';
 import '../models/receive_confirm_serial_model.dart';
 import '../models/receive_order_detail_model.dart';
+import '../models/serial_confirm_summary_model.dart';
 
 class ReceiveOrderProvider extends ApiProvider {
   Future<Map<String, dynamic>> getReceiveOrders({String? cursor, Map<String, String>? params}) {
@@ -21,6 +22,12 @@ class ReceiveOrderProvider extends ApiProvider {
 
   Future<List<ReceiveConfirmSerialModel>> getReceiveOrderSerials(int roId) {
     return getList('/receive-order/$roId/serial-number', ReceiveConfirmSerialModel.fromJson);
+  }
+
+  /// Receive orders still waiting for serial confirmation (the Receive home card).
+  Future<SerialConfirmSummary> getSerialConfirmSummary() async {
+    final body = await getMap('/receive-order/serial-confirm-summary');
+    return SerialConfirmSummary.fromJson(Map<String, dynamic>.from(body['data'] as Map? ?? const {}));
   }
 
   Future<Map<String, dynamic>> confirmReceiveSerial(int roId, List<String> codes) {

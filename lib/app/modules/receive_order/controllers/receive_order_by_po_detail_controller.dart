@@ -200,6 +200,17 @@ class ReceiveOrderByPoDetailController extends GetxController {
     final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
     if (index < 0 || index >= filled.length) return;
 
+    // A renamed batch serial must not repeat another entry's (same rule as
+    // addFilledSerial).
+    if (serial != null &&
+        [for (var i = 0; i < filled.length; i++) if (i != index) filled[i]]
+            .any((e) => (e['serial']?.toString() ?? '') == serial)) {
+      warningAlertBottom(
+          title: "Duplicate Serial",
+          "Serial \"$serial\" is already added for $itemName.");
+      return;
+    }
+
     // Sum every other entry so the edited value is validated against the rest.
     final othersTotal = sumQty([
       for (var i = 0; i < filled.length; i++)
@@ -342,11 +353,9 @@ class ReceiveOrderByPoDetailController extends GetxController {
           arguments: {'ro_id': roId, 'ro_code': roCode},
         );
       } else {
-        // Defensive fallback: behave as before if the id is missing.
-        if (Get.isRegistered<ReceiveOrderByPoController>()) {
-          Get.delete<ReceiveOrderByPoController>(force: true);
-        }
-        await Get.offAndToNamed(AppPages.receiveOrderByPoPage);
+        // Defensive fallback when the id is missing: back to the refreshed PO list.
+        returnToListAfterSubmit(AppPages.receiveOrderByPoPage,
+            refresh: () => Get.find<ReceiveOrderByPoController>().loadPurchaseOrders());
       }
     });
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:getx_project/app/data/models/product_summary_model.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
+import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/variables.dart';
 import 'package:getx_project/app/global/widget/functions_widget.dart';
 import 'package:getx_project/app/global/widget/stock_level_tile.dart';
@@ -112,8 +113,8 @@ class ProductTile extends StatelessWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           // Remaining + low-stock status live in the leading tile.
-                          textWithIcon(size, "${product.qtyIn}", Icons.arrow_drop_down, stockInColor),
-                          textWithIcon(size, "${product.qtyOut}", Icons.arrow_drop_up, stockOutColor),
+                          textWithIcon(size, formatQty(product.qtyIn), Icons.arrow_drop_down, stockInColor),
+                          textWithIcon(size, formatQty(product.qtyOut), Icons.arrow_drop_up, stockOutColor),
                         ],
                       ),
                     ),

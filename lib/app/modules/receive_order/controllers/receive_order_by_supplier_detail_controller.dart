@@ -201,6 +201,17 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
     if (index < 0 || index >= filled.length) return;
 
+    // A renamed batch serial must not repeat another entry's (same rule as
+    // addFilledSerial).
+    if (serial != null &&
+        [for (var i = 0; i < filled.length; i++) if (i != index) filled[i]]
+            .any((e) => (e['serial']?.toString() ?? '') == serial)) {
+      warningAlertBottom(
+          title: "Duplicate Serial",
+          "Serial \"$serial\" is already added for $itemName.");
+      return;
+    }
+
     // Sum every other entry so the edited value is validated against the rest.
     final othersTotal = sumQty([
       for (var i = 0; i < filled.length; i++)
@@ -347,10 +358,8 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
           },
         );
       } else {
-        if (Get.isRegistered<ReceiveOrderBySupplierController>()) {
-          Get.delete<ReceiveOrderBySupplierController>(force: true);
-        }
-        await Get.offAndToNamed(AppPages.receiveOrderBySupplierPage);
+        returnToListAfterSubmit(AppPages.receiveOrderBySupplierPage,
+            refresh: () => Get.find<ReceiveOrderBySupplierController>().loadSuppliers());
       }
     });
   }
