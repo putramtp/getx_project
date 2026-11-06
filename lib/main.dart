@@ -55,9 +55,14 @@ Future<void> initServices() async {
   await Get.putAsync<AuthService>(() => AuthService().init(), permanent: true);
   // Durable draft store for in-progress scans/fills — opened async before any
   // fill/scan screen can read/write a draft.
-  // Drafts are kept per company (workspace mode): see DraftService.
+  // Drafts are kept per company (workspace mode) and per signed-in account, so
+  // one worker never sees — or submits — another's half-filled document on a
+  // shared phone: see DraftService.
   await Get.putAsync<DraftService>(
-    () => DraftService(namespace: () => Get.find<AuthService>().tenantId.value ?? '').init(),
+    () => DraftService(namespace: () {
+      final auth = Get.find<AuthService>();
+      return [auth.tenantId.value, auth.account.value].where((p) => p != null && p.isNotEmpty).join('/');
+    }).init(),
     permanent: true,
   );
   Get.put(ApiProvider(), permanent: true);

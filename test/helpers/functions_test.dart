@@ -77,4 +77,24 @@ void main() {
       expect(linesToSubmit(items, 'scanned').map((e) => e['line_id']), [7]);
     });
   });
+
+  group('submitLines', () {
+    test('sends only the line id and its entries, so a retry hashes the same', () {
+      final entries = [{'qty': 2, 'expired_date': null}];
+      final before = [{'line_id': 1, 'item_id': 9, 'received': 0, 'expected': 10, 'filled': entries}];
+      // Reopened after the lost answer: the line now counts what was booked.
+      final after = [{'line_id': 1, 'item_id': 9, 'received': 2, 'expected': 10, 'filled': entries}];
+
+      expect(submitLines(before, 'filled'), [{'line_id': 1, 'filled': entries}]);
+      expect(submitLines(after, 'filled'), submitLines(before, 'filled'));
+    });
+
+    test('drops lines with nothing to submit', () {
+      final items = [
+        {'line_id': 7, 'scanned': [{'serial_number': 'SKU-1', 'qty': 1}]},
+        {'line_id': 8, 'scanned': []},
+      ];
+      expect(submitLines(items, 'scanned').map((e) => e['line_id']), [7]);
+    });
+  });
 }

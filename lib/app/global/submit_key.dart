@@ -14,10 +14,16 @@ import '../services/draft_service.dart';
 /// The key lives until a submit succeeds (or the server says it is spent), so
 /// the next submit of the same scope gets a fresh one.
 class SubmitKey {
-  SubmitKey(this._drafts, String draftScope) : _scope = '$draftScope:submit_key';
+  SubmitKey(this._drafts, this._draftScope, {this.onAlreadySaved}) : _scope = '$_draftScope:submit_key';
 
   final DraftService _drafts;
+  final String _draftScope;
   final String _scope;
+
+  /// Runs after the server answered `submit_already_saved` (the draft was
+  /// already booked by an earlier try whose answer got lost): the screen
+  /// reloads its lines, which now show that booking.
+  final void Function()? onAlreadySaved;
 
   /// The pending key, created and stored on first use.
   Future<String> current() async {
@@ -41,6 +47,10 @@ class SubmitKey {
       return result;
     } on SubmitAlreadySavedException {
       await clear();
+      // The draft itself is spent too: kept, the next tap would send it with a
+      // fresh key and book the document a second time.
+      await _drafts.remove(_draftScope);
+      onAlreadySaved?.call();
       rethrow;
     }
   }

@@ -104,20 +104,45 @@ void main() {
 
   e2eTest('status chip filters the list', skip: !hasCredentials, ($) async {
     await _openDeliveries($);
-    final chip = _statusChips().at(1);
-    final status = $.tester.widget<Text>(find.descendant(of: chip, matching: find.byType(Text))).data!;
+    // Try each status chip (index 0 is "All") until one has deliveries: an
+    // empty status alone proves nothing about the filter.
+    var checked = 0;
+    // Chips are tracked by label, never by index: scrolling the row towards a
+    // later chip unbuilds the first ones, so `at(i)` then names another chip
+    // than the one whose label was read — the test tapped one and checked the
+    // other. Each round takes the first built chip not tried yet.
+    final tried = <String>{'All'};
+    String? labelOf(Finder chip) => $.tester.widget<Text>(find.descendant(of: chip, matching: find.byType(Text))).data;
+    while (true) {
+      final chips = _statusChips();
+      String? status;
+      for (var i = 0; i < chips.evaluate().length; i++) {
+        final label = labelOf(chips.at(i));
+        if (label != null && !tried.contains(label)) {
+          status = label;
+          break;
+        }
+      }
+      if (status == null) break;
+      tried.add(status);
 
-    await $.tester.tap(chip);
-    await waitForList($);
+      final chip = find.ancestor(of: find.text(status), matching: chips).first;
+      await $.tester.ensureVisible(chip);
+      await $.pumpAndTrySettle();
+      await $.tester.tap(find.ancestor(of: find.text(status), matching: _statusChips()).first);
+      await waitForList($);
+      if ($('No deliveries found.').exists) continue;
 
-    if ($('No deliveries found.').exists) return;
-    for (final card in listCards().evaluate()) {
-      expect(
-        find.descendant(of: find.byElementPredicate((e) => e == card), matching: find.text(status)),
-        findsOneWidget,
-        reason: 'card shown under the "$status" filter has another status',
-      );
+      for (final card in listCards().evaluate()) {
+        expect(
+          find.descendant(of: find.byElementPredicate((e) => e == card), matching: find.text(status)),
+          findsOneWidget,
+          reason: 'card shown under the "$status" filter has another status',
+        );
+      }
+      checked++;
     }
+    expect(checked, greaterThan(0), reason: 'no status chip has deliveries — the filter was never checked');
   });
 
   e2eTest('search finds a delivery by code', skip: !hasCredentials, ($) async {

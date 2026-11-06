@@ -121,7 +121,7 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (isLoading.value) return; // a reload owns the list
+    if (isLoading.value || !mayLoadMore) return; // a reload owns the list; or a page just failed
     final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
@@ -133,7 +133,8 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
     );
     // If network failed or exception handled, data is null
     // A reload started meanwhile: this page belongs to the old query.
-    if (res == null || !isCurrentPage(generation)) return;
+    if (res == null) return noteLoadMoreFailed();
+    if (!isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => ReceiveOrderModel.fromJson(e)).toList();
@@ -205,10 +206,7 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
   }
 
   void openDetail(ReceiveOrderModel order) {
-    if (Get.isRegistered<ReceiveOrderListDetailController>()) {
-      Get.delete<ReceiveOrderListDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.receiveOrderListDetailPage, arguments: order);
+    openFresh<ReceiveOrderListDetailController>(AppPages.receiveOrderListDetailPage, arguments: order);
   }
 
   /// From the pending queue: straight into Confirm Serials (it pops back here

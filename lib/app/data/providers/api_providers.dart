@@ -103,8 +103,8 @@ class ApiProvider extends GetConnect {
     Progress? uploadProgress,
   }) {
     _syncBaseUrl();
-    return super.post<T>(url, body,
-        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
+    return _bounded(super.post<T>(url, body,
+        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress));
   }
 
   @override
@@ -118,8 +118,8 @@ class ApiProvider extends GetConnect {
     Progress? uploadProgress,
   }) {
     _syncBaseUrl();
-    return super.put<T>(url, body,
-        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
+    return _bounded(super.put<T>(url, body,
+        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress));
   }
 
   @override
@@ -133,8 +133,8 @@ class ApiProvider extends GetConnect {
     Progress? uploadProgress,
   }) {
     _syncBaseUrl();
-    return super.patch<T>(url, body,
-        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
+    return _bounded(super.patch<T>(url, body,
+        contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress));
   }
 
   @override
@@ -146,7 +146,7 @@ class ApiProvider extends GetConnect {
     Decoder<T>? decoder,
   }) {
     _syncBaseUrl();
-    return super.delete<T>(url, headers: headers, contentType: contentType, query: query, decoder: decoder);
+    return _bounded(super.delete<T>(url, headers: headers, contentType: contentType, query: query, decoder: decoder));
   }
 
   @override
@@ -161,8 +161,8 @@ class ApiProvider extends GetConnect {
     Progress? uploadProgress,
   }) {
     _syncBaseUrl();
-    return super.request<T>(url, method,
-        body: body, contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress);
+    return _bounded(super.request<T>(url, method,
+        body: body, contentType: contentType, headers: _stampSession(body, headers), query: query, decoder: decoder, uploadProgress: uploadProgress));
   }
 
   /// GETs are resent once when they died on a stale keep-alive socket: the
@@ -179,7 +179,7 @@ class ApiProvider extends GetConnect {
   }) async {
     Future<Response<T>> send() {
       _syncBaseUrl();
-      return super.get<T>(url, headers: headers, contentType: contentType, query: query, decoder: decoder);
+      return _bounded(super.get<T>(url, headers: headers, contentType: contentType, query: query, decoder: decoder));
     }
     final response = await send();
     if (response.statusCode == null && isStaleConnection(response.statusText)) {
@@ -187,6 +187,22 @@ class ApiProvider extends GetConnect {
     }
     return response;
   }
+
+  /// GetConnect's timeout stops at the response headers: a link that stalls
+  /// while the body comes in (or during a slow upload) would hang the call —
+  /// and its loading flag — for good. The whole request gets
+  /// [wholeRequestTimeout]; past it, it answers like any transport failure
+  /// (no status), which [checkResponse] reports.
+  Future<Response<T>> _bounded<T>(Future<Response<T>> call) => call.timeout(
+        wholeRequestTimeout,
+        onTimeout: () => Response<T>(
+          statusCode: null,
+          statusText: 'No complete answer from the server within ${wholeRequestTimeout.inSeconds} s',
+        ),
+      );
+
+  /// Three times the per-step timeout: room for a slow photo upload.
+  Duration get wholeRequestTimeout => httpClient.timeout * 3;
 
   /// True for transport errors caused by reusing a connection the other end
   /// already closed (safe to retry on a fresh one) — not timeouts or DNS.
@@ -375,7 +391,7 @@ class ApiProvider extends GetConnect {
   /// decoded as usual so [checkResponse] reports the server's message.
   Future<Uint8List> getBytes(String path) async {
     _syncBaseUrl();
-    Future<Response<Object?>> send() => httpClient.get<Object?>(path,
+    Future<Response<Object?>> send() => _bounded(httpClient.get<Object?>(path,
         responseInterceptor: (request, type, raw) async {
       if (raw.statusCode < 200 || raw.statusCode >= 300) return null;
       final bytes = BytesBuilder(copy: false);
@@ -383,7 +399,7 @@ class ApiProvider extends GetConnect {
         bytes.add(chunk);
       }
       return Response<Object?>(statusCode: raw.statusCode, body: bytes.takeBytes());
-    });
+    }));
     var response = await send();
     if (response.statusCode == null && isStaleConnection(response.statusText)) {
       response = await send();

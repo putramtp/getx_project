@@ -45,6 +45,12 @@ void main() {
     await $(#masterLimitField).enterText('0');
     await $('Apply').tap(settlePolicy: SettlePolicy.noSettle);
     // The SnackBar sits under the dialog barrier: it exists but isn't hit-testable.
-    await $('Please enter a valid number').waitUntilExists();
+    await $('Enter a number from 1 to 200').waitUntilExists();
+
+    // Above the backend's 200 is refused too (it would answer 422 on every load).
+    await $(#masterLimitField).enterText('500');
+    await $('Apply').tap(settlePolicy: SettlePolicy.noSettle);
+    await $('Enter a number from 1 to 200').waitUntilExists();
+    expect($('Set Limit'), findsOneWidget, reason: 'an out-of-range limit closed the dialog');
   });
 }

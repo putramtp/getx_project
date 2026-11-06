@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -47,6 +48,13 @@ class OutflowOrderByCustomerController extends GetxController {
     loadCustomers();
   }
 
+  @override
+  void onClose() {
+    searchController.dispose();
+    searchFocus.dispose();
+    super.onClose();
+  }
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
     filteredCustomers.sort((a, b) => isAscending.value
@@ -93,10 +101,7 @@ class OutflowOrderByCustomerController extends GetxController {
   }
 
   void openDetail(OrCustomerModel customer) {
-    if (Get.isRegistered<OutflowOrderByCustomerDetailController>()) {
-      Get.delete<OutflowOrderByCustomerDetailController>(force: true);
-    }
-    Get.toNamed(detailRoute, arguments: customer);
+    openFresh<OutflowOrderByCustomerDetailController>(detailRoute, arguments: customer);
   }
 
 }

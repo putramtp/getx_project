@@ -88,6 +88,10 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
                 if (controller.isLoading.value) {
                   return skeletonLineList(size, accent: navyDark);
                 }
+                // A failed reload keeps what is already on screen; Retry only replaces nothing.
+                if (controller.hasError.value && controller.receiveOrderDetail.value == null) {
+                  return errorRetry(size, onRetry: controller.loadReceiveOrderDetail, accent: navyDark);
+                }
                 if (controller.receiveOrderDetail.value == null) {
                   return textNoData(size, message: "No items found.");
                 }

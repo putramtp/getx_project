@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/data/models/stock_transaction_model.dart';
+import '../../../global/functions.dart';
 import '../../../global/accent.dart';
 import '../../../global/widget/app_header.dart';
 import '../../../global/widget/stock_direction_icon.dart';
@@ -48,11 +49,13 @@ class StockTransactionView extends GetView<StockTransactionController> {
                     }
       
                     final trans = controller.trans;
+                    // Read here, not in itemBuilder, so the footer follows the cursor.
+                    final cursor = controller.cursorNext.value;
                     if (controller.hasError.value && trans.isEmpty) {
-                      return errorRetry(size, onRetry: controller.loadstockTransactions, accent: navyDark);
+                      return _pullable(errorRetry(size, onRetry: controller.loadstockTransactions, accent: navyDark));
                     }
                     if (trans.isEmpty) {
-                      return textNoData(size,message: "No stock transaction data.");
+                      return _pullable(textNoData(size, message: "No stock transaction data."));
                     }
       
                     return NotificationListener(
@@ -64,13 +67,14 @@ class StockTransactionView extends GetView<StockTransactionController> {
                         return false;
                       },
                       child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(), // pull-to-refresh on a short list
                         itemCount: trans.length + 1,
                         itemBuilder: (context, index) {
                           if (index < trans.length) {
                             return _buildOrderCard(trans[index], size);
                           }
                           
-                          if (controller.cursorNext.value != null  &&  controller.limit.value >= 8 ) {
+                          if (cursor != null && controller.limit.value >= 8) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 18),
                               child: Center(
@@ -83,7 +87,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                             );
                           }
                           
-                          if (controller.cursorNext.value == null && trans.isNotEmpty) {
+                          if (cursor == null) {
                             return NoMoreDataFooter(size: size);
                           }
                           
@@ -127,6 +131,15 @@ class StockTransactionView extends GetView<StockTransactionController> {
     );
   }
 
+  /// The empty / error state inside a scrollable, so pull-to-refresh still
+  /// works when there is no list to pull.
+  Widget _pullable(Widget child) => LayoutBuilder(
+        builder: (context, box) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [SizedBox(height: box.maxHeight, child: child)],
+        ),
+      );
+
   Widget _buildOrderCard(StockTransactionModel st, double size) {
     final isIn = st.flowType == "IN";
     final color = isIn ? stockInColor : stockOutColor;
@@ -158,7 +171,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          st.order!.code,
+                          st.order?.code ?? '-', // no order once it was deleted
                           style: AppTextStyle.custom(size,
                               scale: 1.1,
                               weight: FontWeight.w400,
@@ -173,7 +186,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        "${isIn ? '+' : '-'}${st.qty % 1 == 0 ? st.qty.toInt() : st.qty}",
+                        "${isIn ? '+' : '-'}${formatQty(st.qty)}",
                         style: AppTextStyle.plain(
                             weight: FontWeight.bold, color: color),
                       ),

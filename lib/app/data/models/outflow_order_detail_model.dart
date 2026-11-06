@@ -12,7 +12,6 @@ class OutflowOrderDetailModel {
   final int? createdBy;
   final String? creatorName;
   final DateTime? date;
-  final String? billNumber;
 
   /// Whether this outflow order can be delivered (`is_deliverable` from the
   /// backend — true only for `DO` type orders). Gates the delivery CTA.
@@ -34,7 +33,6 @@ class OutflowOrderDetailModel {
     this.createdBy,
     this.creatorName,
     this.date,
-    this.billNumber,
     this.isDeliverable = false,
     this.isHaveDelivery = false,
     required this.outflowOrderLines,
@@ -52,7 +50,6 @@ class OutflowOrderDetailModel {
       createdBy: json['created_by'],
       creatorName: json['creator_name'],
       date: DateTime.tryParse(json['date']),
-      billNumber: json['bill_number'],
       isDeliverable: json['is_deliverable'] == true,
       isHaveDelivery: json['is_have_delivery'] == true,
       outflowOrderLines: (json['outflow_order_lines'] as List<dynamic>? ?? [])
@@ -73,7 +70,6 @@ class OutflowOrderDetailModel {
       'created_by': createdBy,
       'creator_name': creatorName,
       'date': date?.toIso8601String(),
-      'bill_number': billNumber,
       'is_deliverable': isDeliverable,
       'is_have_delivery': isHaveDelivery,
       'outflow_order_lines':
@@ -89,8 +85,6 @@ class OutflowOrderLine {
   final String itemName;
   final String orLineId;
   final num qty;
-  final double pricePerUnit;
-  final double priceTotal;
   final List<SerialNumberModel> serialNumbers;
 
   OutflowOrderLine({
@@ -100,8 +94,6 @@ class OutflowOrderLine {
     required this.itemName,
     required this.orLineId,
     required this.qty,
-    required this.pricePerUnit,
-    required this.priceTotal,
     required this.serialNumbers,
   });
 
@@ -112,11 +104,9 @@ class OutflowOrderLine {
       itemId: json['item_id'],
       itemName: json['item_name'] ?? '-',
       orLineId: json['or_line_id']?.toString() ?? '',
-      // qty / prices arrive as decimal strings (backend AsDecimalSix cast),
-      // so parse leniently from string-or-number instead of casting directly.
+      // qty arrives as a decimal string (backend AsDecimalSix cast). The
+      // resource sends no prices or bill number for outflow orders.
       qty: safeToNum(json['qty']),
-      pricePerUnit: double.tryParse(json['price_per_unit']?.toString() ?? '') ?? 0,
-      priceTotal: double.tryParse(json['price_total']?.toString() ?? '') ?? 0,
       serialNumbers: (json['serial_numbers'] as List<dynamic>? ?? [])
           .map((e) => SerialNumberModel.fromJson(e))
           .toList(),
@@ -131,8 +121,6 @@ class OutflowOrderLine {
       'item_name': itemName,
       'or_line_id': orLineId,
       'qty': qty,
-      'price_per_unit': pricePerUnit,
-      'price_total': priceTotal,
       'serial_numbers': serialNumbers.map((s) => s.toJson()).toList(),
     };
   }

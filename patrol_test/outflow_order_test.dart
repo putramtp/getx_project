@@ -191,8 +191,9 @@ void main() {
     await expectScreen($, 'Item Summary');
     await waitForList($);
     expect($(RegExp('^By Work Order')), findsOneWidget);
-    if (!await scrollUntilExists($, $('Scan'))) fail('${workOrder.code} has no serial-tracked line to scan');
-    await $('Scan').first.tap();
+    final scan = actionOnLine(workOrder.itemName, 'Scan');
+    if (!await scrollUntilExists($, $(scan))) fail('${workOrder.code} has no ${workOrder.itemName} line to scan');
+    await $(scan).first.tap();
     await expectScreen($, 'Scan Item');
 
     // Same UNIQUE scan as By Request: the label goes in through the scanner's

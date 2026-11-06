@@ -45,7 +45,7 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
                     lines: lines.length,
                     totalQty: roundQty(lines.fold<num>(0, (sum, l) => sum + l.qty)),
                     date: detail?.date,
-                    footer: headerFooterText([detail?.customerName, detail?.billNumber]),
+                    footer: headerFooterText([detail?.customerName]),
                     footerIcon: Icons.groups_rounded,
                   ),
                 );
@@ -54,6 +54,10 @@ class OutflowOrderDetailView extends GetView<OutflowOrderListDetailController> {
               Expanded(child: Obx(() {
                 if (controller.isLoading.value) {
                   return skeletonLineList(size, accent: mutedPurple);
+                }
+                // A failed reload keeps what is already on screen; Retry only replaces nothing.
+                if (controller.hasError.value && controller.outflowOrderDetail.value == null) {
+                  return errorRetry(size, onRetry: controller.loadOutflowOrderDetail, accent: mutedPurple);
                 }
                 if (controller.outflowOrderDetail.value == null) {
                   return textNoData(size, message: "No items found.");

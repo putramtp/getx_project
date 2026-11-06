@@ -11,6 +11,8 @@ class ReceiveOrderListDetailController extends GetxController {
 
   final receiveOrderDetail = Rxn<ReceiveOrderDetailModel>();
   var isLoading = false.obs;
+  /// The last load failed: the view offers Retry instead of reading it as empty.
+  final hasError = false.obs;
   late final ReceiveOrderModel currentReceiveOrder;
 
   /// Whether this RO has labels of `manage_sn` items — the only ones the
@@ -37,6 +39,7 @@ class ReceiveOrderListDetailController extends GetxController {
     final orderId = currentReceiveOrder.id;
     final data = await ApiExecutor.run<ReceiveOrderDetailModel>(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getReceiveOrderDetail(orderId),
     );
     // If network failed or exception handled, data is null

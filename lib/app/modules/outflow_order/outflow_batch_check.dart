@@ -15,6 +15,13 @@ import '../../helpers/api_excecutor.dart';
 /// [checkRename]) so they can be unit tested; the `Future` wrappers fetch the
 /// stock and show the refusal.
 
+/// Whether two scan codes name the same label. The backend matches codes
+/// without regard to case (utf8mb4_unicode_ci), so `SKU-001` scanned and
+/// `sku-001` typed are one label: compared exactly, the app let both through
+/// and the backend then refused the whole submit as scanned twice.
+bool sameCode(Object? a, Object? b) =>
+    a != null && b != null && a.toString().trim().toLowerCase() == b.toString().trim().toLowerCase();
+
 /// A refusal the scan screen shows as a snackbar.
 class BatchRefusal {
   final String title;
@@ -42,7 +49,7 @@ class BatchLeft {
 num scannedFromBatch(Iterable<Map> lines, Object? itemId, String code) => sumQty([
       for (final line in lines)
         if (line['item_id'] == itemId)
-          ...List<Map>.from(line['scanned'] ?? const []).where((e) => e['serial_number'] == code),
+          ...List<Map>.from(line['scanned'] ?? const []).where((e) => sameCode(e['serial_number'], code)),
     ]);
 
 /// What is left of batch [code] for [line] given the label stock [stock]
@@ -50,7 +57,7 @@ num scannedFromBatch(Iterable<Map> lines, Object? itemId, String code) => sumQty
 /// [lines] already scanned from it.
 BatchLeft checkBatchLeft(Map<String, num> stock, Map line, String code, {Iterable<Map> lines = const []}) {
   final itemName = line['name']?.toString() ?? 'this item';
-  final inStock = stock[code];
+  final inStock = stock.entries.where((e) => sameCode(e.key, code)).firstOrNull?.value;
   if (inStock == null || inStock <= 0) {
     return BatchLeft.refused(BatchRefusal('Unknown Batch', '"$code" is not in stock for $itemName.'));
   }
@@ -80,10 +87,10 @@ BatchRefusal? checkBatchQty(String code, num qty, num left) => roundQty(qty) <= 
 /// the screen, so a code scanned on another line of the same item counts too.
 BatchRefusal? checkRename(Map line, String oldCode, String newCode, {Iterable<Map> lines = const []}) {
   final scanned = List<Map>.from(line['scanned'] ?? const []);
-  if (newCode.isEmpty || newCode == oldCode || !scanned.any((e) => e['serial_number'] == oldCode)) {
+  if (newCode.isEmpty || sameCode(newCode, oldCode) || !scanned.any((e) => e['serial_number'] == oldCode)) {
     return renameIgnored;
   }
-  if (scanned.any((e) => e['serial_number'] == newCode) || scannedOnOtherLine(lines, line, newCode)) {
+  if (scanned.any((e) => sameCode(e['serial_number'], newCode)) || scannedOnOtherLine(lines, line, newCode)) {
     return BatchRefusal('Duplicate Code', '"$newCode" is already scanned for this item.', isWarning: true);
   }
   return null;
@@ -98,7 +105,7 @@ bool scannedOnOtherLine(Iterable<Map> lines, Map line, String code) {
   return lines.any((other) =>
       !identical(other, line) &&
       other['item_id'] == line['item_id'] &&
-      List<Map>.from(other['scanned'] ?? const []).any((e) => e['serial_number'] == code));
+      List<Map>.from(other['scanned'] ?? const []).any((e) => sameCode(e['serial_number'], code)));
 }
 
 /// [checkRename]'s answer when there is nothing to rename (no message).
@@ -115,6 +122,7 @@ Future<num?> batchLeftToScan(
   String code, {
   required RxBool isLoading,
   Iterable<Map> lines = const [],
+  Map<int, Map<String, num>>? stockCache,
 }) async {
   final itemId = line['item_id'];
   if (itemId is! int) {
@@ -122,11 +130,16 @@ Future<num?> batchLeftToScan(
     return null;
   }
 
-  final stock = await ApiExecutor.run<Map<String, num>>(
-    isLoading: isLoading,
-    task: () => provider.getSerialStock(itemId),
-  );
+  // [stockCache]: the item's label stock as read on this screen. Every scan
+  // re-read the whole of it before; what this screen draws is subtracted
+  // locally anyway ([scannedFromBatch]), and the backend re-checks at submit.
+  final stock = stockCache?[itemId] ??
+      await ApiExecutor.run<Map<String, num>>(
+        isLoading: isLoading,
+        task: () => provider.getSerialStock(itemId),
+      );
   if (stock == null) return null;
+  stockCache?[itemId] = stock;
 
   final result = checkBatchLeft(stock, line, code, lines: lines);
   result.refusal?.show();
@@ -153,6 +166,7 @@ Future<bool> canRenameScan(
   String newCode, {
   required RxBool isLoading,
   Iterable<Map> lines = const [],
+  Map<int, Map<String, num>>? stockCache,
 }) async {
   final refusal = checkRename(line, oldCode, newCode, lines: lines);
   if (refusal != null) {
@@ -167,7 +181,7 @@ Future<bool> canRenameScan(
   }
 
   final row = List<Map>.from(line['scanned'] ?? const []).firstWhere((e) => e['serial_number'] == oldCode);
-  final left = await batchLeftToScan(provider, line, newCode, isLoading: isLoading, lines: lines);
+  final left = await batchLeftToScan(provider, line, newCode, isLoading: isLoading, lines: lines, stockCache: stockCache);
   if (left == null) return false;
   return batchQtyFits(newCode, safeToNum(row['qty']), left);
 }

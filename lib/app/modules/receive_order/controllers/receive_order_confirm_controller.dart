@@ -36,6 +36,8 @@ class ReceiveOrderConfirmController extends GetxController {
   final groups = <Map<String, dynamic>>[].obs;
   final selectedIndex = 0.obs;
   final isLoading = false.obs;
+  /// The last load failed: the view offers Retry instead of reading it as empty.
+  final hasError = false.obs;
   final isConfirming = false.obs;
 
   @override
@@ -55,6 +57,7 @@ class ReceiveOrderConfirmController extends GetxController {
   Future<void> loadSerials() async {
     final data = await ApiExecutor.run<List<ReceiveConfirmSerialModel>>(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getReceiveOrderSerials(roId),
     );
     if (data == null) return;
@@ -154,7 +157,8 @@ class ReceiveOrderConfirmController extends GetxController {
     ReceiveConfirmSerialModel? match;
     for (final group in groups) {
       match = serialsOf(group).firstWhereOrNull(
-        (s) => s.internalCode == code || s.serialNumber == code,
+        // The backend matches codes without case: a label typed in lower case is the same label.
+        (s) => s.internalCode.toLowerCase() == code.toLowerCase() || s.serialNumber.toLowerCase() == code.toLowerCase(),
       );
       if (match != null) break;
     }
@@ -170,14 +174,16 @@ class ReceiveOrderConfirmController extends GetxController {
       isLoading: isConfirming,
       task: () => provider.confirmReceiveSerial(roId, [code]),
     );
-    if (res == null) return ScanFeedback.error("Save failed — check connection.");
+    // The reason (offline, refused, server error) is in ApiExecutor's message.
+    if (res == null) return ScanFeedback.error("Not saved — see the message above, then scan it again.");
 
     final confirmed = List<String>.from(res['data']?['confirmed'] ?? const []);
     final already = List<String>.from(res['data']?['already_scanned'] ?? const []);
 
-    if (confirmed.contains(code) || already.contains(code)) {
+    final sent = match.internalCode.isNotEmpty ? match.internalCode : match.serialNumber;
+    if ([...confirmed, ...already].any((c) => c.toLowerCase() == code.toLowerCase() || c == sent)) {
       match.isScanned = true;
-      await _cacheCode(code); // local safety copy
+      await _cacheCode(sent); // local safety copy — the label's own code, so a restore matches it
       groups.refresh();
       return ScanFeedback.ok("Confirmed $totalConfirmed/$totalSerials");
     }
@@ -228,7 +234,7 @@ class ReceiveOrderConfirmController extends GetxController {
       _reloadDetail();
       return;
     }
-    returnToListAfterSubmit(backRoute, refresh: () {
+    returnToListAfterSubmit(backRoute, menuRoute: AppPages.receiveHomePage, refresh: () {
       if (backRoute == AppPages.receiveOrderBySupplierPage) {
         Get.find<ReceiveOrderBySupplierController>().loadSuppliers();
       } else {

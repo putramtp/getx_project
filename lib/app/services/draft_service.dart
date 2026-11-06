@@ -7,6 +7,9 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' show databaseFactoryFfi, sqfliteFfiInit;
 
+import '../global/alert.dart';
+import '../global/functions.dart';
+
 /// A GetxService providing durable, on-device storage for in-progress work
 /// ("drafts") so a worker never loses a batch of scans/fills to an app kill,
 /// crash, or an offline/failed submit.
@@ -19,11 +22,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart' show databaseFactoryFfi, sq
 /// Registered permanently and opened asynchronously in main() via
 /// `Get.putAsync`, mirroring [AuthService].
 ///
-/// **Per company:** document ids only mean something inside one company
-/// (PO 42 of company A is not PO 42 of company B), so in workspace mode every
-/// scope is stored under the signed-in company's id ([namespace]):
-/// `<tenantId>/receive_po_42`. Direct mode has no company id and keeps the
-/// plain scope, so drafts saved before workspace mode stay readable there.
+/// **Per company and per user:** document ids only mean something inside one
+/// company (PO 42 of company A is not PO 42 of company B), and one worker's
+/// half-filled document must not reach the next worker on a shared phone. So
+/// every scope is stored under [namespace] — `<tenantId>/<account>/receive_po_42`
+/// in workspace mode, `<account>/…` in direct mode (account = the email or
+/// username typed to sign in, `AuthService.account`). A session signed in
+/// before accounts were stored has none and keeps the older key.
 class DraftService extends GetxService {
   DraftService({this.namespace});
 
@@ -129,6 +134,24 @@ Future<Map<String, List<Map<String, dynamic>>>> readLineDraft(
     }
   });
   return result;
+}
+
+/// A line's restored draft [cached] when its total still fits [open] (what is
+/// left to receive / outflow on the line now); null when it doesn't — someone
+/// else booked part of the line meanwhile, or its qty shrank — so the stale
+/// draft is cleared instead of failing the whole submit later.
+List<Map<String, dynamic>>? draftThatFits(List<Map<String, dynamic>>? cached, num open) {
+  if (cached == null) return null;
+  return roundQty(sumQty(cached)) <= roundQty(open) ? cached : null;
+}
+
+/// Tells the worker which lines lost their saved entries ([draftThatFits]).
+void showClearedDrafts(List<String> names) {
+  if (names.isEmpty) return;
+  warningAlertBottom(
+    'Saved entries for ${names.join(', ')} no longer fit what is left on the line and were cleared.',
+    title: 'Draft Cleared',
+  );
 }
 
 /// Build the line-keyed draft map from a controller's `items` list, collecting

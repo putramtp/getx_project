@@ -61,7 +61,7 @@ class ReceiveOrderFillBySupplierView
                 );
               },
               child: Column(
-                key: ValueKey(item['id']),
+                key: ValueKey(item['line_id']), // the line maps carry line_id, not id
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   orderFillItemHeader(

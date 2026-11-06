@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
@@ -98,7 +99,8 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                       contentPadding:
                           const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
-                    items: const [20, 50, 100,200,1000]
+                    // The list endpoints accept a limit of 1–200 (CursorRequest).
+                    items: const [20, 50, 100, 200]
                         .map(
                           (e) => DropdownMenuItem(
                             value: e,
@@ -190,6 +192,13 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                           "Apply",
                           icon: Icons.check,
                           onPressed: () {
+                            final start = controller.startDate.value;
+                            final end = controller.endDate.value;
+                            // The backend refuses it (end_date after_or_equal start_date).
+                            if (showDateRange && start != null && end != null && end.isBefore(start)) {
+                              warningAlertBottom('The end date is before the start date.', title: 'Date Filter');
+                              return;
+                            }
                             controller.applyFilter();
                             closeRoute();
                           },

@@ -188,6 +188,7 @@ Widget orderItemSummaryTile({
 }) {
   final blocked = blockedReason != null;
   return Container(
+    key: const Key('orderItemSummaryTile'),
     padding: EdgeInsets.all(size * 1.4),
     decoration: BoxDecoration(
       color: Colors.white,

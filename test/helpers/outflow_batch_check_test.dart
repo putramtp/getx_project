@@ -122,4 +122,28 @@ void main() {
     expect(needsBatchCheck({'manage_sn': true, 'serialNumberType': 'UNIQUE'}), isFalse);
     expect(needsBatchCheck({'manage_sn': false, 'serialNumberType': 'BATCH'}), isFalse);
   });
+
+  group('codes compare without case, like the backend', () {
+    test('a typed lower-case code is the scanned label', () {
+      expect(sameCode('SKU-001', ' sku-001 '), isTrue);
+      expect(sameCode('SKU-001', 'SKU-002'), isFalse);
+      expect(sameCode(null, 'SKU-001'), isFalse);
+    });
+
+    test('a rename that only changes case is a duplicate of the other row', () {
+      final line = {
+        'scanned': [
+          {'serial_number': 'B1', 'qty': 1},
+          {'serial_number': 'B2', 'qty': 1},
+        ],
+      };
+      expect(checkRename(line, 'B1', 'b2')!.title, 'Duplicate Code');
+      expect(checkRename(line, 'B1', 'b1'), same(renameIgnored));
+    });
+
+    test('a batch typed in lower case is found in stock', () {
+      final line = {'item_id': 5, 'name': 'Paste', 'scanned': []};
+      expect(checkBatchLeft({'BATCH-A': 6}, line, 'batch-a').left, 6);
+    });
+  });
 }

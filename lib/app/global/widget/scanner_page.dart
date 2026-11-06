@@ -83,12 +83,14 @@ class _ScannerPageState extends State<ScannerPage> {
       }
     }
     if (code == null) return;
+    // Closing (X, Back, a code already handed back) or covered by a dialog
+    // (manual entry): a frame read now would pop the page underneath, or add a
+    // unit behind the dialog the worker never sees.
+    if (_popped || ModalRoute.of(context)?.isCurrent != true) return;
 
     // Single-shot: hand the first code back to the caller and close.
     if (!widget.continuous) {
-      if (_popped) return;
-      _popped = true;
-      closeRoute(code);
+      _close(code);
       return;
     }
 
@@ -98,6 +100,13 @@ class _ScannerPageState extends State<ScannerPage> {
     final now = DateTime.now();
     if (code == _lastCode && now.difference(_lastAt) < _dupCooldown) return;
     _process(code);
+  }
+
+  /// Pops the scanner once, whatever closes it first.
+  void _close([String? code]) {
+    if (_popped) return;
+    _popped = true;
+    closeRoute(code);
   }
 
   Future<void> _process(String code) async {
@@ -126,7 +135,12 @@ class _ScannerPageState extends State<ScannerPage> {
     SizeConfig.init(context);
     final double size = SizeConfig.defaultSize;
 
-    return Scaffold(
+    // System Back closes it too: mark it, so a late frame can't pop again.
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) _popped = true;
+      },
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         fit: StackFit.expand,
@@ -149,6 +163,7 @@ class _ScannerPageState extends State<ScannerPage> {
             SafeArea(child: Align(alignment: Alignment.bottomCenter, child: _hint(size))),
         ],
       ),
+      ),
     );
   }
 
@@ -157,7 +172,7 @@ class _ScannerPageState extends State<ScannerPage> {
       padding: EdgeInsets.all(size * 1.2),
       child: Row(
         children: [
-          _circleButton(size, Icons.close_rounded, () => closeRoute()),
+          _circleButton(size, Icons.close_rounded, () => _close()),
           SizedBox(width: size),
           Expanded(
             child: Text(
@@ -242,7 +257,7 @@ class _ScannerPageState extends State<ScannerPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => closeRoute(),
+              onPressed: () => _close(),
               icon: const Icon(Icons.done_rounded),
               label: Text("Done", style: AppTextStyle.bodyBold(size, color: Colors.white)),
               style: ElevatedButton.styleFrom(

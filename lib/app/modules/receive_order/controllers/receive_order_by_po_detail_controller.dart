@@ -24,6 +24,8 @@ class ReceiveOrderByPoDetailController extends GetxController {
   var selectedItem = Rxn<Map<String, dynamic>>();
   var filledResults = <String>[].obs;
   var isLoading = false.obs;
+  /// The last load failed: the view offers Retry instead of reading it as empty.
+  final hasError = false.obs;
   var isLoadingReceiving = false.obs;
   late final PurchaseOrderModel currentOrder;
   final receiveNumber = ''.obs;
@@ -53,19 +55,26 @@ class ReceiveOrderByPoDetailController extends GetxController {
     final orderId = currentOrder.id;
     final data = await ApiExecutor.run(
         isLoading: isLoading,
+        hasError: hasError,
         task: () => provider.getPurchaseOrderLineItem(orderId));
     if (data == null) return;
 
     final cached = await readLineDraft(_drafts, _draftScope);
+
+    final cleared = <String>[];
     final normalizedData = data.map((item) {
       final serverFilled = (item.filled != null && item.filled!.isNotEmpty)
           ? item.filled!
           : <String>[];
       // Restore any locally cached in-progress fills for this line — unless the
       // backend now refuses it, so a stale fill can't ride along to the submit.
+      // A draft larger than what is still open is dropped (draftThatFits).
+      final draft = cached[item.lineId.toString()];
+      final fits = draftThatFits(draft, item.expected - (item.received ?? 0));
+      if (draft != null && fits == null && item.blockedReason == null) cleared.add(item.name);
       final filled = item.blockedReason != null
           ? <String>[]
-          : cached[item.lineId.toString()] ?? serverFilled;
+          : fits ?? serverFilled;
       return {
         "line_id": item.lineId,
         "name": item.name,
@@ -80,6 +89,10 @@ class ReceiveOrderByPoDetailController extends GetxController {
     }).toList();
 
     items.assignAll(normalizedData);
+    showClearedDrafts(cleared);
+    // The pending submit key stays: if the earlier submit was booked (its answer
+    // lost), the next tap gets `submit_already_saved` and drops the draft —
+    // clearing it here would let the lines that still fit be booked twice.
   }
 
   /// Persist current fills (only non-empty lines); clears the draft when empty.
@@ -319,16 +332,20 @@ class ReceiveOrderByPoDetailController extends GetxController {
   num get totalFilled => sumQty(getAllFilledUnified().values.expand((list) => list));
 
   void startReceivingItem() async {
+    final page = topRoute(); // see submitPageStillOpen
     final po = currentOrder;
     final poNumber = po.poNumber;
     final Map<String, dynamic> payload = {
       "receive_number": receiveNumber.value,
       "po_id": po.id,
-      "items": linesToSubmit(items, "filled"), // unfilled lines would be saved as qty 0
+      "items": submitLines(items, "filled"), // unfilled lines would be saved as qty 0
     };
     final data = await ApiExecutor.run(
       isLoading: isLoadingReceiving,
-      task: () => SubmitKey(_drafts, _draftScope)
+      task: () => SubmitKey(_drafts, _draftScope, onAlreadySaved: () {
+          dropAllEntries(items, 'filled');
+          loadPurchaseOrderItems();
+        })
           .send((key) => provider.postPoLineToReceivedData(payload, idempotencyKey: key)),
     );
     if (data == null) return;
@@ -336,6 +353,9 @@ class ReceiveOrderByPoDetailController extends GetxController {
     // Submitted to the server — drop the local in-progress draft. (On failure
     // the draft is intentionally kept so the worker can retry when back online.)
     await _drafts.remove(_draftScope);
+    // The entries on screen are booked now: kept, a second Continue (after a
+    // failed delivery create, or from a page left open) would book them again.
+    dropAllEntries(items, 'filled');
 
     if (Get.isDialogOpen == true) closeRoute();
     successAlertBottom("Receiving process for $poNumber started successfully.");
@@ -347,6 +367,9 @@ class ReceiveOrderByPoDetailController extends GetxController {
     final roCode = (ro?['code'] ?? '-').toString();
 
     Future.delayed(const Duration(milliseconds: 500), () async {
+      // Left the page while it was sending: the receipt is saved (snackbar
+      // above); don't navigate from whatever screen is on top now.
+      if (!submitPageStillOpen(page)) return;
       if (roId is int) {
         await Get.offAndToNamed(
           AppPages.receiveOrderConfirmPage,
@@ -354,7 +377,7 @@ class ReceiveOrderByPoDetailController extends GetxController {
         );
       } else {
         // Defensive fallback when the id is missing: back to the refreshed PO list.
-        returnToListAfterSubmit(AppPages.receiveOrderByPoPage,
+        returnToListAfterSubmit(AppPages.receiveOrderByPoPage, menuRoute: AppPages.receiveHomePage,
             refresh: () => Get.find<ReceiveOrderByPoController>().loadPurchaseOrders());
       }
     });

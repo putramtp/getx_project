@@ -58,4 +58,23 @@ void main() {
       expect(buildLineDraftMap(items, 'filled'), isEmpty);
     });
   });
+
+  group('draftThatFits', () {
+    final draft = [
+      {'qty': 2},
+      {'qty': 1.5},
+    ];
+
+    test('keeps a draft that still fits what is open', () {
+      expect(draftThatFits(draft, 3.5), draft);
+      expect(draftThatFits(draft, 10), draft);
+    });
+
+    test('drops a draft larger than what is left (someone else booked part of the line)', () {
+      expect(draftThatFits(draft, 3), isNull);
+      expect(draftThatFits(draft, 0), isNull);
+    });
+
+    test('no draft stays no draft', () => expect(draftThatFits(null, 5), isNull));
+  });
 }

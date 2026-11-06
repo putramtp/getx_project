@@ -30,6 +30,9 @@ class AuthService extends GetxService {
   static const String _tokenKey = 'auth_token';
   static const String _usernameKey = 'username_key';
   static const String _rolesKey = 'roles_key';
+  // The account typed to sign in (email in workspace mode, username in direct
+  // mode): unique per person, so drafts are kept per user (DraftService).
+  static const String _accountKey = 'account_key';
   // The signed-in company (workspace mode): its API host is where every
   // request of the session goes.
   static const String _tenantIdKey = 'tenant_id_key';
@@ -43,6 +46,7 @@ class AuthService extends GetxService {
   final RxnString token = RxnString(null);
   final RxnString username = RxnString(null);
   final RxnString roles = RxnString(null);
+  final RxnString account = RxnString(null);
   final RxnString tenantId = RxnString(null);
   final RxnString tenantName = RxnString(null);
   final RxnString tenantApiHost = RxnString(null);
@@ -72,6 +76,7 @@ class AuthService extends GetxService {
     token.value = storedToken;
     username.value = _box.read<String>(_usernameKey);
     roles.value = _box.read<String>(_rolesKey);
+    account.value = _box.read<String>(_accountKey);
     tenantId.value = _box.read<String>(_tenantIdKey);
     tenantName.value = _box.read<String>(_tenantNameKey);
     tenantApiHost.value = _box.read<String>(_tenantApiHostKey);
@@ -101,6 +106,13 @@ class AuthService extends GetxService {
     _box.write(_usernameKey, newUsername);
   }
 
+  /// Save the account the user signed in with, lower-cased (see [_accountKey]).
+  void setAccount(String? typed) {
+    final value = typed?.trim().toLowerCase();
+    account.value = value;
+    _box.write(_accountKey, value);
+  }
+
   /// Save roles to memory and storage
   void setRoles(String? newRoles) {
     roles.value = newRoles;
@@ -126,6 +138,7 @@ class AuthService extends GetxService {
     token.value = null;
     username.value = null;
     roles.value = null;
+    account.value = null;
     tenantId.value = null;
     tenantName.value = null;
     tenantApiHost.value = null;
@@ -133,6 +146,7 @@ class AuthService extends GetxService {
     await _secure.delete(key: _tokenKey);
     _box.remove(_usernameKey);
     _box.remove(_rolesKey);
+    _box.remove(_accountKey);
     _box.remove(_tenantIdKey);
     _box.remove(_tenantNameKey);
     _box.remove(_tenantApiHostKey);

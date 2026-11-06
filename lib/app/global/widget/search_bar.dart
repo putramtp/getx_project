@@ -42,7 +42,10 @@ class SearchBarWidget extends StatelessWidget {
                   child: TextField(
                     key: const Key('searchBarField'),
                     controller: searchController,
+                    // The list endpoints refuse a search over 255 characters.
+                    maxLength: 255,
                     decoration: InputDecoration(
+                      counterText: '',
                       prefixIcon: const Icon(Icons.search),
                       hintText: hintText,
                       filled: true,

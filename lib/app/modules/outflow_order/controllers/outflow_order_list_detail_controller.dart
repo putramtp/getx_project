@@ -13,6 +13,8 @@ class OutflowOrderListDetailController extends GetxController {
 
   final outflowOrderDetail = Rxn<OutflowOrderDetailModel>();
   var isLoading = false.obs;
+  /// The last load failed: the view offers Retry instead of reading it as empty.
+  final hasError = false.obs;
   var isCreatingDelivery = false.obs;
   late final OutflowOrderModel curretOutflowOrder;
 
@@ -34,8 +36,11 @@ class OutflowOrderListDetailController extends GetxController {
     final orderId = curretOutflowOrder.id;
     final data = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getOutflowOrderDetail(orderId),
     );
+    // A failed reload keeps the order already on screen (error shown by ApiExecutor).
+    if (data == null) return;
     outflowOrderDetail.value = data;
   }
 

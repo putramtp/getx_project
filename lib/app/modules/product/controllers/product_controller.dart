@@ -125,7 +125,7 @@ class ProductController extends GetxController with ListReloadGuard implements T
 
     // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (isLoading.value) return; // a reload owns the list
+    if (isLoading.value || !mayLoadMore) return; // a reload owns the list; or a page just failed
     final generation = listGeneration;
     if (!hasMore.value || cursorNext.value == null || isLoadingMore.value) return;
 
@@ -135,7 +135,8 @@ class ProductController extends GetxController with ListReloadGuard implements T
     );
     // If network failed or exception handled, data is null
     // A reload started meanwhile: this page belongs to the old query.
-    if (res == null || !isCurrentPage(generation)) return;
+    if (res == null) return noteLoadMoreFailed();
+    if (!isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newProducts = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
@@ -221,16 +222,10 @@ class ProductController extends GetxController with ListReloadGuard implements T
 
 
   void openDetail(ProductSummaryModel product) {
-    if (Get.isRegistered<ProductDetailController>()) {
-      Get.delete<ProductDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.productDetailPage, arguments: product);
+    openFresh<ProductDetailController>(AppPages.productDetailPage, arguments: product);
   }
 
   void openTransaction(ProductSummaryModel product) {
-    if (Get.isRegistered<ProductTransactionListController>()) {
-      Get.delete<ProductTransactionListController>(force: true);
-    }
-    Get.toNamed(AppPages.productTransactionListPage, arguments: product);
+    openFresh<ProductTransactionListController>(AppPages.productTransactionListPage, arguments: product);
   }
 }

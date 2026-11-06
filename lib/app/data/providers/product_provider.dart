@@ -29,11 +29,17 @@ class ProductProvider extends ApiProvider {
     return ProductDetailModel.fromJson(response.body['data'] as Map<String, dynamic>);
   }
 
-  Future<Map<String, dynamic>> getStockTransactionByProduct({required int productId, String? cursor}) {
-    return getMap(
-      '/stock-transaction/product/$productId',
-      query: cursor != null ? {'cursor': cursor} : {},
-    );
+  /// One product's movements; [params] carries `search` / `start_date` /
+  /// `end_date`, filtered by the backend over all of them.
+  Future<Map<String, dynamic>> getStockTransactionByProduct({
+    required int productId,
+    String? cursor,
+    Map<String, String>? params,
+  }) {
+    return getMap('/stock-transaction/product/$productId', query: {
+      ...?params,
+      'cursor': ?cursor,
+    });
   }
 
   Future<Map<String, dynamic>> getProductCategories({String? cursor, Map<String, String>? params}) {

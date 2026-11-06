@@ -92,6 +92,7 @@ Future<String?> showUndoReasonDialog(String backTo) {
       icon: Icons.undo_rounded,
       fieldKey: const Key('deliveryUndoReasonField'),
       confirmText: 'Undo',
+      maxLength: 500,
     ),
   );
 }
@@ -110,11 +111,13 @@ Future<String?> showReceiverNameDialog() {
   );
 }
 
-void _invalidQtyAlert({required bool wholeUnits}) => errorAlertBottom(
+void _invalidQtyAlert({required bool wholeUnits, String typed = ''}) => errorAlertBottom(
       title: "Invalid Input",
-      wholeUnits
-          ? "Serial-tracked items count whole units — enter a whole number greater than 0."
-          : "Please enter a quantity greater than 0 (up to 6 decimals).",
+      looksLikeThousands(typed)
+          ? "Type the number without a thousands separator (e.g. 1000, not ${typed.trim()})."
+          : wholeUnits
+              ? "Serial-tracked items count whole units — enter a whole number greater than 0."
+              : "Please enter a quantity greater than 0 (up to 6 decimals).",
     );
 
 class _QtyDialog extends StatefulWidget {
@@ -148,7 +151,7 @@ class _QtyDialogState extends State<_QtyDialog> {
 
   void _save() {
     final qty = parseQty(_controller.text, wholeUnits: widget.wholeUnits);
-    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits);
+    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits, typed: _controller.text);
     closeRoute(qty);
   }
 
@@ -239,7 +242,7 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
 
   void _save() {
     final qty = parseQty(_qtyController.text, wholeUnits: widget.wholeUnits);
-    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits);
+    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits, typed: _qtyController.text);
     if (widget.manageExpired == true && _expController.text.isEmpty) {
       errorAlertBottom(
         title: "Missing Expiration Date",
@@ -313,6 +316,7 @@ class _TextDialog extends StatefulWidget {
     required this.fieldKey,
     this.initialValue = '',
     this.confirmText = 'Save',
+    this.maxLength = 255,
   });
 
   final String title;
@@ -321,6 +325,9 @@ class _TextDialog extends StatefulWidget {
   final Key fieldKey;
   final String initialValue;
   final String confirmText;
+
+  /// The backend's limit for this field (the counter stops the typing there).
+  final int maxLength;
 
   @override
   State<_TextDialog> createState() => _TextDialogState();
@@ -345,6 +352,7 @@ class _TextDialogState extends State<_TextDialog> {
         key: widget.fieldKey,
         controller: _controller,
         autofocus: true,
+        maxLength: widget.maxLength,
         decoration: InputDecoration(
           labelText: widget.label,
           prefixIcon: Icon(widget.icon),

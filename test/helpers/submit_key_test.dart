@@ -49,6 +49,30 @@ void main() {
     expect(await key.current(), isNot(spent));
   });
 
+  test('an already-saved answer also drops the spent draft and asks for a reload', () async {
+    await drafts.saveJson('receive_po_9', {'10': [{'qty': 5}]});
+    var reloads = 0;
+    final key = SubmitKey(drafts, 'receive_po_9', onAlreadySaved: () => reloads++);
+
+    await expectLater(
+      key.send((_) async => throw SubmitAlreadySavedException('already saved')),
+      throwsA(isA<SubmitAlreadySavedException>()),
+    );
+    // Kept, the next tap would send it with a fresh key and book it twice.
+    expect(await drafts.readJson('receive_po_9'), isNull);
+    expect(reloads, 1);
+  });
+
+  test('a plain failure keeps the draft and does not reload', () async {
+    await drafts.saveJson('receive_po_8', {'10': [{'qty': 5}]});
+    var reloads = 0;
+    final key = SubmitKey(drafts, 'receive_po_8', onAlreadySaved: () => reloads++);
+
+    await expectLater(key.send((_) async => throw Exception('No response from server.')), throwsException);
+    expect(await drafts.readJson('receive_po_8'), {'10': [{'qty': 5}]});
+    expect(reloads, 0);
+  });
+
   test('keys are per scope and never touch the line draft', () async {
     await drafts.saveJson('receive_po_1', {'10': [{'qty': 2}]});
     final a = await SubmitKey(drafts, 'receive_po_1').current();

@@ -71,6 +71,10 @@ class ReceiveOrderConfirmView extends GetView<ReceiveOrderConfirmController> {
             if (controller.isLoading.value) {
               return skeletonLineList(size, accent: _accent);
             }
+            // A failed reload keeps what is already on screen; Retry only replaces nothing.
+            if (controller.hasError.value && controller.groups.isEmpty) {
+              return errorRetry(size, onRetry: controller.loadSerials, accent: _accent);
+            }
 
             // No manage_sn items => nothing to scan-confirm.
             if (controller.groups.isEmpty) {

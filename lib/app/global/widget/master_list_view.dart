@@ -253,10 +253,11 @@ class _LimitDialogState extends State<_LimitDialog> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: navyDark),
                       onPressed: () {
-                        final value = int.tryParse(_limit.text);
-                        if (value == null || value <= 0) {
+                        final value = int.tryParse(_limit.text.trim());
+                        // The list endpoints accept a limit of 1–200 (CursorRequest).
+                        if (value == null || value < 1 || value > 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter a valid number')),
+                            const SnackBar(content: Text('Enter a number from 1 to 200')),
                           );
                           return;
                         }

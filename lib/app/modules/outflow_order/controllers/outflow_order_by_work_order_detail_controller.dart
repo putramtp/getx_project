@@ -29,22 +29,32 @@ class OutflowOrderByWorkOrderDetailController extends OutflowOrderByCustomerDeta
 
   @override
   Future<void> startOutflowingItem() async {
+    final page = topRoute(); // see submitPageStillOpen
     final workOrder = currentOrCustomer;
     final data = await submitOutflowData(
       provider.issueByWorkOrder,
       workOrderIssuePayload(workOrder.id, items),
       isLoading: isLoadingOutflowing,
-      submitKey: SubmitKey(drafts, draftScope),
+      submitKey: SubmitKey(drafts, draftScope, onAlreadySaved: () {
+          dropAllEntries(items, 'scanned');
+          loadOrByCustomerItems();
+        }),
     );
     if (data == null) return;
 
     // Submitted to the server — drop the local in-progress draft.
     await drafts.remove(draftScope);
+    // The entries on screen are booked now: kept, a second Continue (after a
+    // failed delivery create, or from a page left open) would book them again.
+    dropAllEntries(items, 'scanned');
     successAlertBottom("Material issued to ${workOrder.customerCode}.");
 
     await Future.delayed(const Duration(milliseconds: 300));
+    // The worker left the page while it was sending: the document is saved
+    // (snackbar above); don't navigate from whatever screen is on top now.
+    if (!submitPageStillOpen(page)) return;
     // The work-order list runs under the By Customer controller type.
-    returnToListAfterSubmit(AppPages.outflowOrderByWorkOrderPage,
+    returnToListAfterSubmit(AppPages.outflowOrderByWorkOrderPage, menuRoute: AppPages.outflowHomePage,
         refresh: () => Get.find<OutflowOrderByCustomerController>().loadCustomers());
   }
 }

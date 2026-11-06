@@ -28,6 +28,8 @@ class OutflowOrderByRequestDetailController extends GetxController {
   var selectedItem = Rxn<Map<String, dynamic>>();
   var scannedResults = <String>[].obs;
   var isLoading = false.obs;
+  /// The last load failed: the view offers Retry instead of reading it as empty.
+  final hasError = false.obs;
   var isLoadingOutflowing = false.obs;
 
   late final OutflowRequestModel currentOr;
@@ -55,24 +57,32 @@ class OutflowOrderByRequestDetailController extends GetxController {
   }
 
   Future<void> loadOrItems() async {
+    _batchStock.clear(); // a reload reads the stock afresh
     final orderId = currentOr.id;
     final data = await ApiExecutor.run(
       isLoading: isLoading,
+      hasError: hasError,
       task: () => provider.getOutflowRequestLineItem(orderId),
     );
     // If network failed or exception handled, data is null
     if (data == null) return;
 
     final cached = await readLineDraft(_drafts, _draftScope);
+
+    final cleared = <String>[];
     final normalizedData = data.map((item) {
       final serverScanned = (item.scanned != null && item.scanned!.isNotEmpty)
           ? item.scanned!
           : <String>[];
       // Restore any locally cached in-progress scans for this line — unless the
       // backend now refuses it, so a stale scan can't ride along to the submit.
+      // A draft larger than what is still open is dropped (draftThatFits).
+      final draft = cached[item.lineId.toString()];
+      final fits = draftThatFits(draft, item.reserved - (item.received ?? 0));
+      if (draft != null && fits == null && item.blockedReason == null) cleared.add(item.name);
       final scanned = item.blockedReason != null
           ? <String>[]
-          : cached[item.lineId.toString()] ?? serverScanned;
+          : fits ?? serverScanned;
 
       return {
         "line_id": item.lineId,
@@ -90,6 +100,10 @@ class OutflowOrderByRequestDetailController extends GetxController {
     }).toList();
 
     items.assignAll(normalizedData);
+    showClearedDrafts(cleared);
+    // The pending submit key stays: if the earlier submit was booked (its answer
+    // lost), the next tap gets `submit_already_saved` and drops the draft —
+    // clearing it here would let the lines that still fit be booked twice.
   }
 
   /// Persist current scans (only non-empty lines); clears the draft when empty.
@@ -105,12 +119,15 @@ class OutflowOrderByRequestDetailController extends GetxController {
   /// Busy flag of the BATCH label check ([batchLeft]).
   final isCheckingBatch = false.obs;
 
+  /// Label stock per item, read once per load of this screen (see batchLeftToScan).
+  final _batchStock = <int, Map<String, num>>{};
+
   /// What can still be drawn from BATCH label [code] on the selected line, or
   /// null when it can't (reason shown) — checked at the scan, before the qty.
   Future<num?> batchLeft(String code) {
     final index = selectedIndex.value;
     if (index >= items.length) return Future.value(null);
-    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch, lines: items);
+    return batchLeftToScan(provider, items[index], code, isLoading: isCheckingBatch, lines: items, stockCache: _batchStock);
   }
 
   void addScannedCode(String code,
@@ -127,7 +144,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     final List<Map<String, dynamic>> scanned =
         List<Map<String, dynamic>>.from(item["scanned"] ?? []);
 
-    final existingIndex = scanned.indexWhere((e) => e['serial_number'] == code);
+    final existingIndex = scanned.indexWhere((e) => sameCode(e['serial_number'], code));
 
     final totalScannedQty = sumQty(scanned);
 
@@ -188,7 +205,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     final received = safeToNum(item['received']);
 
     final scanned = List<Map<String, dynamic>>.from(item['scanned'] ?? []);
-    if (scanned.any((e) => e['serial_number'] == code) || scannedOnOtherLine(items, item, code)) {
+    if (scanned.any((e) => sameCode(e['serial_number'], code)) || scannedOnOtherLine(items, item, code)) {
       return ScanFeedback.duplicate("\"$code\" already scanned.");
     }
 
@@ -238,7 +255,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     final index = selectedIndex.value;
     if (index >= items.length) return;
     newCode = newCode.trim();
-    if (!await canRenameScan(provider, items[index], oldCode, newCode, isLoading: isCheckingBatch, lines: items)) {
+    if (!await canRenameScan(provider, items[index], oldCode, newCode, isLoading: isCheckingBatch, lines: items, stockCache: _batchStock)) {
       return;
     }
 
@@ -309,18 +326,29 @@ class OutflowOrderByRequestDetailController extends GetxController {
   num get totalScanned => sumQty(getAllScannedUnified().values.expand((list) => list));
 
   void startOutflowingItem() async {
+    final page = topRoute(); // see submitPageStillOpen
     final or = currentOr;
     final payload = {
       "or_id": or.id,
-      "items": linesToSubmit(items, "scanned"), // unscanned lines would be saved as qty 0
+      "items": submitLines(items, "scanned"), // unscanned lines would be saved as qty 0
     };
     final data = await submitOutflowData(provider.postOrLineToOutflowedData, payload,
-        isLoading: isLoadingOutflowing, submitKey: SubmitKey(_drafts, _draftScope));
+        isLoading: isLoadingOutflowing, submitKey: SubmitKey(_drafts, _draftScope, onAlreadySaved: () {
+          dropAllEntries(items, 'scanned');
+          loadOrItems();
+        }));
     if (data == null) return;
 
     // Submitted to the server — drop the local in-progress draft.
     await _drafts.remove(_draftScope);
+    // The entries on screen are booked now: kept, a second Continue (after a
+    // failed delivery create, or from a page left open) would book them again.
+    dropAllEntries(items, 'scanned');
     successAlertBottom("Outflowing process for ${or.code} completed!");
+
+    // The worker left the page while it was sending: the document is saved
+    // (snackbar above); don't navigate from whatever screen is on top now.
+    if (!submitPageStillOpen(page)) return;
 
     // Offer to create a delivery for the newly created outflow order.
     final createdId = _createdOutflowId(data);
@@ -328,13 +356,13 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
     await Future.delayed(const Duration(milliseconds: 400));
     if (wantsDelivery) {
-      // Unwinds to the Outflow menu, list included — its controller goes with it.
-      if (Get.isRegistered<OutflowOrderByRequestController>()) {
-        Get.delete<OutflowOrderByRequestController>(force: true);
-      }
-      await createDeliveryForOutflow(createdId, replace: true);
+      // On success it unwinds to the Outflow menu, list included — its
+      // controller goes with it; a failed create leaves the list alive.
+      await createDeliveryForOutflow(createdId, replace: true, beforeLeaving: () {
+        if (Get.isRegistered<OutflowOrderByRequestController>()) Get.delete<OutflowOrderByRequestController>(force: true);
+      });
     } else {
-      returnToListAfterSubmit(AppPages.outflowOrderByRequestPage,
+      returnToListAfterSubmit(AppPages.outflowOrderByRequestPage, menuRoute: AppPages.outflowHomePage,
           refresh: () => Get.find<OutflowOrderByRequestController>().loadRequestOrders());
     }
   }

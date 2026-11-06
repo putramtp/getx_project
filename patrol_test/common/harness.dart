@@ -144,9 +144,16 @@ Future<void> loginAsTestUser(PatrolIntegrationTester $) async {
       if (attempt == _loginAttempts) fail('Login failed after $_loginAttempts attempts ($account): $lastError');
       // ignore: avoid_print
       print('loginAsTestUser: attempt $attempt failed ($lastError), retrying');
-      // Throttled (5 a minute per address on /login): wait part of it out.
+      // Throttled: wait out what the server says (its "Try again in N
+      // seconds"). The per-account hourly cap can't be waited out in a test —
+      // fail with how to avoid it instead of burning the remaining attempts.
       if (lastError.contains('Too many')) {
-        await Future<void>.delayed(const Duration(seconds: 25));
+        final wait = _retryAfter(lastError);
+        if (wait == null || wait > const Duration(seconds: 90)) {
+          fail('Login throttled ($account): $lastError — pass several accounts in TEST_EMAIL/TEST_USERNAME '
+              '(the e2e.bot accounts and their password: CLAUDE.md → Testing → Credentials)');
+        }
+        await Future<void>.delayed(wait + const Duration(seconds: 2));
       }
     }
   }
@@ -173,6 +180,7 @@ Future<void> _signInByEmail(String email) async {
     answer = await provider.signIn(email, testPassword, tenantId: company.id);
   }
   await WorkspaceSession().complete(answer);
+  Get.find<AuthService>().setAccount(email); // as LoginController does
 }
 
 /// The company chooser's tile for TEST_COMPANY, matched on the texts it shows
@@ -215,6 +223,7 @@ Future<void> _signInByUsername(String username) async {
   if (token == null || token.isEmpty) fail('Login response has no token');
   // Same session LoginController.authLogin stores.
   await auth.setToken(token);
+  auth.setAccount(username);
   auth.setUsername(data['name'] as String?);
   final roles = (data['roles'] as List?)?.map((r) => r['name'] as String);
   if (roles != null && roles.isNotEmpty) auth.setRoles(roles.join(', '));
@@ -235,6 +244,7 @@ Future<void> loginViaForm(PatrolIntegrationTester $) async {
   for (var attempt = 1; attempt <= _loginAttempts; attempt++) {
     await $('Sign In').tap(settlePolicy: SettlePolicy.noSettle);
     final end = DateTime.now().add(apiTimeout);
+    var companyPicked = false;
     while (DateTime.now().isBefore(end)) {
       await $.pump(const Duration(milliseconds: 250));
       if ($('Start a task').exists) {
@@ -243,7 +253,10 @@ Future<void> loginViaForm(PatrolIntegrationTester $) async {
       }
       if ($('Error!').exists) break;
       // A multi-company account opens the chooser: pick TEST_COMPANY's tile.
-      if (find.byKey(const Key('loginCompanyChoice_0')).evaluate().isNotEmpty) {
+      // Once: the sheet stays on screen while it closes, and a second tap
+      // would send a second sign-in.
+      if (!companyPicked && find.byKey(const Key('loginCompanyChoice_0')).evaluate().isNotEmpty) {
+        companyPicked = true;
         await $.tester.tap(_chooserTileForTestCompany());
         await $.pump(const Duration(milliseconds: 250));
       }
@@ -290,18 +303,26 @@ const _listRetries = 2;
 Future<void> _waitForListOnce(PatrolIntegrationTester $) async {
   final end = DateTime.now().add(apiTimeout);
   var stableSince = DateTime.now();
-  while (DateTime.now().difference(stableSince) < _listStableFor) {
+  var sawSkeleton = false;
+  // Until a skeleton has shown, allow longer: a load that starts late (a
+  // debounce, a slow first frame) must not read as "already loaded".
+  while (DateTime.now().difference(stableSince) < (sawSkeleton ? _listStableFor : _listFirstLoadGrace)) {
     if (DateTime.now().isAfter(end)) {
       fail('List still loading after ${apiTimeout.inSeconds}s');
     }
     await $.pump(const Duration(milliseconds: 250));
     if (skeletonTexts.any((t) => find.text(t).evaluate().isNotEmpty)) {
+      sawSkeleton = true;
       stableSince = DateTime.now();
     }
   }
 }
 
 const _listStableFor = Duration(milliseconds: 1500);
+
+/// How long a scroll waits for the next page before calling it the list's end.
+const _pageWait = Duration(seconds: 8);
+const _listFirstLoadGrace = Duration(milliseconds: 2500);
 
 /// Tappable rows of the current list screen: orderListCard / masterListCard
 /// are InkWells inside the screen's vertical ListView (horizontal ones hold
@@ -405,8 +426,16 @@ Future<String?> _nextUntriedCard(PatrolIntegrationTester $, Set<String> tried, S
       const Offset(0, -400),
     );
     await $.pumpAndTrySettle();
-    // Room for an infinite-scroll page to arrive.
-    await $.pump(const Duration(seconds: 1));
+    // Room for an infinite-scroll page to arrive: wait while the footer spinner
+    // shows and no new card has appeared (a slow tunnel), up to [_pageWait] —
+    // the footer spinner also shows while idle above the load trigger, so
+    // "spinner gone" alone could hold every scroll for the whole apiTimeout.
+    final pageEnd = DateTime.now().add(_pageWait);
+    do {
+      await $.pump(const Duration(milliseconds: 500));
+    } while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+        keys().every(seen.contains) &&
+        DateTime.now().isBefore(pageEnd));
 
     final next = keys();
     if (next.every(seen.contains)) return null;
@@ -520,3 +549,21 @@ void expectAboveSystemNavBar(PatrolIntegrationTester $, Finder finder) {
 /// Waits for a screen identified by its AppBar title.
 Future<void> expectScreen(PatrolIntegrationTester $, String appBarTitle) =>
     $(appBarTitle).waitUntilVisible(timeout: apiTimeout);
+
+/// In the open "Filter Options" popup: picks [limit] in the Limit dropdown
+/// ("20 items" → "[limit] items"), so a filter test sends a real value.
+Future<void> chooseFilterLimit(PatrolIntegrationTester $, int limit) async {
+  await $.tester.tap(find.byType(DropdownButtonFormField<int>));
+  await $.pumpAndTrySettle();
+  await $.tester.tap(find.text('$limit items').last);
+  await $.pumpAndTrySettle();
+}
+
+/// The wait in a throttle message ("Try again in 42 seconds." / "… 5
+/// minutes."), or null when it names none.
+Duration? _retryAfter(String message) {
+  final m = RegExp(r'Try again in (\d+) (second|minute)').firstMatch(message);
+  if (m == null) return null;
+  final n = int.parse(m.group(1)!);
+  return m.group(2) == 'minute' ? Duration(minutes: n) : Duration(seconds: n);
+}

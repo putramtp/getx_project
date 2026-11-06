@@ -16,6 +16,7 @@ import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
 import '../../../global/variables.dart';
 import '../../../global/widget/functions_widget.dart';
+import '../../../global/widget/owned_text_controllers.dart';
 import '../../../global/widget/qty_input_dialogs.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/delivery_detail_controller.dart';
@@ -119,16 +120,27 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
           receiver = await showReceiverNameDialog();
           if (receiver == null) return;
         }
+        // Missing ETA/address: the quick button can't send the update, so the
+        // edit form opens. A refused or failed save already showed its error —
+        // opening the form then would drop the receiver name just typed.
+        final missingDetails = !controller.hasRequiredDetails;
         final ok = await controller.quickSetStatus(s.id, receiverName: receiver);
-        if (!ok) _openEditSheet(presetStatusId: s.id);
+        if (!ok && missingDetails) _openEditSheet(presetStatusId: s.id);
       },
     );
   }
 
   /// Picks a photo (resized: the backend caps a file at 20 MB) and uploads it.
   Future<void> _pickProof(ImageSource source) async {
-    if (controller.isUploading.value) return;
-    final file = await ImagePicker().pickImage(source: source, maxWidth: 2000, imageQuality: 85);
+    // A second tap while the picker is open would throw `already_active`.
+    if (controller.isUploading.value || controller.isPickingProof) return;
+    controller.isPickingProof = true;
+    final XFile? file;
+    try {
+      file = await ImagePicker().pickImage(source: source, maxWidth: 2000, imageQuality: 85);
+    } finally {
+      controller.isPickingProof = false;
+    }
     if (file == null) return;
     await controller.uploadProof(await file.readAsBytes(), file.name);
   }
@@ -252,9 +264,9 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
     TimeOfDay? time = _parseTime(d.estimateTime);
 
     Get.bottomSheet(
-      // The fields' controllers live in _SheetTextControllers, which disposes
+      // The fields' controllers live in OwnedTextControllers, which disposes
       // them only once the sheet has left the tree (after its close animation).
-      _SheetTextControllers(
+      OwnedTextControllers(
         initialTexts: [d.address, d.description ?? '', ''],
         builder: (ctrls) {
       final addressCtrl = ctrls[0];
@@ -469,35 +481,4 @@ class DeliveryDetailView extends GetView<DeliveryDetailController> {
 
   String _fmtTime(TimeOfDay t) =>
       "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
-}
-
-/// Owns the text controllers of a bottom sheet and disposes them in
-/// [State.dispose] — after the sheet's close animation, while its TextFields
-/// are still mounted. Disposing when `Get.bottomSheet` completes throws
-/// "A TextEditingController was used after being disposed".
-class _SheetTextControllers extends StatefulWidget {
-  const _SheetTextControllers({required this.initialTexts, required this.builder});
-
-  final List<String> initialTexts;
-  final Widget Function(List<TextEditingController> controllers) builder;
-
-  @override
-  State<_SheetTextControllers> createState() => _SheetTextControllersState();
-}
-
-class _SheetTextControllersState extends State<_SheetTextControllers> {
-  late final List<TextEditingController> _controllers = [
-    for (final text in widget.initialTexts) TextEditingController(text: text),
-  ];
-
-  @override
-  void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.builder(_controllers);
 }

@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -105,7 +106,7 @@ class ProductByBrandController extends GetxController with ListReloadGuard {
 
     // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (isLoading.value) return; // a reload owns the list
+    if (isLoading.value || !mayLoadMore) return; // a reload owns the list; or a page just failed
     final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
@@ -117,7 +118,8 @@ class ProductByBrandController extends GetxController with ListReloadGuard {
     );
     // If network failed or exception handled, data is null
     // A reload started meanwhile: this page belongs to the old query.
-    if (res == null || !isCurrentPage(generation)) return;
+    if (res == null) return noteLoadMoreFailed();
+    if (!isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
@@ -168,17 +170,11 @@ class ProductByBrandController extends GetxController with ListReloadGuard {
   }
 
   void openDetail(ProductSummaryModel product) {
-    if (Get.isRegistered<ProductDetailController>()) {
-      Get.delete<ProductDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.productDetailPage, arguments: product);
+    openFresh<ProductDetailController>(AppPages.productDetailPage, arguments: product);
   }
 
   void openTransaction(ProductSummaryModel product) {
-    if (Get.isRegistered<ProductTransactionListController>()) {
-      Get.delete<ProductTransactionListController>(force: true);
-    }
-    Get.toNamed(AppPages.productTransactionListPage, arguments: product);
+    openFresh<ProductTransactionListController>(AppPages.productTransactionListPage, arguments: product);
   }
 
 

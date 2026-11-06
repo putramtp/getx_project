@@ -46,6 +46,10 @@ class ReceiveOrderBySupplierDetailView
                   if (controller.isLoading.value) {
                     return skeletonSummaryList(size, accent: sageTeal);
                   }
+                  // A failed reload keeps what is already on screen; Retry only replaces nothing.
+                  if (controller.hasError.value && controller.items.isEmpty) {
+                    return errorRetry(size, onRetry: controller.loadPurchaseOrderItemBySupplier, accent: sageTeal);
+                  }
 
                   if (controller.items.isEmpty) {
                     return textNoData(size, message: "No items found.");

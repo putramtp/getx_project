@@ -44,6 +44,23 @@ void main() {
       }
     });
 
+    test('rejects exponents, hex, NaN, Infinity and signs', () {
+      for (final text in ['1e3', '0x10', 'NaN', 'Infinity', '+2', '2.5.1', '2,5,1', '١٢']) {
+        expect(parseQty(text), isNull, reason: text);
+      }
+    });
+
+    test('refuses thousands-grouped input instead of reading it as a decimal', () {
+      for (final text in ['1.000', '12,000', '1.000.000', '1,250,000']) {
+        expect(parseQty(text), isNull, reason: text);
+        expect(looksLikeThousands(text), isTrue, reason: text);
+      }
+      // A real decimal amount stays allowed.
+      expect(parseQty('1.500'), 1.5);
+      expect(parseQty('0,125'), 0.125);
+      expect(looksLikeThousands('1.5'), isFalse);
+    });
+
     test('whole units reject fractions', () {
       expect(parseQty('2.5', wholeUnits: true), isNull);
       expect(parseQty('2', wholeUnits: true), 2);

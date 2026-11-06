@@ -1,3 +1,5 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class ProductBrandModel {
   final int id;
   final String name;
@@ -13,10 +15,10 @@ class ProductBrandModel {
 
   factory ProductBrandModel.fromJson(Map<String, dynamic> json) {
     return ProductBrandModel(
-      id: json['id'],
-      name: json['name'],
-      initialCode: json['initial_code'],
-      slug: json['slug'],
+      id: safeToInt(json['id']),
+      name: json['name']?.toString() ?? '',
+      initialCode: json['initial_code']?.toString() ?? '', // nullable on the backend
+      slug: json['slug']?.toString() ?? '',
     );
   }
 }

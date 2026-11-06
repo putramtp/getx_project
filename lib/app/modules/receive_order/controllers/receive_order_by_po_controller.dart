@@ -113,7 +113,7 @@ class ReceiveOrderByPoController extends GetxController with ListReloadGuard imp
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (isLoading.value) return; // a reload owns the list
+    if (isLoading.value || !mayLoadMore) return; // a reload owns the list; or a page just failed
     final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
@@ -125,7 +125,8 @@ class ReceiveOrderByPoController extends GetxController with ListReloadGuard imp
     );
     // If network failed or exception handled, data is null
     // A reload started meanwhile: this page belongs to the old query.
-    if (res == null || !isCurrentPage(generation)) return;
+    if (res == null) return noteLoadMoreFailed();
+    if (!isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => PurchaseOrderModel.fromJson(e)).toList();
@@ -186,9 +187,6 @@ class ReceiveOrderByPoController extends GetxController with ListReloadGuard imp
   }
 
   void openDetail(PurchaseOrderModel order) {
-    if (Get.isRegistered<ReceiveOrderByPoDetailController>()) {
-      Get.delete<ReceiveOrderByPoDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.receiveOrderByPoDetailPage, arguments: order);
+    openFresh<ReceiveOrderByPoDetailController>(AppPages.receiveOrderByPoDetailPage, arguments: order);
   }
 }

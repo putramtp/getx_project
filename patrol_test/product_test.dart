@@ -77,17 +77,22 @@ void main() {
   e2eTest('filter popup applies and clears', skip: !hasCredentials, ($) async {
     await _openProducts($);
 
+    final products = Get.find<ProductController>();
+
     await $.tester.tap(find.byTooltip('Filter'));
     await $('Filter Options').waitUntilVisible();
+    await chooseFilterLimit($, 50);
     await $('Apply').tap();
     await waitForList($);
     expect($('Filter Options'), findsNothing);
+    expect(products.buildParams()['limit'], '50', reason: 'the chosen limit was not sent with the list query');
 
     await $.tester.tap(find.byTooltip('Filter'));
     await $('Filter Options').waitUntilVisible();
     await $('Clear').tap();
     await waitForList($);
     expect($('Filter Options'), findsNothing);
+    expect(products.buildParams()['limit'], '20', reason: 'Clear did not reset the limit');
   });
 
   e2eTest('view details opens the product detail', skip: !hasCredentials, ($) async {

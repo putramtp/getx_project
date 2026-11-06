@@ -58,6 +58,15 @@ class NetworkService extends GetxService {
     isConnected.value = await _hasInternet();
   }
 
+  /// Checks once before a screen fires several calls together (Home, the
+  /// delivery detail): offline, one "No internet connection" — not one per
+  /// call — and false, so the caller skips them.
+  Future<bool> ensureOnline() async {
+    await checkConnection();
+    if (!isConnected.value) errorAlert("No internet connection");
+    return isConnected.value;
+  }
+
   /// connectivity_plus reports every active interface; offline means none.
   static bool _noInterface(List<ConnectivityResult> results) =>
       results.isEmpty || results.every((r) => r == ConnectivityResult.none);

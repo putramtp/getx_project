@@ -8,6 +8,9 @@ import '../../../data/models/delivery_model.dart';
 import '../../../data/models/delivery_status_model.dart';
 import '../../../data/providers/delivery_provider.dart';
 import '../../../global/alert.dart';
+import '../../../global/submit_key.dart';
+import '../../../services/draft_service.dart';
+import '../../../services/network_service.dart';
 import '../../../helpers/api_excecutor.dart';
 
 class DeliveryDetailController extends GetxController {
@@ -19,6 +22,8 @@ class DeliveryDetailController extends GetxController {
   var isLoading = false.obs;
   var isUpdating = false.obs;
   var isUploading = false.obs;
+  /// True while the camera / gallery picker is open (not observed: only a guard).
+  bool isPickingProof = false;
   var isOpeningProof = false.obs;
 
   late final DeliveryModel _initial;
@@ -37,6 +42,8 @@ class DeliveryDetailController extends GetxController {
   }
 
   Future<void> loadDetail() async {
+    // Two calls below: offline, one notice instead of one per call.
+    if (!await Get.find<NetworkService>().ensureOnline()) return;
     final data = await ApiExecutor.run(
       isLoading: isLoading,
       task: () => provider.getDeliveryDetail(_initial.id),
@@ -87,8 +94,9 @@ class DeliveryDetailController extends GetxController {
   }
 
   /// One-tap status change reusing the delivery's current ETA/address/notes.
-  /// Returns false when required details are missing, so the caller can open
-  /// the edit form instead.
+  /// Returns true only when the server accepted it; false when the required
+  /// details are missing ([hasRequiredDetails] — the caller opens the edit
+  /// form) or the save failed (its error is already shown).
   Future<bool> quickSetStatus(int statusId, {String? receiverName}) async {
     final d = delivery.value;
     if (d == null) return false;
@@ -148,7 +156,12 @@ class DeliveryDetailController extends GetxController {
       isLoading: isUpdating,
       task: () => provider.updateDelivery(d.id, payload),
     );
-    if (updated == null) return false;
+    if (updated == null) {
+      // The update may have been applied with its answer lost: show what the
+      // server has, or the next try is refused against a stale screen.
+      loadDetail();
+      return false;
+    }
 
     delivery.value = updated;
     successAlertBottom("Delivery ${updated.code} updated.");
@@ -165,9 +178,12 @@ class DeliveryDetailController extends GetxController {
     }
     final updated = await ApiExecutor.run(
       isLoading: isUpdating,
-      task: () => provider.undoStatus(d.id, reason.trim()),
+      task: () => provider.undoStatus(d.id, reason.trim(), expectedStatusId: d.statusId),
     );
-    if (updated == null) return false;
+    if (updated == null) {
+      loadDetail(); // as in submitUpdate: the screen must follow the server
+      return false;
+    }
 
     delivery.value = updated;
     successAlertBottom("Delivery ${updated.code} is back to ${updated.statusLabel}.");
@@ -179,9 +195,11 @@ class DeliveryDetailController extends GetxController {
   Future<void> uploadProof(List<int> bytes, String filename) async {
     final d = delivery.value;
     if (d == null) return;
+    // One key per pending upload of this delivery (kept across a failed try).
+    final key = SubmitKey(Get.find<DraftService>(), 'delivery_proof_${d.id}');
     final res = await ApiExecutor.run(
       isLoading: isUploading,
-      task: () => provider.uploadProof(d.id, bytes, filename),
+      task: () => key.send((k) => provider.uploadProof(d.id, bytes, filename, idempotencyKey: k)),
     );
     if (res == null) return;
     successAlertBottom("Proof of delivery uploaded.");

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:getx_project/app/data/providers/api_providers.dart';
@@ -18,6 +19,7 @@ Future<void> openOrderWithAction(
   required String noneMessage,
   int maxCards = 15,
   Set<String> skipTitles = const {},
+  Finder? target,
 }) async {
   final found = await openFirstCardWhere(
     $,
@@ -31,7 +33,8 @@ Future<void> openOrderWithAction(
       // found." plus an error snackbar, which must not read as "nothing open".
       final error = errorSnackbarText($);
       if (error != null) fail('Item Summary failed to load: $error');
-      return scrollUntilExists($, $(action));
+      // [target] narrows which [action] counts (e.g. not on a seeded sample line).
+      return scrollUntilExists($, $(target ?? find.text(action)));
     },
   );
   if (!found) fail(noneMessage);
@@ -93,8 +96,7 @@ Future<void> submitOutflow(PatrolIntegrationTester $, {required bool? createDeli
 /// read-only). Seeded by the backend's SerialTrackedFlowSampleSeeder.
 Future<List<String>> inStockSerialsForRequest(String requestCode) async {
   final api = Get.find<ApiProvider>();
-  final requests = (await api.getMap('/outflow-request/pagination', query: {'limit': '100'}))['data'] as List;
-  final request = requests.cast<Map>().where((r) => r['code'] == requestCode).firstOrNull;
+  final request = await _requestByCode(api, requestCode);
   if (request == null) fail('No outflow request $requestCode — run SerialTrackedFlowSampleSeeder');
 
   final lines = (await api.getMap('/outflow-request/${request['id']}/summary'))['data'] as List;
@@ -109,18 +111,39 @@ Future<List<String>> inStockSerialsForRequest(String requestCode) async {
 /// that work order's code (its card's subtitle), the line's item and the SKU
 /// labels of that item still in stock ([inStockLabels] reads them again).
 /// Read-only, like [inStockSerialsForRequest].
-Future<({String code, Object? itemId, List<String> labels})> inStockSerialsForWorkOrder() async {
+///
+/// Pinned to the UNIQUE sample item ([workOrderSerialItemCode], the line of
+/// OR-SMP-SN-WO-01): another serial line on the same work order — a BATCH one
+/// opens a scan/manual chooser, not the scanner — must not be picked.
+Future<({String code, Object? itemId, String itemName, List<String> labels})> inStockSerialsForWorkOrder() async {
   final api = Get.find<ApiProvider>();
   final workOrders = (await api.getMap('/outflow-request/work-order-summary'))['data'] as List;
   for (final wo in workOrders.cast<Map>()) {
     final lines = (await api.getMap('/outflow-request/${wo['id']}/work-order-summary'))['data'] as List;
-    final line = lines.cast<Map>().where((l) => l['manage_sn'] == true && l['can_issue'] == true).firstOrNull;
+    final line = lines
+        .cast<Map>()
+        .where((l) => l['item_code'] == workOrderSerialItemCode && l['can_issue'] == true)
+        .firstOrNull;
     if (line != null) {
-      return (code: wo['code'] as String, itemId: line['item_id'], labels: await inStockLabels(line['item_id']));
+      return (
+        code: wo['code'] as String,
+        itemId: line['item_id'],
+        itemName: line['item_name'].toString(),
+        labels: await inStockLabels(line['item_id']),
+      );
     }
   }
-  fail('No work order has a serial-tracked line to issue — run SerialTrackedFlowSampleSeeder');
+  fail('No work order has an open $workOrderSerialItemCode line (OR-SMP-SN-WO-01) — run SerialTrackedFlowSampleSeeder');
 }
+
+/// The UNIQUE serial sample item the work-order reservation OR-SMP-SN-WO-01 holds.
+const workOrderSerialItemCode = 'CAPE-SN-PT100';
+
+/// The [action] button ("Fill" / "Scan") on the Item Summary line of [itemName].
+Finder actionOnLine(String itemName, String action) => find.descendant(
+      of: find.ancestor(of: find.text(itemName), matching: find.byKey(const Key('orderItemSummaryTile'))),
+      matching: find.text(action),
+    );
 
 /// SKU labels of item [itemId] still in stock (`GET /item/{id}/serial-number`).
 Future<List<String>> inStockLabels(Object? itemId) => _inStockLabels(Get.find<ApiProvider>(), itemId);
@@ -144,8 +167,7 @@ Future<void> continueBackToSummary(PatrolIntegrationTester $, String pageTitle) 
 /// Seeded by the backend's SerialTrackedFlowSampleSeeder (OR-SMP-SNB-01).
 Future<Map<String, num>> inStockBatchesForRequest(String requestCode) async {
   final api = Get.find<ApiProvider>();
-  final requests = (await api.getMap('/outflow-request/pagination', query: {'limit': '100'}))['data'] as List;
-  final request = requests.cast<Map>().where((r) => r['code'] == requestCode).firstOrNull;
+  final request = await _requestByCode(api, requestCode);
   if (request == null) fail('No outflow request $requestCode — run SerialTrackedFlowSampleSeeder');
 
   final lines = (await api.getMap('/outflow-request/${request['id']}/summary'))['data'] as List;
@@ -154,4 +176,11 @@ Future<Map<String, num>> inStockBatchesForRequest(String requestCode) async {
 
   final item = (await api.getMap('/item/${line['item_id']}/serial-number'))['data'] as Map;
   return {for (final s in item['serials'] as List) s['internal_code'] as String: safeToNum(s['qty'])};
+}
+
+/// The outflow request [requestCode], searched on the backend — reading the
+/// first page and filtering here missed it once 100+ newer requests existed.
+Future<Map?> _requestByCode(ApiProvider api, String requestCode) async {
+  final requests = (await api.getMap('/outflow-request/pagination', query: {'search': requestCode, 'limit': '20'}))['data'] as List;
+  return requests.cast<Map>().where((r) => r['code'] == requestCode).firstOrNull;
 }

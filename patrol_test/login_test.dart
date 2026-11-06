@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:getx_project/app/modules/login/controllers/login_controller.dart';
 import 'package:getx_project/app/services/auth_service.dart';
 import 'package:patrol/patrol.dart';
 
@@ -23,6 +24,10 @@ void main() {
 
   e2eTest('an incomplete form shows field errors without calling the server', ($) async {
     await launchApp($);
+    // Any sign-in request sets isLoading: record it, so "without calling the
+    // server" is checked, not assumed.
+    var called = false;
+    final watch = ever<bool>(Get.find<LoginController>().isLoading, (loading) => called |= loading);
 
     await $('Sign In').tap();
     expect($(workspaceMode ? 'Enter your email.' : 'Enter your username.'), findsOneWidget);
@@ -37,6 +42,12 @@ void main() {
     );
     expect($('Password must be at least 6 characters.'), findsOneWidget);
     expect($('Sign in to continue'), findsOneWidget);
+
+    // A request that did go out would answer within this pause.
+    await $.pump(const Duration(seconds: 1));
+    watch.dispose();
+    expect(called, isFalse, reason: 'the incomplete form still sent a sign-in request');
+    expect(errorSnackbarText($), isNull);
   });
 
   e2eTest('forgot password asks for a valid email', ($) async {

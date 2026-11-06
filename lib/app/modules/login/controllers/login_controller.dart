@@ -173,6 +173,7 @@ class LoginController extends GetxController {
     await saveLogin();
 
     await _authService.setToken(token);
+    _authService.setAccount(emailValue.value);
     _authService.setUsername(username);
     if (roles != null && roles.isNotEmpty) {
       final List<String> roleNames = (roles as List).map((role) => role['name'] as String).toList();
@@ -219,6 +220,7 @@ class LoginController extends GetxController {
     }
 
     await saveLogin();
+    _authService.setAccount(email);
     final company = _authService.currentTenantName;
     successAlert("Signed in to ${company ?? 'your company'} as ${round.user?.name ?? 'User'}");
     Get.offAllNamed(Routes.HOME);

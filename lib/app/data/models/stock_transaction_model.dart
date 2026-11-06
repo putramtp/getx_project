@@ -1,8 +1,10 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class StockTransactionModel {
   final String productName;
   final String type; 
   final String flowType; // IN / OUT
-  final double qty;
+  final num qty; // DECIMAL on the backend
   final String time; // "2 Days Ago"
   final OrderInfo? order;
 
@@ -17,11 +19,13 @@ class StockTransactionModel {
 
   factory StockTransactionModel.fromJson(Map<String, dynamic> json) {
     return StockTransactionModel(
-      productName: json['item_name'],
-      type: json['type'],
-      flowType: json['flow_type'],
-      qty: double.parse(json['qty'].toString()),
-      time: json['human_time'],
+      // type and the order's date are nullable on the backend: one such row
+      // must not fail the whole page.
+      productName: json['item_name']?.toString() ?? '',
+      type: json['type']?.toString() ?? '',
+      flowType: json['flow_type']?.toString() ?? '',
+      qty: safeToNum(json['qty']),
+      time: json['human_time']?.toString() ?? '',
        order: json['order'] != null ? OrderInfo.fromJson(json['order']) : null,
     );
   }
@@ -31,19 +35,19 @@ class StockTransactionModel {
 class OrderInfo {
   final String type;
   final String code;
-  final DateTime  date;
+  final DateTime? date;
 
   OrderInfo({
     required this.type,
     required this.code,
-    required this.date,
+    this.date,
   });
 
   factory OrderInfo.fromJson(Map<String, dynamic> json) {
     return OrderInfo(
       type: json['type'] ?? '',
       code: json['code'] ?? '',
-     date: DateTime.parse(json['date']),
+      date: DateTime.tryParse(json['date']?.toString() ?? ''),
     );
   }
 }

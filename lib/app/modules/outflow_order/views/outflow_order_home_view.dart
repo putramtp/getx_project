@@ -1,3 +1,5 @@
+import '../controllers/outflow_order_by_customer_controller.dart';
+import '../../../global/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -61,7 +63,7 @@ class OutflowOrderHomeView extends GetView {
                         icon: Icons.groups_rounded,
                         color: amber,
                         onTap: () =>
-                            Get.toNamed(AppPages.outflowOrderByCustomerPage),
+                            openFresh<OutflowOrderByCustomerController>(AppPages.outflowOrderByCustomerPage),
                       ),
                     ),
                   ],
@@ -74,7 +76,9 @@ class OutflowOrderHomeView extends GetView {
                 subtitle: "Issue reserved material to production",
                 icon: Icons.precision_manufacturing_rounded,
                 accent: AppAccent.sage,
-                onTap: () => Get.toNamed(AppPages.outflowOrderByWorkOrderPage),
+                // Both lists run under the By Customer controller type: wait for the other's
+                // to go, or this page would reuse it (see openFresh).
+                onTap: () => openFresh<OutflowOrderByCustomerController>(AppPages.outflowOrderByWorkOrderPage),
               ),
               SizedBox(height: size * 3),
               orderMenuSectionHeader(

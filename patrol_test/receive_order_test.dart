@@ -63,6 +63,18 @@ Future<void> _confirmFirstPendingLabel(PatrolIntegrationTester $, String listTit
   await waitForList($);
 }
 
+/// "Fill" on a line that is not one of the backend's serial samples (their
+/// names end in "— serial-tracked" / "— batch-tracked").
+Finder _plainFill() {
+  final plainLines = find.byElementPredicate((e) =>
+      e.widget.key == const Key('orderItemSummaryTile') &&
+      find
+          .descendant(of: find.byElementPredicate((x) => identical(x, e)), matching: find.textContaining('-tracked'))
+          .evaluate()
+          .isEmpty);
+  return find.descendant(of: plainLines, matching: find.text('Fill'));
+}
+
 /// On an order list ("Purchase Orders" / "Suppliers"): receives 1 unit of
 /// the first fillable line, submits it and finishes Confirm Serials, which
 /// returns to [listTitle]. With [poNumber] it searches for that PO instead,
@@ -79,8 +91,11 @@ Future<void> _receiveOneLine(
       listTitle: listTitle,
       action: 'Fill',
       noneMessage: 'No open line to fill under "$listTitle" — reseed DemoTenantSeeder',
-      // Leave the serial-tracked PO's few units to its own test.
-      skipTitles: const {_serialPo},
+      // Leave the serial / batch sample POs' few units to their own tests —
+      // by PO number on "Purchase Orders", by line on "Suppliers" (a supplier
+      // card groups every PO of that supplier, the samples included).
+      skipTitles: const {_serialPo, _batchPo},
+      target: _plainFill(),
     );
   } else {
     await $(#searchBarField).enterText(poNumber, hideKeyboard: false);
@@ -93,7 +108,7 @@ Future<void> _receiveOneLine(
     if (!$('Fill').exists) fail('$poNumber has nothing left to receive — rerun SerialTrackedFlowSampleSeeder');
   }
 
-  await $('Fill').first.tap();
+  await $(poNumber == null ? _plainFill() : find.text('Fill')).first.tap();
   await expectScreen($, 'Fill Item');
   await _fillOneUnit($);
   expectAboveSystemNavBar($, find.text('Continue'));

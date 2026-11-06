@@ -101,7 +101,7 @@ class OutflowOrderListController extends GetxController with ListReloadGuard imp
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (isLoading.value) return; // a reload owns the list
+    if (isLoading.value || !mayLoadMore) return; // a reload owns the list; or a page just failed
     final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
@@ -113,7 +113,8 @@ class OutflowOrderListController extends GetxController with ListReloadGuard imp
     );
     // If network failed or exception handled, data is null
     // A reload started meanwhile: this page belongs to the old query.
-    if (res == null || !isCurrentPage(generation)) return;
+    if (res == null) return noteLoadMoreFailed();
+    if (!isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders = rawList.map((e) => OutflowOrderModel.fromJson(e)).toList();
@@ -188,10 +189,7 @@ class OutflowOrderListController extends GetxController with ListReloadGuard imp
   String formatYmd(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
   void openDetail(OutflowOrderModel order) {
-    if (Get.isRegistered<OutflowOrderListDetailController>()) {
-      Get.delete<OutflowOrderListDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.outflowOrderListDetailPage, arguments: order);
+    openFresh<OutflowOrderListDetailController>(AppPages.outflowOrderListDetailPage, arguments: order);
   }
 
 }

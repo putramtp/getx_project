@@ -10,6 +10,7 @@ import '../../../data/models/stock_transaction_model.dart';
 import '../../../data/providers/api_providers.dart';
 import '../../../data/providers/home_provider.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/network_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../../global/variables.dart';
 import '../../../global/size_config.dart';
@@ -103,20 +104,34 @@ class HomeController extends GetxController {
 
   Future<void> reloadDashboard() async {
     _loadDataFromStorage();
+    // Offline: one notice, not three (one per call below); the cached counts stay.
+    if (!await Get.find<NetworkService>().ensureOnline()) return;
     // Independent calls with their own loading flags: run them side by side
     // so Home waits for the slowest one, not the sum of all three.
     await Future.wait([loadDashboard(), loadLatest(), loadPendingDeliveries()]);
   }
 
   // ================= NAVIGATION =================
-  void goToProductPage() => Get.toNamed(AppPages.productPage);
-  void goToReceiveOrderHomePage() => Get.toNamed(AppPages.receiveHomePage);
-  void goToOutflowOrderHomePage() => Get.toNamed(AppPages.outflowHomePage);
-  void goToTransactionPage() => Get.toNamed(AppPages.stockTransactionPage);
-  void goToCategoryPage() => Get.toNamed(AppPages.productCategory);
-  void goToBrandPage() => Get.toNamed(AppPages.productBrand);
-  void goToUnitPage() => Get.toNamed(AppPages.productUnit);
-  void goToDeliveryPage() => Get.toNamed(AppPages.deliveryListPage);
+  /// Opens [route]; back on Home, the counts, latest transactions and pending
+  /// deliveries are reloaded — a receive, outflow or delivery update there
+  /// changed them.
+  Future<void> _open(String route) async {
+    await Get.toNamed(route);
+    // Signed out meanwhile (a 401 there): these loads would only fail on the
+    // login screen.
+    if (isClosed || _authService.currentToken == null) return;
+    if (!await Get.find<NetworkService>().ensureOnline()) return;
+    await Future.wait([loadDashboard(), loadLatest(), loadPendingDeliveries()]);
+  }
+
+  void goToProductPage() => _open(AppPages.productPage);
+  void goToReceiveOrderHomePage() => _open(AppPages.receiveHomePage);
+  void goToOutflowOrderHomePage() => _open(AppPages.outflowHomePage);
+  void goToTransactionPage() => _open(AppPages.stockTransactionPage);
+  void goToCategoryPage() => _open(AppPages.productCategory);
+  void goToBrandPage() => _open(AppPages.productBrand);
+  void goToUnitPage() => _open(AppPages.productUnit);
+  void goToDeliveryPage() => _open(AppPages.deliveryListPage);
   // ================= USER INFO =================   
 
   String getName() {
@@ -355,7 +370,8 @@ class HomeController extends GetxController {
                   SizedBox(height: size * 1.2),
                   _dialogInfoRow(size, Icons.shield_outlined,           'Role',     roles),
                   SizedBox(height: size * 1.2),
-                  _dialogInfoRow(size, Icons.business_outlined,         'Company',  'Mastercool'),
+                  // The signed-in company (workspace mode); direct mode has no name to show.
+                  _dialogInfoRow(size, Icons.business_outlined,         'Company',  _authService.currentTenantName ?? '-'),
                   SizedBox(height: size * 2),
 
                   // close button

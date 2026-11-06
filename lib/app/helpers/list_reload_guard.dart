@@ -30,6 +30,17 @@ mixin ListReloadGuard on GetxController {
     }
   }
 
+  DateTime? _moreFailedAt;
+
+  /// False for a few seconds after a next page failed. Scrolling near the end
+  /// fires `loadMore` on every scroll notification: offline, each try queued
+  /// another "No internet connection" snackbar.
+  bool get mayLoadMore =>
+      _moreFailedAt == null || DateTime.now().difference(_moreFailedAt!) > const Duration(seconds: 5);
+
+  /// Call when a next page failed (see [mayLoadMore]).
+  void noteLoadMoreFailed() => _moreFailedAt = DateTime.now();
+
   /// Snapshot of the list's reload count, taken before a next-page call.
   int get listGeneration => _generation;
 

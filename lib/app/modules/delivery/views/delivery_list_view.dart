@@ -54,9 +54,25 @@ class DeliveryListView extends GetView<DeliveryListController> {
                     if (deliveries.isEmpty) {
                       return textNoData(size, message: "No deliveries found.");
                     }
-                    return ListView.builder(
-                      itemCount: deliveries.length,
+                    // Read here, not in itemBuilder, so the footer follows the cursor.
+                    final cursor = controller.cursorNext.value;
+                    return NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        if (n.metrics.pixels >= n.metrics.maxScrollExtent - 250) controller.loadMore();
+                        return false;
+                      },
+                      child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: deliveries.length + 1,
                       itemBuilder: (context, index) {
+                        if (index == deliveries.length) {
+                          return cursor != null
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 18),
+                                  child: Center(child: CircularProgressIndicator(strokeWidth: 3)),
+                                )
+                              : NoMoreDataFooter(size: size);
+                        }
                         final d = deliveries[index];
                         return orderListCard(
                           size: size,
@@ -71,6 +87,7 @@ class DeliveryListView extends GetView<DeliveryListController> {
                           onTap: () => controller.openDetail(d),
                         );
                       },
+                      ),
                     );
                   }),
                 ),

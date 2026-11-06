@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:getx_project/app/global/alert.dart';
 import 'package:getx_project/app/modules/product-category/controllers/product_by_category_controller.dart';
@@ -122,7 +123,7 @@ class ProductCategoryController extends GetxController with ListReloadGuard {
 
   // LOAD NEXT PAGE
   Future<void> loadMore() async {
-    if (isLoading.value) return; // a reload owns the list
+    if (isLoading.value || !mayLoadMore) return; // a reload owns the list; or a page just failed
     final generation = listGeneration;
     if (!hasMore.value) return; // ⭐ stop if no more data
     if (cursorNext.value == null) return; // no cursor → stop
@@ -134,7 +135,8 @@ class ProductCategoryController extends GetxController with ListReloadGuard {
     );
     // If network failed or exception handled, data is null
     // A reload started meanwhile: this page belongs to the old query.
-    if (res == null || !isCurrentPage(generation)) return;
+    if (res == null) return noteLoadMoreFailed();
+    if (!isCurrentPage(generation)) return;
 
     final List rawList = res['data'] ?? [];
     final newOrders =
@@ -156,9 +158,6 @@ class ProductCategoryController extends GetxController with ListReloadGuard {
   }
 
   void openDetail(ProductCategoryModel category) {
-    if (Get.isRegistered<ProductByCategoryController>()) {
-      Get.delete<ProductByCategoryController>(force: true);
-    }
-    Get.toNamed(AppPages.productByCategory, arguments: category);
+    openFresh<ProductByCategoryController>(AppPages.productByCategory, arguments: category);
   }
 }

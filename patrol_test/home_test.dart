@@ -41,9 +41,14 @@ void main() {
     await waitUntilTrue($, () => home.dashboard.value.product > 0,
         reason: 'dashboard product count stayed 0 (GET /dashboard-inventory)');
 
+    // Record that the pull really started a reload: checking only that loading
+    // ended would also pass on the first load's counts.
+    var reloaded = false;
+    final watch = ever<bool>(home.isLoading, (loading) => reloaded |= loading);
     await $.tester.fling(find.byType(RefreshIndicator), const Offset(0, 400), 1000);
-    await $.pump(const Duration(milliseconds: 300));
+    await waitUntilTrue($, () => reloaded, reason: 'pull to refresh never reloaded the dashboard');
     await waitUntilTrue($, () => !home.isLoading.value, reason: 'dashboard reload never finished');
+    watch.dispose();
 
     expect(errorSnackbarText($), isNull, reason: 'reloading the dashboard showed an error');
     expect(home.dashboard.value.product, greaterThan(0), reason: 'reload reset the counts to 0');

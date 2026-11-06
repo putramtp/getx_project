@@ -46,6 +46,10 @@ class OutflowOrderByRequestDetailView
                   if (controller.isLoading.value) {
                     return skeletonSummaryList(size, accent: mutedPurple);
                   }
+                  // A failed reload keeps what is already on screen; Retry only replaces nothing.
+                  if (controller.hasError.value && controller.items.isEmpty) {
+                    return errorRetry(size, onRetry: controller.loadOrItems, accent: mutedPurple);
+                  }
 
                   if (controller.items.isEmpty) {
                     return textNoData(size, message: "No items found.");

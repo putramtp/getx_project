@@ -1,3 +1,5 @@
+import 'package:getx_project/app/global/functions.dart';
+
 class ProductUnitModel {
   final int id;
   final String name;
@@ -13,8 +15,8 @@ class ProductUnitModel {
 
   factory ProductUnitModel.fromJson(Map<String, dynamic> json) {
     return ProductUnitModel(
-      id: json['id'],
-      name: json['name'],
+      id: safeToInt(json['id']),
+      name: json['name']?.toString() ?? '',
       description: json['description'] ?? '',
     );
   }

@@ -4,6 +4,7 @@ import 'package:getx_project/app/global/size_config.dart';
 import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/widget/scanner_page.dart';
 import 'package:getx_project/app/global/variables.dart';
+import 'package:getx_project/app/global/widget/owned_text_controllers.dart';
 import '../functions.dart';
 
 Widget titleMenu(String text, double size) {
@@ -128,10 +129,12 @@ Future<void> showEditCodeDialog(
   String code, {
   required ValueChanged<String> onSave,
 }) async {
-  final TextEditingController controller = TextEditingController(text: code);
-
   await Get.dialog(
-    Dialog(
+    OwnedTextControllers(
+      initialTexts: [code],
+      builder: (controllers) {
+      final controller = controllers.first;
+      return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
@@ -195,6 +198,8 @@ Future<void> showEditCodeDialog(
           ],
         ),
       ),
+    );
+      },
     ),
   );
 }
@@ -351,14 +356,17 @@ Future<String?> captureSerialInput({Color accent = Colors.blueAccent}) async {
 
 /// Manual serial-number entry dialog. Returns the trimmed code or null.
 Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async {
-  final TextEditingController controller = TextEditingController();
-  void submit() {
-    final value = controller.text.trim();
-    if (value.isNotEmpty) closeRoute(value);
-  }
-
   return Get.dialog<String>(
-    Dialog(
+    OwnedTextControllers(
+      initialTexts: const [''],
+      builder: (controllers) {
+      final controller = controllers.first;
+      void submit() {
+        final value = controller.text.trim();
+        if (value.isNotEmpty) closeRoute(value);
+      }
+
+      return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Padding(
@@ -406,6 +414,8 @@ Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async
           ],
         ),
       ),
+    );
+      },
     ),
   );
 }

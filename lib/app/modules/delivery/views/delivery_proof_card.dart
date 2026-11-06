@@ -116,7 +116,18 @@ Future<void> showProofPreview(String title, Uint8List bytes) {
             Expanded(
               child: InteractiveViewer(
                 maxScale: 5,
-                child: Center(child: Image.memory(bytes, fit: BoxFit.contain)),
+                // Decoded at twice the screen's pixel width, not the photo's own:
+                // a large photo from the web decoded in full took tens of MB.
+                // Twice still leaves a pinch-zoom sharp.
+                child: LayoutBuilder(
+                  builder: (context, box) => Center(
+                    child: Image.memory(
+                      bytes,
+                      fit: BoxFit.contain,
+                      cacheWidth: (box.maxWidth * MediaQuery.devicePixelRatioOf(context) * 2).round(),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

@@ -131,15 +131,26 @@ String clearedEntriesMessage(List? entries, String name) {
 }
 
 /// Parses a typed quantity ("2.5" or "2,5"). Null when blank, not above 0,
-/// beyond 6 decimals, or a fraction where [wholeUnits] are required.
+/// beyond 6 decimals, a fraction where [wholeUnits] are required, or not plain
+/// digits with at most one decimal separator — so "1e3", "0x10", "NaN",
+/// "Infinity" and signs are refused, and so is [looksLikeThousands] input.
 num? parseQty(String text, {bool wholeUnits = false}) {
-  final value = num.tryParse(text.trim().replaceAll(',', '.'));
+  final typed = text.trim();
+  if (!RegExp(r'^\d+([.,]\d+)?$').hasMatch(typed) || looksLikeThousands(typed)) return null;
+  final value = num.tryParse(typed.replaceAll(',', '.'));
   if (value == null || value <= 0) return null;
   final qty = roundQty(value);
   if (qty != value) return null;
   if (wholeUnits && qty is! int) return null;
   return qty;
 }
+
+/// Typed input that reads as a thousands-grouped number ("1.000", "12,000",
+/// "1.000.000"): taken as a decimal it would silently become 1 / 12 / junk.
+/// ".000" adds nothing to a decimal, so whoever typed it meant thousands.
+/// ("1.500" stays 1.5 — a real decimal amount in kg or metres.)
+bool looksLikeThousands(String text) =>
+    RegExp(r'^\d{1,3}([.,]\d{3}){2,}$').hasMatch(text.trim()) || RegExp(r'^\d{1,3}[.,]000$').hasMatch(text.trim());
 
 /// Serial-tracked UNIQUE/BATCH lines count whole units — the backend makes one
 /// SKU per unit / batch entry and rejects fractions. Everything else (quantity
@@ -177,6 +188,27 @@ List<Map<String, dynamic>> linesToSubmit(Iterable<Map<String, dynamic>> items, S
           item,
     ];
 
+/// The submit body's `items`: [linesToSubmit] reduced to what the backend
+/// reads — `line_id` and the [entriesKey] entries. The idempotency check hashes
+/// the whole body, so the line's `received` / `reserved` (which change once the
+/// document is booked) must not be in it: a retry after reopening the screen
+/// has to hash the same to be recognised.
+List<Map<String, dynamic>> submitLines(Iterable<Map<String, dynamic>> items, String entriesKey) => [
+      for (final item in linesToSubmit(items, entriesKey))
+        {'line_id': item['line_id'], entriesKey: item[entriesKey]},
+    ];
+
+/// Empties every line's [entriesKey] entries ("filled" / "scanned") in memory.
+/// After `submit_already_saved` the entries on screen were already booked: if
+/// they stayed, the next tap would send them again with a fresh key — even
+/// when the reload that should replace them fails.
+void dropAllEntries(RxList<Map<String, dynamic>> items, String entriesKey) {
+  for (final item in items) {
+    item[entriesKey] = <Map<String, dynamic>>[];
+  }
+  items.refresh();
+}
+
 String formatPrice(dynamic value) {
   if (value == null) return "-";
 
@@ -196,6 +228,60 @@ void closeRoute<T>([T? result]) {
   if (navigator != null && navigator.canPop()) navigator.pop<T>(result);
 }
 
+/// The route really on top of the root navigator (page, dialog or sheet).
+/// Not `Get.rawRoute`: that is GetX's bookkeeping, and after `offNamedUntil`
+/// it names the route the unwind stopped at (e.g. the Outflow menu), not the
+/// page just pushed. `popUntil` with a predicate true at once pops nothing.
+Route<dynamic>? topRoute() {
+  Route<dynamic>? top;
+  Get.key.currentState?.popUntil((route) {
+    top = route;
+    return true;
+  });
+  return top;
+}
+
+/// Whether [page] — the page a submit started on, taken with [topRoute]
+/// before its request — is still on the stack. The steps after the answer
+/// (Confirm Serials, the delivery prompt, back to the list) navigate relative
+/// to the top of the stack: run after the worker left the page (Back while it
+/// was sending), they replaced another document's page or popped Home.
+bool submitPageStillOpen(Route<dynamic>? page) => page != null && page.isActive;
+
+/// Opens [route] with a fresh controller of type [T] (a detail page bound by
+/// `lazyPut`). GetX deletes the previous page's controller only once that route
+/// is disposed, about 300 ms after Back. Force-deleting it earlier and pushing
+/// the new page let that late disposal delete the NEW page's controller (its
+/// draft stopped saving, then "controller not found"). So wait for it to go
+/// first; force-delete only a leftover that outlived the wait.
+///
+/// A second call while one is still opening (a double tap during the wait or
+/// the push animation, when the page underneath still takes taps) is ignored:
+/// it would force-delete the page just opened. And if the worker left the
+/// screen during the wait, nothing opens.
+Future<dynamic> openFresh<T>(String route, {dynamic arguments}) async {
+  if (_openingFresh) return null;
+  _openingFresh = true;
+  final from = topRoute();
+  Future<dynamic>? opened;
+  try {
+    final deadline = DateTime.now().add(const Duration(milliseconds: 800));
+    while (Get.isRegistered<T>() && DateTime.now().isBefore(deadline)) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    if (from != null && !from.isCurrent) return null;
+    if (Get.isRegistered<T>()) Get.delete<T>(force: true);
+    opened = Get.toNamed(route, arguments: arguments);
+    // Taps still reach the page underneath until the push animation ends.
+    await Future.delayed(const Duration(milliseconds: 400));
+  } finally {
+    _openingFresh = false;
+  }
+  return opened;
+}
+
+bool _openingFresh = false;
+
 /// After a submit: pop back to the [listRoute] the flow started from and let
 /// [refresh] reload it, so it shows the document's new state.
 ///
@@ -204,12 +290,13 @@ void closeRoute<T>([T? result]) {
 /// deleted controller (Back landed on a dead page), and `offNamedUntil`
 /// disposed the old list right away, which deleted the new list's controller
 /// of the same type ("OutflowOrderByCustomerController not found").
-/// When [listRoute] isn't on the stack, it's opened instead.
-void returnToListAfterSubmit(String listRoute, {required VoidCallback refresh}) {
+/// When [listRoute] isn't on the stack, popping stops at the module's
+/// [menuRoute] and the list is opened above it, so Back still reaches the menu.
+void returnToListAfterSubmit(String listRoute, {required String menuRoute, required VoidCallback refresh}) {
   var found = false;
   Get.key.currentState?.popUntil((route) {
     if (route.settings.name == listRoute) found = true;
-    return found || route.isFirst;
+    return found || route.settings.name == menuRoute || route.isFirst;
   });
   if (found) {
     refresh();

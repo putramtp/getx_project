@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
@@ -84,9 +85,6 @@ class ReceiveOrderBySupplierController extends GetxController {
 
 
   void openDetail(PoSupplierModel supplier) {
-    if (Get.isRegistered<ReceiveOrderBySupplierDetailController>()) {
-      Get.delete<ReceiveOrderBySupplierDetailController>(force: true);
-    }
-    Get.toNamed(AppPages.receiveOrderBySupplierDetailPage, arguments: supplier);
+    openFresh<ReceiveOrderBySupplierDetailController>(AppPages.receiveOrderBySupplierDetailPage, arguments: supplier);
   }
 }

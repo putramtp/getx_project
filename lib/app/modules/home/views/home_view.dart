@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../global/functions.dart';
 import '../../../global/accent.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
@@ -637,9 +638,9 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _transactionRow(double size, String name, String code, bool isIn, double qty, String time) {
+  Widget _transactionRow(double size, String name, String code, bool isIn, num qty, String time) {
     final color = isIn ? stockInColor : stockOutColor;
-    final qtyText = qty % 1 == 0 ? qty.toInt().toString() : qty.toString();
+    final qtyText = formatQty(qty);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: size * 1.2),
       child: Row(
