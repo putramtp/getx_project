@@ -100,7 +100,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
     }).toList();
 
     items.assignAll(normalizedData);
-    showClearedDrafts(cleared);
+    showClearedDrafts(_drafts, _draftScope, cleared);
     // The pending submit key stays: if the earlier submit was booked (its answer
     // lost), the next tap gets `submit_already_saved` and drops the draft —
     // clearing it here would let the lines that still fit be booked twice.
@@ -119,8 +119,8 @@ class OutflowOrderByRequestDetailController extends GetxController {
   /// Busy flag of the BATCH label check ([batchLeft]).
   final isCheckingBatch = false.obs;
 
-  /// Label stock per item, read once per load of this screen (see batchLeftToScan).
-  final _batchStock = <int, Map<String, num>>{};
+  /// Label stock per item, reused for a minute at most (see BatchStockCache).
+  final _batchStock = BatchStockCache();
 
   /// What can still be drawn from BATCH label [code] on the selected line, or
   /// null when it can't (reason shown) — checked at the scan, before the qty.
@@ -276,6 +276,7 @@ class OutflowOrderByRequestDetailController extends GetxController {
 
   void removeScannedCode(String code) {
     final index = selectedIndex.value;
+    if (index >= items.length) return;
     final item = items[index];
 
     item['scanned']?.removeWhere((e) => e['serial_number'] == code);

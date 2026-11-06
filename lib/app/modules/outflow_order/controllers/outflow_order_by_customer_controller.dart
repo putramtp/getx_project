@@ -55,12 +55,16 @@ class OutflowOrderByCustomerController extends GetxController {
     super.onClose();
   }
 
+  /// The search typed and submitted, lower-cased; kept for every reload.
+  String _query = '';
+
+  /// Set once Sort is tapped; until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredCustomers.sort((a, b) => isAscending.value
-        ? a.name.compareTo(b.name)
-        : b.name.compareTo(a.name));
-    filteredCustomers.refresh();
+    _sortedByUser = true;
+    _applyView();
   }
 
   void clearSearch() {
@@ -69,19 +73,20 @@ class OutflowOrderByCustomerController extends GetxController {
   }
 
   void onSearchChanged(String query) {
-    if (query.isEmpty) {
-      filteredCustomers.assignAll(orders);
-    } else {
-      filteredCustomers.assignAll(
-        orders.where((order) {
-          final lowerQuery = query.toLowerCase();
-          final nameMatch = order.name.toLowerCase().contains(lowerQuery);
-          final codeMatch =
-              order.customerCode.toLowerCase().contains(lowerQuery);
-          return nameMatch || codeMatch;
-        }),
-      );
-    }
+    _query = query.trim().toLowerCase();
+    _applyView();
+  }
+
+  /// [filteredCustomers] = [orders] matching the search, in the order Sort
+  /// set. Run after every load too: a reload (back from a submit, pull to
+  /// refresh) must not show every target under a search box that still names
+  /// one, nor drop the order the Sort button shows.
+  void _applyView() {
+    final rows = orders
+        .where((o) => _query.isEmpty || o.name.toLowerCase().contains(_query) || o.customerCode.toLowerCase().contains(_query))
+        .toList();
+    if (_sortedByUser) sortRowsBy(rows, (o) => o.name, ascending: isAscending.value);
+    filteredCustomers.assignAll(rows);
   }
 
   Future<void> loadCustomers() async {
@@ -93,7 +98,7 @@ class OutflowOrderByCustomerController extends GetxController {
     // If network failed or exception handled, data is null
     if (data == null) return;
     orders.assignAll(data);
-    filteredCustomers.assignAll(data);
+    _applyView();
   }
 
   String formatDate(DateTime date) {

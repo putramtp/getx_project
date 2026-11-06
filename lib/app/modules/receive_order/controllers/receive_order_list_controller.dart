@@ -1,6 +1,7 @@
 import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
+import 'receive_order_confirm_controller.dart';
 import 'package:flutter/material.dart';
 
 import 'package:getx_project/app/global/widget/top_filter_popup.dart';
@@ -71,11 +72,20 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
     super.onClose();
   }
 
+  /// Set once Sort is tapped: from then on the order is kept on every reload
+  /// and next page ([_keepSort]); until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    orders.sort((a, b) => isAscending.value
-        ? a.code.compareTo(b.code)
-        : b.code.compareTo(a.code));
+    _sortedByUser = true;
+    _keepSort();
+  }
+
+  /// Re-sorts the loaded rows the way Sort set them (see [sortRowsBy]).
+  void _keepSort() {
+    if (!_sortedByUser) return;
+    sortRowsBy(orders, (o) => o.code, ascending: isAscending.value);
     orders.refresh();
   }
 
@@ -117,6 +127,7 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
     final mapped = rawList.map((e) => ReceiveOrderModel.fromJson(e)).toList();
 
     orders.assignAll(mapped);
+    _keepSort();
   }
 
   // LOAD NEXT PAGE
@@ -148,6 +159,7 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
     }
 
     orders.addAll(newOrders);
+    _keepSort();
   }
 
   String formatYmd(DateTime date) {
@@ -212,7 +224,9 @@ class ReceiveOrderListController extends GetxController with ListReloadGuard imp
   /// From the pending queue: straight into Confirm Serials (it pops back here
   /// when done, as from the detail), then reload so a finished order drops out.
   Future<void> openSerialConfirm(ReceiveOrderModel order) async {
-    await Get.toNamed(AppPages.receiveOrderConfirmPage, arguments: {
+    // openFresh: a pass for another order left just before must not lend
+    // this one its controller (its order's labels).
+    await openFresh<ReceiveOrderConfirmController>(AppPages.receiveOrderConfirmPage, arguments: {
       'ro_id': order.id,
       'ro_code': order.code,
       'back_route': AppPages.receiveOrderListPage,

@@ -2,6 +2,7 @@ import 'package:getx_project/app/global/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../controllers/receive_order_confirm_controller.dart';
 import '../controllers/receive_order_list_detail_controller.dart';
 import '../../../global/accent.dart';
 import '../../../global/widget/app_header.dart';
@@ -37,7 +38,7 @@ class ReceiveOrderListDetailView extends GetView<ReceiveOrderListDetailControlle
           icon: const Icon(Icons.qr_code_scanner_rounded),
           label: Text("Confirm Serials",
               style: AppTextStyle.bodyBold(size, color: Colors.white)),
-          onPressed: () => Get.toNamed(
+          onPressed: () => openFresh<ReceiveOrderConfirmController>(
             AppPages.receiveOrderConfirmPage,
             arguments: {
               'ro_id': controller.currentReceiveOrder.id,

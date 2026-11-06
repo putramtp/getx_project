@@ -1,3 +1,4 @@
+import 'package:getx_project/app/global/functions.dart';
 import 'package:getx_project/app/helpers/list_reload_guard.dart';
 import 'package:getx_project/app/data/models/product_unit_model.dart';
 import 'package:getx_project/app/global/alert.dart';
@@ -44,11 +45,20 @@ class ProductUnitController extends GetxController with ListReloadGuard {
     super.onClose();
   }
 
+  /// Set once Sort is tapped: from then on the order is kept on every reload
+  /// and next page ([_keepSort]); until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    units.sort((a, b) => isAscending.value
-        ? a.name.compareTo(b.name)
-        : b.name.compareTo(a.name));
+    _sortedByUser = true;
+    _keepSort();
+  }
+
+  /// Re-sorts the loaded rows the way Sort set them (see [sortRowsBy]).
+  void _keepSort() {
+    if (!_sortedByUser) return;
+    sortRowsBy(units, (o) => o.name, ascending: isAscending.value);
     units.refresh();
   }
 
@@ -114,6 +124,7 @@ class ProductUnitController extends GetxController with ListReloadGuard {
     final mapped = rawList.map((e) => ProductUnitModel.fromJson(e)).toList();
 
     units.assignAll(mapped);
+    _keepSort();
   }
 
   // LOAD NEXT PAGE
@@ -145,6 +156,7 @@ class ProductUnitController extends GetxController with ListReloadGuard {
     }
 
     units.addAll(newOrders);
+    _keepSort();
   }
 
   String formatYmd(DateTime date) {

@@ -36,15 +36,29 @@ class SubmitKey {
 
   Future<void> clear() => _drafts.remove(_scope);
 
+  /// Whether a submit of this scope is still unanswered (its key is kept):
+  /// it may already be booked, its answer lost — a refused submit drops its
+  /// key ([send]), so it doesn't count. Reads only — creates no key.
+  Future<bool> isPending() async {
+    final stored = await _drafts.readJson(_scope);
+    return stored is String && stored.isNotEmpty;
+  }
+
   /// Runs [post] with the pending key and drops the key once it is used up: on
-  /// success, or when the server answers that it was already spent. Any other
-  /// failure keeps it, so the retry is recognised.
+  /// success, when the server answers that it was already spent, or when it
+  /// refused the submit outright ([RequestRefusedException.refusedWithoutBooking]:
+  /// nothing booked, the backend released the key). A failure that may hide a
+  /// booking — no answer, a 5xx, "still running" — keeps it, so the retry is
+  /// recognised and [isPending] stays true.
   Future<T> send<T>(Future<T> Function(String key) post) async {
     final key = await current();
     try {
       final result = await post(key);
       await clear();
       return result;
+    } on RequestRefusedException catch (e) {
+      if (e.refusedWithoutBooking) await clear();
+      rethrow;
     } on SubmitAlreadySavedException {
       await clear();
       // The draft itself is spent too: kept, the next tap would send it with a

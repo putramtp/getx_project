@@ -17,11 +17,12 @@ const _endpoints = ApiEndpoints(centralApiUrl: 'https://app.example.com/api', di
 /// Answers the handoff and /me from canned bodies and records where each call
 /// would have gone (the base URL at call time).
 class _FakeTenantApi extends ApiProvider {
-  _FakeTenantApi({this.handoff, this.me, this.handoffError});
+  _FakeTenantApi({this.handoff, this.me, this.handoffError, this.meError});
 
   final Map<String, dynamic>? handoff;
   final Map<String, dynamic>? me;
   final Exception? handoffError;
+  final Exception? meError;
   final calls = <String>[];
   final revoked = <String>[];
 
@@ -35,6 +36,7 @@ class _FakeTenantApi extends ApiProvider {
   @override
   Future<Map<String, dynamic>> getMap(String path, {Map<String, dynamic>? query}) async {
     calls.add('GET $requestBaseUrl$path');
+    if (meError != null) throw meError!;
     return me!;
   }
 
@@ -143,6 +145,26 @@ void main() {
       await expectLater(WorkspaceSession(api: api, auth: auth).complete(_handoffAnswer), throwsException);
       expect(auth.tenantApiHost.value, isNull);
       expect(auth.currentToken, isNull);
+    });
+    test('a failed /me revokes the token it had just issued and leaves no session', () async {
+      final api = _FakeTenantApi(
+        handoff: {
+          'data': {'token': 'access-3'},
+        },
+        meError: Exception('No response from server.'),
+      );
+
+      await expectLater(WorkspaceSession(api: api, auth: auth).complete(_handoffAnswer), throwsException);
+      expect(api.revoked, ['access-3']);
+      expect(auth.currentToken, isNull);
+      expect(auth.tenantApiHost.value, isNull);
+    });
+
+    test('a refused handoff revokes nothing (no token was issued)', () async {
+      final api = _FakeTenantApi(handoffError: Exception('This sign-in link has expired.'));
+
+      await expectLater(WorkspaceSession(api: api, auth: auth).complete(_handoffAnswer), throwsException);
+      expect(api.revoked, isEmpty);
     });
   });
 

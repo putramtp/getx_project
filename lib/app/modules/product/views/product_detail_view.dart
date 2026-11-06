@@ -12,6 +12,7 @@ import '../../../global/widget/app_header.dart';
 import '../../../global/functions.dart';
 import '../../../global/size_config.dart';
 import '../../../global/styles/app_text_style.dart';
+import '../../../global/widget/functions_widget.dart';
 import '../../../global/widget/skeleton_widgets.dart';
 import '../controllers/product_detail.controller.dart';
 
@@ -34,6 +35,10 @@ class ProductDetailView extends GetView<ProductDetailController> {
       body: Obx(() {
         final detail = controller.productDetail.value;
         final loading = controller.isLoading.value;
+        // Failed with nothing loaded: Retry, not a page of defaults.
+        if (!loading && detail == null && controller.hasError.value) {
+          return errorRetry(size, onRetry: controller.loadProductDetail, accent: AppAccent.slate.base);
+        }
 
         return FadeTransition(
           opacity: controller.fadeAnim,

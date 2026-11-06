@@ -273,7 +273,8 @@ class ApiProvider extends GetConnect {
         final hint = retryAfterHint(body?['retry_after'] ?? response.headers?['retry-after']);
         serverMsg = '${serverMsg ?? 'Too many requests.'}\n$hint';
       }
-      throw Exception(
+      throw RequestRefusedException(
+        code,
         serverMsg ?? 'HTTP $code${response.statusText != null ? ": ${response.statusText}" : ""}',
       );
     }
@@ -448,6 +449,24 @@ class SessionEndedException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// A non-2xx answer (other than the typed ones above): the server answered and
+/// said no. Reads like `Exception(message)` (ApiExecutor strips the prefix);
+/// [statusCode] lets a submit tell a refusal from an answer that never came.
+class RequestRefusedException implements Exception {
+  final int statusCode;
+  final String message;
+  RequestRefusedException(this.statusCode, this.message);
+
+  /// A 4xx the backend's idempotency check releases (validation, not found,
+  /// forbidden…): nothing was booked, so the submit's key may go. Not 408
+  /// (timed out — may still run), 409 (the first try is still running) or 429.
+  bool get refusedWithoutBooking =>
+      statusCode >= 400 && statusCode < 500 && statusCode != 408 && statusCode != 409 && statusCode != 429;
+
+  @override
+  String toString() => 'Exception: $message';
 }
 
 class SubmitAlreadySavedException implements Exception {

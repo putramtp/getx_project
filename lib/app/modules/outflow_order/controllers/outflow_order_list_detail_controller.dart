@@ -53,11 +53,12 @@ class OutflowOrderListDetailController extends GetxController {
 
   /// Create a delivery for this outflow order, then route to the delivery list.
   /// Reloads the detail behind it so Back shows "View Deliveries", not a
-  /// second "Create Delivery".
+  /// second "Create Delivery" — after a failed create too: a create whose
+  /// answer got lost is refused on the next tap ("delivery already exists"),
+  /// and only the reloaded detail swaps the CTA for "View Deliveries".
   Future<void> createDelivery() async {
-    final created = await createDeliveryForOutflow(curretOutflowOrder.id,
-        isLoading: isCreatingDelivery);
-    if (created) loadOutflowOrderDetail();
+    await createDeliveryForOutflow(curretOutflowOrder.id, isLoading: isCreatingDelivery);
+    loadOutflowOrderDetail();
   }
 
   /// Open the delivery list (used when a delivery already exists).

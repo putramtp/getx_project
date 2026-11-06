@@ -107,28 +107,7 @@ class StockTransactionView extends GetView<StockTransactionController> {
 
   /// 🧾 Modern Top Filter Sheet
   void _openTopFilterSheet(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      barrierLabel: "Filter",
-      barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.3),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, _, _) {
-        return TopDateFilterPopup(controller: controller);
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, -1), // 👈 slide from top
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
-          child: FadeTransition(
-            opacity: anim1,
-            child: child,
-          ),
-        );
-      },
-    );
+    showTopFilterPopup(context, TopDateFilterPopup(controller: controller));
   }
 
   /// The empty / error state inside a scrollable, so pull-to-refresh still

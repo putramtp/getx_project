@@ -17,37 +17,6 @@ void main() {
     });
   });
 
-  group('capitalizeFirstofEach', () {
-    test('capitalizes each word', () {
-      expect(capitalizeFirstofEach('hello world'), 'Hello World');
-    });
-    test('leaves empty string untouched', () {
-      expect(capitalizeFirstofEach(''), '');
-    });
-  });
-
-  group('url helpers', () {
-    test('urlValid only accepts absolute http(s)', () {
-      expect(urlValid('https://example.com'), isTrue);
-      expect(urlValid('http://example.com/a'), isTrue);
-      expect(urlValid('ftp://example.com'), isFalse);
-      expect(urlValid('not a url'), isFalse);
-    });
-    test('isImageUrl / isPdfUrl by extension', () {
-      expect(isImageUrl('a/b/pic.PNG'), isTrue);
-      expect(isImageUrl('a/b/pic.pdf'), isFalse);
-      expect(isPdfUrl('doc.pdf'), isTrue);
-      expect(isPdfUrl('doc.png'), isFalse);
-    });
-  });
-
-  group('searchString', () {
-    test('is case- and space-insensitive substring match', () {
-      expect(searchString('AB', 'x a  b y'), isTrue);
-      expect(searchString('zz', 'abc'), isFalse);
-    });
-  });
-
   group('formatPrice', () {
     test('null → dash', () {
       expect(formatPrice(null), '-');
@@ -95,6 +64,23 @@ void main() {
         {'line_id': 8, 'scanned': []},
       ];
       expect(submitLines(items, 'scanned').map((e) => e['line_id']), [7]);
+    });
+  });
+
+  group('sortRowsBy', () {
+    test('sorts A→Z or Z→A by the key, in place', () {
+      final rows = ['PO-3', 'PO-1', 'PO-2'];
+      sortRowsBy(rows, (r) => r, ascending: true);
+      expect(rows, ['PO-1', 'PO-2', 'PO-3']);
+      sortRowsBy(rows, (r) => r, ascending: false);
+      expect(rows, ['PO-3', 'PO-2', 'PO-1']);
+    });
+
+    test('a page appended below is sorted in with the rest', () {
+      final rows = ['b', 'd']; // page 1, sorted A→Z
+      rows.addAll(['a', 'c']); // page 2 as the server sends it
+      sortRowsBy(rows, (r) => r, ascending: true);
+      expect(rows, ['a', 'b', 'c', 'd']);
     });
   });
 }

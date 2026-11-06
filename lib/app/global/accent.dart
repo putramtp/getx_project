@@ -39,6 +39,21 @@ AppAccent accentFor(String name) => const [
       AppAccent.steel,
     ][name.codeUnits.fold<int>(0, (a, c) => a + c) % 6];
 
-/// API colors (e.g. `delivery_statuses.color`, default `#fff`) can be unreadable
-/// on white — fall back to navy for light ones.
-Color readableOnWhite(Color c) => c.computeLuminance() > 0.7 ? navyMid : c;
+/// API colors (e.g. `delivery_statuses.color`, default `#fff`; Pending is gold
+/// `#EFBF04`) can be unreadable on white. Near-white / grey ones fall back to
+/// navy; a saturated color under 4.5:1 contrast keeps its hue and is darkened
+/// until it reaches 4.5:1 (gold → dark gold).
+Color readableOnWhite(Color c) {
+  if (_contrastOnWhite(c) >= 4.5) return c;
+  final hsl = HSLColor.fromColor(c.withValues(alpha: 1));
+  if (hsl.saturation < 0.15 && c.computeLuminance() > 0.7) return navyMid;
+  var l = hsl.lightness;
+  var out = c;
+  while (l > 0 && _contrastOnWhite(out) < 4.5) {
+    l = (l - 0.02).clamp(0.0, 1.0);
+    out = hsl.withLightness(l).toColor();
+  }
+  return out;
+}
+
+double _contrastOnWhite(Color c) => 1.05 / (c.withValues(alpha: 1).computeLuminance() + 0.05);

@@ -114,6 +114,32 @@ const renameIgnored = BatchRefusal('', '');
 /// Whether a scan on [line] is checked against the batch stock.
 bool needsBatchCheck(Map line) => line['manage_sn'] == true && line['serialNumberType'] == 'BATCH';
 
+/// Label stock per item as read on one scan screen ([batchLeftToScan]). Every
+/// scan re-read an item's whole label stock before; what this screen draws is
+/// subtracted locally anyway ([scannedFromBatch]). A read is reused for
+/// [maxAge] only, so a batch another worker drew from meanwhile is soon seen
+/// as it is — the backend still re-checks at submit.
+class BatchStockCache {
+  BatchStockCache({DateTime Function()? clock}) : _now = clock ?? DateTime.now;
+
+  static const maxAge = Duration(minutes: 1);
+
+  final DateTime Function() _now;
+  final _entries = <int, ({DateTime at, Map<String, num> stock})>{};
+
+  /// [itemId]'s stock when read less than [maxAge] ago; else null.
+  Map<String, num>? fresh(int itemId) {
+    final entry = _entries[itemId];
+    if (entry == null || _now().difference(entry.at) >= maxAge) return null;
+    return entry.stock;
+  }
+
+  void put(int itemId, Map<String, num> stock) => _entries[itemId] = (at: _now(), stock: stock);
+
+  /// Forget every read (a reload of the screen).
+  void clear() => _entries.clear();
+}
+
 /// Fetches [line]'s label stock and runs [checkBatchLeft]; null when nothing
 /// can be drawn (the reason, or the failed lookup, is already shown).
 Future<num?> batchLeftToScan(
@@ -122,7 +148,7 @@ Future<num?> batchLeftToScan(
   String code, {
   required RxBool isLoading,
   Iterable<Map> lines = const [],
-  Map<int, Map<String, num>>? stockCache,
+  BatchStockCache? stockCache,
 }) async {
   final itemId = line['item_id'];
   if (itemId is! int) {
@@ -130,18 +156,27 @@ Future<num?> batchLeftToScan(
     return null;
   }
 
-  // [stockCache]: the item's label stock as read on this screen. Every scan
-  // re-read the whole of it before; what this screen draws is subtracted
-  // locally anyway ([scannedFromBatch]), and the backend re-checks at submit.
-  final stock = stockCache?[itemId] ??
-      await ApiExecutor.run<Map<String, num>>(
-        isLoading: isLoading,
-        task: () => provider.getSerialStock(itemId),
-      );
-  if (stock == null) return null;
-  stockCache?[itemId] = stock;
+  Future<Map<String, num>?> read() async {
+    final stock = await ApiExecutor.run<Map<String, num>>(
+      isLoading: isLoading,
+      task: () => provider.getSerialStock(itemId),
+    );
+    if (stock != null) stockCache?.put(itemId, stock);
+    return stock;
+  }
 
-  final result = checkBatchLeft(stock, line, code, lines: lines);
+  final cached = stockCache?.fresh(itemId);
+  final stock = cached ?? await read();
+  if (stock == null) return null;
+
+  var result = checkBatchLeft(stock, line, code, lines: lines);
+  // A refusal read from the cache may be out of date (the label was received
+  // or returned since): confirm it against the server before showing it.
+  if (cached != null && result.refusal != null) {
+    final current = await read();
+    if (current == null) return null;
+    result = checkBatchLeft(current, line, code, lines: lines);
+  }
   result.refusal?.show();
   return result.left;
 }
@@ -166,7 +201,7 @@ Future<bool> canRenameScan(
   String newCode, {
   required RxBool isLoading,
   Iterable<Map> lines = const [],
-  Map<int, Map<String, num>>? stockCache,
+  BatchStockCache? stockCache,
 }) async {
   final refusal = checkRename(line, oldCode, newCode, lines: lines);
   if (refusal != null) {

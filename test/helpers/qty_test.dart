@@ -38,6 +38,16 @@ void main() {
       expect(parseQty('4'), 4);
     });
 
+    test('reads a bare leading or trailing separator', () {
+      expect(parseQty('.5'), 0.5);
+      expect(parseQty(',25'), 0.25);
+      expect(parseQty('5.'), 5);
+      expect(parseQty('5,', wholeUnits: true), 5);
+      for (final text in ['.', ',', '..5', '5..']) {
+        expect(parseQty(text), isNull, reason: text);
+      }
+    });
+
     test('rejects blank, junk, zero, negative and over 6 decimals', () {
       for (final text in ['', 'abc', '0', '-1', '1.1234567']) {
         expect(parseQty(text), isNull, reason: text);
@@ -59,6 +69,17 @@ void main() {
       expect(parseQty('1.500'), 1.5);
       expect(parseQty('0,125'), 0.125);
       expect(looksLikeThousands('1.5'), isFalse);
+    });
+
+    test('ambiguousQty offers both readings of "1.500" but not of a clear amount', () {
+      expect(ambiguousQty('1.500'), (decimal: 1.5, thousands: 1500));
+      expect(ambiguousQty('12,250'), (decimal: 12.25, thousands: 12250));
+      // A trailing separator doesn't hide the ambiguity (nor a thousands group).
+      expect(ambiguousQty('1.500.'), (decimal: 1.5, thousands: 1500));
+      expect(looksLikeThousands('1.000,'), isTrue);
+      for (final text in ['0.125', '.500', '1.5', '1.25', '1500', '1.000', '1.000.000', '1234.500']) {
+        expect(ambiguousQty(text), isNull, reason: text);
+      }
     });
 
     test('whole units reject fractions', () {

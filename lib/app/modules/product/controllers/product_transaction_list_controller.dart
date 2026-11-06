@@ -56,11 +56,16 @@ class ProductTransactionListController extends GetxController with ListReloadGua
   @override
   void onInit() {
     super.onInit();
-    currentProduct = Get.arguments;
     searchFocus.addListener(() {
       isSearchFocused.value = searchFocus.hasFocus;
     });
-    loadProductTrans();
+    final args = Get.arguments;
+    if (args is ProductSummaryModel) {
+      currentProduct = args;
+      loadProductTrans();
+    } else {
+      errorAlert("⚠️ Invalid or missing arguments in ProductTransactionListController: $args");
+    }
   }
 
   @override

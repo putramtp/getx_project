@@ -9,6 +9,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart' show databaseFactoryFfi, sq
 
 import '../global/alert.dart';
 import '../global/functions.dart';
+import '../global/submit_key.dart';
 
 /// A GetxService providing durable, on-device storage for in-progress work
 /// ("drafts") so a worker never loses a batch of scans/fills to an app kill,
@@ -146,10 +147,18 @@ List<Map<String, dynamic>>? draftThatFits(List<Map<String, dynamic>>? cached, nu
 }
 
 /// Tells the worker which lines lost their saved entries ([draftThatFits]).
-void showClearedDrafts(List<String> names) {
+/// With a submit of [scope] still unanswered, the likeliest cause is that
+/// submit itself — booked, its answer lost — not someone else: say so, rather
+/// than blame the line.
+Future<void> showClearedDrafts(DraftService store, String scope, List<String> names) async {
   if (names.isEmpty) return;
+  final lines = names.join(', ');
+  final pending = await SubmitKey(store, scope).isPending();
   warningAlertBottom(
-    'Saved entries for ${names.join(', ')} no longer fit what is left on the line and were cleared.',
+    pending
+        ? 'Your last submit may have been saved before its answer was lost: the entries for $lines '
+            'are more than what is left now and were cleared. Check the history before submitting again.'
+        : 'Saved entries for $lines no longer fit what is left on the line and were cleared.',
     title: 'Draft Cleared',
   );
 }

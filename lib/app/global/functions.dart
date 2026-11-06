@@ -1,78 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
-String capitalizeFirstofEach(String text) {
-  List<String> words = text.split(" ");
-  for (int i = 0; i < words.length; i++) {
-    String word = words[i];
-    if (word.isNotEmpty) {
-      words[i] = word[0].toUpperCase() + word.substring(1);
-    }
-  }
-  return words.join(" ");
-}
-
-bool urlValid(String imageUrl) {
-  Uri? uri = Uri.tryParse(imageUrl);
-  return uri != null &&
-      uri.isAbsolute &&
-      (uri.scheme == 'http' || uri.scheme == 'https');
-}
-
-bool isImageUrl(String imageUrl) {
-  final imageExtensions = ['.jpg', '.jpeg', '.png'];
-  final lowercaseUrl = imageUrl.toLowerCase();
-
-  // Check if the URL ends with a known image extension
-  if (imageExtensions.any((extension) => lowercaseUrl.endsWith(extension))) {
-    return true;
-  }
-
-  // Alternatively, you can check the content type of the resource
-  // using a package like http or dio
-  // Example:
-  // final response = await http.head(Uri.parse(url));
-  // final contentType = response.headers['content-type'];
-  // return contentType?.startsWith('image/') ?? false;
-
-  return false;
-}
-
-bool isPdfUrl(String pdfUrl) {
-  final pdfExtensions = ['.pdf'];
-  final lowercaseUrl = pdfUrl.toLowerCase();
-  if (pdfExtensions.any((extension) => lowercaseUrl.endsWith(extension))) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool searchString(String query, String string) {
-  query = query.replaceAll(' ', '').toLowerCase();
-  string = string.replaceAll(' ', '').toLowerCase();
-  return string.contains(query);
-}
-
-Future<bool> checkImageAssetExist(String pathImage) async {
-  try {
-    await rootBundle.load(pathImage);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-String formatDateTime(DateTime dateTime) {
-  return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} "
-      "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
-}
-
-String formatTime(DateTime dateTime) {
-  return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
-}
 
 String getDateString(DateTime date) {
   return DateFormat('yyyy-MM-dd').format(date);
@@ -130,12 +58,12 @@ String clearedEntriesMessage(List? entries, String name) {
   return 'Removed ${list.length} $noun (qty ${formatQty(sumQty(list))}) from $name';
 }
 
-/// Parses a typed quantity ("2.5" or "2,5"). Null when blank, not above 0,
+/// Parses a typed quantity ("2.5", "2,5", ".5", "5."). Null when blank, not above 0,
 /// beyond 6 decimals, a fraction where [wholeUnits] are required, or not plain
 /// digits with at most one decimal separator — so "1e3", "0x10", "NaN",
 /// "Infinity" and signs are refused, and so is [looksLikeThousands] input.
 num? parseQty(String text, {bool wholeUnits = false}) {
-  final typed = text.trim();
+  final typed = _qtyText(text);
   if (!RegExp(r'^\d+([.,]\d+)?$').hasMatch(typed) || looksLikeThousands(typed)) return null;
   final value = num.tryParse(typed.replaceAll(',', '.'));
   if (value == null || value <= 0) return null;
@@ -148,9 +76,37 @@ num? parseQty(String text, {bool wholeUnits = false}) {
 /// Typed input that reads as a thousands-grouped number ("1.000", "12,000",
 /// "1.000.000"): taken as a decimal it would silently become 1 / 12 / junk.
 /// ".000" adds nothing to a decimal, so whoever typed it meant thousands.
-/// ("1.500" stays 1.5 — a real decimal amount in kg or metres.)
-bool looksLikeThousands(String text) =>
-    RegExp(r'^\d{1,3}([.,]\d{3}){2,}$').hasMatch(text.trim()) || RegExp(r'^\d{1,3}[.,]000$').hasMatch(text.trim());
+/// ("1.500" may be 1.5 kg or 1500: see [ambiguousQty].)
+bool looksLikeThousands(String text) {
+  final typed = _qtyText(text);
+  return RegExp(r'^\d{1,3}([.,]\d{3}){2,}$').hasMatch(typed) || RegExp(r'^\d{1,3}[.,]000$').hasMatch(typed);
+}
+
+/// Typed quantity text as the qty helpers read it: trimmed, ".5" as "0.5" and
+/// "5." as "5" — plain decimals a worker types. One place, so [parseQty],
+/// [looksLikeThousands] and [ambiguousQty] judge the same text ("1.500." is
+/// "1.500" to all three, not 1.5 to one and nothing to the others).
+String _qtyText(String text) {
+  final typed = text.trim();
+  if (RegExp(r'^[.,]\d+$').hasMatch(typed)) return '0$typed';
+  if (RegExp(r'\d[.,]$').hasMatch(typed)) return typed.substring(0, typed.length - 1);
+  return typed;
+}
+
+/// The two readings of a typed quantity that may be either ("1.500",
+/// "12,250": a 1–3 digit whole part, one separator, exactly three digits).
+/// In English it is 1.5, in Indonesian 1500 — the app can't tell, so the qty
+/// dialogs ask ([parseQty] alone takes the decimal). Null when the text is
+/// not ambiguous: "0.125" (no thousands start with 0), "1.5", "1.000"
+/// ([looksLikeThousands], refused outright).
+({num decimal, int thousands})? ambiguousQty(String text) {
+  final typed = _qtyText(text);
+  if (!RegExp(r'^[1-9]\d{0,2}[.,]\d{3}$').hasMatch(typed) || looksLikeThousands(typed)) return null;
+  return (
+    decimal: roundQty(num.parse(typed.replaceAll(',', '.'))),
+    thousands: int.parse(typed.replaceAll(RegExp(r'[.,]'), '')),
+  );
+}
 
 /// Serial-tracked UNIQUE/BATCH lines count whole units — the backend makes one
 /// SKU per unit / batch entry and rejects fractions. Everything else (quantity
@@ -208,6 +164,13 @@ void dropAllEntries(RxList<Map<String, dynamic>> items, String entriesKey) {
   }
   items.refresh();
 }
+
+/// Sorts [rows] in place by [key]: A→Z when [ascending], else Z→A. A list's
+/// Sort button sorts only the rows loaded so far (the list endpoints take no
+/// sort), so the controllers re-run it after every reload and next page —
+/// else a page appended below, or a reload, undoes the order the button shows.
+void sortRowsBy<T>(List<T> rows, String Function(T row) key, {required bool ascending}) =>
+    rows.sort((a, b) => ascending ? key(a).compareTo(key(b)) : key(b).compareTo(key(a)));
 
 String formatPrice(dynamic value) {
   if (value == null) return "-";

@@ -6,11 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Pumps [home] inside a GetMaterialApp on a phone-sized view ([width] × 800 dp)
 /// with [SizeConfig.defaultSize] set the way `MyApp` sets it.
-Future<void> pumpUi(WidgetTester t, Widget home, {double width = 400}) async {
+/// [pages]: named routes a test opens with `Get.toNamed` (their bindings run).
+Future<void> pumpUi(WidgetTester t, Widget home, {double width = 400, List<GetPage> pages = const []}) async {
   GoogleFonts.config.allowRuntimeFetching = false;
   t.view.physicalSize = Size(width, 800);
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.reset);
   SizeConfig.defaultSize = width * 0.024;
-  await t.pumpWidget(GetMaterialApp(home: home));
+  await t.pumpWidget(GetMaterialApp(home: home, getPages: pages));
 }

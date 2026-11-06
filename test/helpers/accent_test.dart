@@ -28,4 +28,12 @@ void main() {
     expect(readableOnWhite(const Color(0xFFEEEEEE)), navyMid);
     expect(readableOnWhite(steelBlue), steelBlue);
   });
+
+  test('readableOnWhite darkens a saturated light color, keeping its hue', () {
+    const gold = Color(0xFFEFBF04); // delivery status Pending ("Scheduled")
+    final out = readableOnWhite(gold);
+    expect(out, isNot(navyMid));
+    expect(1.05 / (out.computeLuminance() + 0.05), greaterThanOrEqualTo(4.5));
+    expect(HSLColor.fromColor(out).hue, closeTo(HSLColor.fromColor(gold).hue, 1));
+  });
 }

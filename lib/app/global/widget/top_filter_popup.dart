@@ -7,6 +7,45 @@ import 'package:getx_project/app/global/styles/app_text_style.dart';
 import 'package:getx_project/app/global/variables.dart';
 import 'package:getx_project/app/global/widget/app_buttons.dart';
 
+/// Opens [popup] sliding down from the top. Its fields edit the controller's
+/// filter directly, so a popup closed without Apply or Clear (a tap outside,
+/// Back) puts every value back as it was: left changed, the next page of the
+/// list would load with a filter the rows on screen weren't loaded with — a
+/// page of another query appended to them, or a 422 for an end date before the
+/// start date the Apply check never saw. [extra]: the screen's own filter
+/// values edited in [TopDateFilterPopup.children].
+Future<void> showTopFilterPopup(BuildContext context, TopDateFilterPopup popup, {List<Rx> extra = const []}) async {
+  final c = popup.controller;
+  final start = c.startDate.value, end = c.endDate.value, limit = c.limit.value;
+  final priceOn = c.enablePriceRange.value, minPrice = c.minPrice.value, maxPrice = c.maxPrice.value;
+  final extraKept = [for (final r in extra) r.value];
+
+  final applied = await showGeneralDialog<bool>(
+    context: context,
+    barrierLabel: "Filter",
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.3),
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (_, _, _) => popup,
+    transitionBuilder: (context, anim1, anim2, child) => SlideTransition(
+      position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
+          .animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
+      child: FadeTransition(opacity: anim1, child: child),
+    ),
+  );
+  if (applied == true) return;
+
+  c.startDate.value = start;
+  c.endDate.value = end;
+  c.limit.value = limit;
+  c.enablePriceRange.value = priceOn;
+  c.minPrice.value = minPrice;
+  c.maxPrice.value = maxPrice;
+  for (var i = 0; i < extra.length; i++) {
+    extra[i].value = extraKept[i];
+  }
+}
+
 class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget {
   const TopDateFilterPopup({super.key, required this.controller,  this.showPrice = false , this.showDateRange = true, this.children});
 
@@ -181,7 +220,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                           icon: Icons.clear,
                           onPressed: () {
                             controller.clearFilter();
-                            closeRoute();
+                            closeRoute(true); // applied: keep (see showTopFilterPopup)
                           },
                         ),
                       ),
@@ -200,7 +239,7 @@ class TopDateFilterPopup<T extends TopFilterController> extends StatelessWidget 
                               return;
                             }
                             controller.applyFilter();
-                            closeRoute();
+                            closeRoute(true); // applied: keep (see showTopFilterPopup)
                           },
                         ),
                       ),

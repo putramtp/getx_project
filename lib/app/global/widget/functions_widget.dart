@@ -355,10 +355,12 @@ Future<String?> captureSerialInput({Color accent = Colors.blueAccent}) async {
 }
 
 /// Manual serial-number entry dialog. Returns the trimmed code or null.
-Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent}) async {
+/// [initialValue]: the serial being edited, so changing only a qty or an
+/// expiry doesn't mean typing the serial again.
+Future<String?> showManualSerialDialog({Color accent = Colors.blueAccent, String initialValue = ''}) async {
   return Get.dialog<String>(
     OwnedTextControllers(
-      initialTexts: const [''],
+      initialTexts: [initialValue],
       builder: (controllers) {
       final controller = controllers.first;
       void submit() {

@@ -244,7 +244,12 @@ class ReceiveOrderFillByPoView extends GetView<ReceiveOrderByPoDetailController>
               onTap: () async {
                 closeRoute();
                 if (isSerial) {
-                  final barcode = await showManualSerialDialog(accent: _accent);
+                  final cur = controller.items[controller.selectedIndex.value];
+                  final current = List<Map>.from(cur['filled'] ?? const []);
+                  final barcode = await showManualSerialDialog(
+                    accent: _accent,
+                    initialValue: i < current.length ? current[i]['serial']?.toString() ?? '' : '',
+                  );
                   if (barcode == null) return;
                   final result = await showReceiveItemQtyDialog(accent: _accent,
                     type: 'BATCH',

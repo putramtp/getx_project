@@ -97,6 +97,7 @@ class OutflowOrderListController extends GetxController with ListReloadGuard imp
     final mapped = rawList.map((e) => OutflowOrderModel.fromJson(e)).toList();
 
     orders.assignAll(mapped);
+    _keepSort();
   }
 
   // LOAD NEXT PAGE
@@ -128,6 +129,7 @@ class OutflowOrderListController extends GetxController with ListReloadGuard imp
     }
 
     orders.addAll(newOrders);
+    _keepSort();
   }
 
   void onSearchChanged(String value) {
@@ -135,11 +137,20 @@ class OutflowOrderListController extends GetxController with ListReloadGuard imp
     loadOutflowOrders();
   }
   // SORT
+  /// Set once Sort is tapped: from then on the order is kept on every reload
+  /// and next page ([_keepSort]); until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    orders.sort((a, b) => isAscending.value
-        ? a.code.compareTo(b.code)
-        : b.code.compareTo(a.code));
+    _sortedByUser = true;
+    _keepSort();
+  }
+
+  /// Re-sorts the loaded rows the way Sort set them (see [sortRowsBy]).
+  void _keepSort() {
+    if (!_sortedByUser) return;
+    sortRowsBy(orders, (o) => o.code, ascending: isAscending.value);
     orders.refresh();
   }
 

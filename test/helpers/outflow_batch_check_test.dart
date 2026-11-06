@@ -146,4 +146,23 @@ void main() {
       expect(checkBatchLeft({'BATCH-A': 6}, line, 'batch-a').left, 6);
     });
   });
+
+  group('BatchStockCache', () {
+    test('reuses a read for a minute, then asks for a fresh one', () {
+      var now = DateTime(2026, 11, 6, 9);
+      final cache = BatchStockCache(clock: () => now);
+      cache.put(5, {'BATCH-A': 6});
+      expect(cache.fresh(5), {'BATCH-A': 6});
+      expect(cache.fresh(6), isNull);
+
+      now = now.add(BatchStockCache.maxAge);
+      expect(cache.fresh(5), isNull);
+    });
+
+    test('clear forgets every read', () {
+      final cache = BatchStockCache()..put(5, {'BATCH-A': 6});
+      cache.clear();
+      expect(cache.fresh(5), isNull);
+    });
+  });
 }

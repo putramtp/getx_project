@@ -175,10 +175,13 @@ class LoginController extends GetxController {
     await _authService.setToken(token);
     _authService.setAccount(emailValue.value);
     _authService.setUsername(username);
-    if (roles != null && roles.isNotEmpty) {
-      final List<String> roleNames = (roles as List).map((role) => role['name'] as String).toList();
-      _authService.setRoles(roleNames.join(', '));
-    }
+    // Read leniently: the token is stored already, so a malformed role here
+    // must not throw (outside ApiExecutor) and leave the user stuck on login.
+    final roleNames = [
+      for (final role in roles is List ? roles : const [])
+        if (role is Map && (role['name']?.toString() ?? '').isNotEmpty) role['name'].toString(),
+    ];
+    if (roleNames.isNotEmpty) _authService.setRoles(roleNames.join(', '));
 
     successAlert("Success Login as ${username ?? 'User'}");
     Get.offAllNamed(Routes.HOME);

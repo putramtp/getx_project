@@ -41,17 +41,21 @@ class DeliveryDetailController extends GetxController {
     }
   }
 
-  Future<void> loadDetail() async {
+  /// [quiet]: a resync after a failed save — that save already showed why it
+  /// failed (often "No internet connection"), so this one shows nothing.
+  Future<void> loadDetail({bool quiet = false}) async {
     // Two calls below: offline, one notice instead of one per call.
-    if (!await Get.find<NetworkService>().ensureOnline()) return;
+    if (!quiet && !await Get.find<NetworkService>().ensureOnline()) return;
     final data = await ApiExecutor.run(
       isLoading: isLoading,
+      quiet: quiet,
       task: () => provider.getDeliveryDetail(_initial.id),
     );
     if (data != null) delivery.value = data;
 
     final list = await ApiExecutor.run(
       isLoading: false.obs,
+      quiet: quiet,
       task: () => provider.getDeliveryStatuses(),
     );
     if (list != null) statuses.assignAll(list);
@@ -159,7 +163,7 @@ class DeliveryDetailController extends GetxController {
     if (updated == null) {
       // The update may have been applied with its answer lost: show what the
       // server has, or the next try is refused against a stale screen.
-      loadDetail();
+      loadDetail(quiet: true);
       return false;
     }
 
@@ -181,7 +185,7 @@ class DeliveryDetailController extends GetxController {
       task: () => provider.undoStatus(d.id, reason.trim(), expectedStatusId: d.statusId),
     );
     if (updated == null) {
-      loadDetail(); // as in submitUpdate: the screen must follow the server
+      loadDetail(quiet: true); // as in submitUpdate: the screen must follow the server
       return false;
     }
 
@@ -196,12 +200,19 @@ class DeliveryDetailController extends GetxController {
     final d = delivery.value;
     if (d == null) return;
     // One key per pending upload of this delivery (kept across a failed try).
-    final key = SubmitKey(Get.find<DraftService>(), 'delivery_proof_${d.id}');
+    // "Already saved" means an earlier photo went up with its answer lost:
+    // reload so it shows — the worker then sees this one still needs sending.
+    final key = SubmitKey(Get.find<DraftService>(), 'delivery_proof_${d.id}',
+        onAlreadySaved: () => loadDetail(quiet: true));
     final res = await ApiExecutor.run(
       isLoading: isUploading,
       task: () => key.send((k) => provider.uploadProof(d.id, bytes, filename, idempotencyKey: k)),
     );
-    if (res == null) return;
+    if (res == null) {
+      // A lost answer may hide a stored photo: show what the server has.
+      loadDetail(quiet: true);
+      return;
+    }
     successAlertBottom("Proof of delivery uploaded.");
     await loadDetail();
   }

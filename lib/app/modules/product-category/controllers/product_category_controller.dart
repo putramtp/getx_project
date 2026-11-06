@@ -47,11 +47,20 @@ class ProductCategoryController extends GetxController with ListReloadGuard {
     super.onClose();
   }
 
+  /// Set once Sort is tapped: from then on the order is kept on every reload
+  /// and next page ([_keepSort]); until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    orders.sort((a, b) => isAscending.value
-        ? a.name.compareTo(b.name)
-        : b.name.compareTo(a.name));
+    _sortedByUser = true;
+    _keepSort();
+  }
+
+  /// Re-sorts the loaded rows the way Sort set them (see [sortRowsBy]).
+  void _keepSort() {
+    if (!_sortedByUser) return;
+    sortRowsBy(orders, (o) => o.name, ascending: isAscending.value);
     orders.refresh();
   }
 
@@ -119,6 +128,7 @@ class ProductCategoryController extends GetxController with ListReloadGuard {
         rawList.map((e) => ProductCategoryModel.fromJson(e)).toList();
 
     orders.assignAll(mapped);
+    _keepSort();
   }
 
   // LOAD NEXT PAGE
@@ -151,6 +161,7 @@ class ProductCategoryController extends GetxController with ListReloadGuard {
     }
 
     orders.addAll(newOrders);
+    _keepSort();
   }
 
   String formatYmd(DateTime date) {

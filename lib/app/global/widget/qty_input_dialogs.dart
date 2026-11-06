@@ -113,12 +113,49 @@ Future<String?> showReceiverNameDialog() {
 
 void _invalidQtyAlert({required bool wholeUnits, String typed = ''}) => errorAlertBottom(
       title: "Invalid Input",
-      looksLikeThousands(typed)
+      looksLikeThousands(typed) || (wholeUnits && ambiguousQty(typed) != null)
           ? "Type the number without a thousands separator (e.g. 1000, not ${typed.trim()})."
           : wholeUnits
               ? "Serial-tracked items count whole units — enter a whole number greater than 0."
               : "Please enter a quantity greater than 0 (up to 6 decimals).",
     );
+
+/// The typed quantity, or null (the reason shown) — the dialog then stays open.
+/// An [ambiguousQty] ("1.500": 1.5 or 1500?) is never guessed: a whole-unit
+/// line refuses it (a decimal can't be meant there, and a silent 1500 would
+/// make 1500 labels), any other line lets the worker pick the reading.
+Future<num?> _readQty(String text, {required bool wholeUnits}) async {
+  final readings = ambiguousQty(text);
+  if (readings == null) {
+    final qty = parseQty(text, wholeUnits: wholeUnits);
+    if (qty == null) _invalidQtyAlert(wholeUnits: wholeUnits, typed: text);
+    return qty;
+  }
+  if (wholeUnits) {
+    _invalidQtyAlert(wholeUnits: true, typed: text);
+    return null;
+  }
+  return Get.dialog<num>(
+    AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Which quantity?'),
+      content: Text('"${text.trim()}" can be read two ways. Which one did you mean?'),
+      actions: [
+        TextButton(onPressed: () => closeRoute(), child: const Text('Cancel')),
+        OutlinedButton(
+          key: const Key('qtyReadingDecimal'),
+          onPressed: () => closeRoute<num>(readings.decimal),
+          child: Text(formatQty(readings.decimal)),
+        ),
+        ElevatedButton(
+          key: const Key('qtyReadingThousands'),
+          onPressed: () => closeRoute<num>(readings.thousands),
+          child: Text('${readings.thousands}'),
+        ),
+      ],
+    ),
+  );
+}
 
 class _QtyDialog extends StatefulWidget {
   const _QtyDialog({
@@ -149,9 +186,9 @@ class _QtyDialogState extends State<_QtyDialog> {
     super.dispose();
   }
 
-  void _save() {
-    final qty = parseQty(_controller.text, wholeUnits: widget.wholeUnits);
-    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits, typed: _controller.text);
+  Future<void> _save() async {
+    final qty = await _readQty(_controller.text, wholeUnits: widget.wholeUnits);
+    if (qty == null || !mounted) return;
     closeRoute(qty);
   }
 
@@ -240,9 +277,9 @@ class _ReceiveItemQtyDialogState extends State<_ReceiveItemQtyDialog> {
     }
   }
 
-  void _save() {
-    final qty = parseQty(_qtyController.text, wholeUnits: widget.wholeUnits);
-    if (qty == null) return _invalidQtyAlert(wholeUnits: widget.wholeUnits, typed: _qtyController.text);
+  Future<void> _save() async {
+    final qty = await _readQty(_qtyController.text, wholeUnits: widget.wholeUnits);
+    if (qty == null || !mounted) return;
     if (widget.manageExpired == true && _expController.text.isEmpty) {
       errorAlertBottom(
         title: "Missing Expiration Date",

@@ -73,6 +73,37 @@ void main() {
     expect(reloads, 0);
   });
 
+  test('a 4xx refusal drops the key (nothing booked) but keeps the draft', () async {
+    await drafts.saveJson('receive_po_5', {'10': [{'qty': 5}]});
+    final key = SubmitKey(drafts, 'receive_po_5');
+    final first = await key.current();
+
+    await expectLater(
+      key.send((_) async => throw RequestRefusedException(422, 'The qty is invalid.')),
+      throwsA(isA<RequestRefusedException>()),
+    );
+    expect(await key.isPending(), isFalse);
+    expect(await key.current(), isNot(first));
+    expect(await drafts.readJson('receive_po_5'), {'10': [{'qty': 5}]});
+  });
+
+  test('a 5xx, 408, 409 or 429 keeps the key: the submit may still be booked', () async {
+    for (final code in [500, 502, 408, 409, 429]) {
+      final key = SubmitKey(drafts, 'outflow_or_$code');
+      final first = await key.current();
+      await expectLater(
+        key.send((_) async => throw RequestRefusedException(code, 'HTTP $code')),
+        throwsA(isA<RequestRefusedException>()),
+      );
+      expect(await key.isPending(), isTrue, reason: '$code');
+      expect(await key.current(), first, reason: '$code');
+    }
+  });
+
+  test('a refusal reads like a plain Exception for the user', () {
+    expect(RequestRefusedException(422, 'The qty is invalid.').toString(), 'Exception: The qty is invalid.');
+  });
+
   test('keys are per scope and never touch the line draft', () async {
     await drafts.saveJson('receive_po_1', {'10': [{'qty': 2}]});
     final a = await SubmitKey(drafts, 'receive_po_1').current();

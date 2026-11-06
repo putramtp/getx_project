@@ -90,7 +90,7 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     }).toList();
 
     items.assignAll(normalizedData);
-    showClearedDrafts(cleared);
+    showClearedDrafts(_drafts, _draftScope, cleared);
     // The pending submit key stays: if the earlier submit was booked (its answer
     // lost), the next tap gets `submit_already_saved` and drops the draft —
     // clearing it here would let the lines that still fit be booked twice.
@@ -267,30 +267,6 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     items.refresh();
   }
 
-  /// Edit code (only applies to unique or batch)
-  void editFilledCode({required String oldCode, required String newCode}) {
-    final index = selectedIndex.value;
-    final item = items[index];
-    final filled = List<Map<String, dynamic>>.from(item['filled'] ?? []);
-
-    final foundIndex = filled.indexWhere((e) => e['code'] == oldCode);
-    if (foundIndex != -1) {
-      filled[foundIndex]['code'] = newCode;
-      item['filled'] = filled;
-      items.refresh();
-      // log('Edited code $oldCode → $newCode');
-    }
-  }
-
-  void removeFilledCode(String code) {
-    final index = selectedIndex.value;
-    final item = items[index];
-    item['filled']
-        ?.removeWhere((e) => e['code']?.toString() == code.toString());
-    items.refresh();
-    // log('Removed code $code');
-  }
-
   /// ✅ Clear all filled qty for the currently selected item
   void clearFilledCodes() {
     final index = selectedIndex.value;
@@ -359,7 +335,9 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
     // failed delivery create, or from a page left open) would book them again.
     dropAllEntries(items, 'filled');
 
-    if (Get.isDialogOpen == true) closeRoute();
+    // Only a dialog over the submit page itself: after the worker left it, the
+    // dialog on top belongs to another screen.
+    if (submitPageStillOpen(page) && !page!.isCurrent && Get.isDialogOpen == true) closeRoute();
     successAlertBottom("Receiving process for $supplierName started successfully.");
 
     // Route into the serial-confirmation pass for the created receive order.
@@ -371,6 +349,10 @@ class ReceiveOrderBySupplierDetailController extends GetxController {
       // Left the page while it was sending: the receipt is saved (snackbar
       // above); don't navigate from whatever screen is on top now.
       if (!submitPageStillOpen(page)) return;
+      // offAndToNamed replaces the TOP route: a dialog that opened over the
+      // page meanwhile would be replaced, and the page left under Confirm
+      // Serials. Bring the submit page back on top first.
+      if (!page!.isCurrent) Get.key.currentState?.popUntil((route) => route == page);
       if (roId is int) {
         await Get.offAndToNamed(
           AppPages.receiveOrderConfirmPage,

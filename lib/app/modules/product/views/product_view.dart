@@ -187,14 +187,10 @@ class ProductView extends GetView<ProductController> {
 
   /// 🧾 Modern Top Filter Sheet
   void _openTopFilterSheet(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      barrierLabel: "Filter",
-      barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.3),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, _, _) {
-        return TopDateFilterPopup(
+    showTopFilterPopup(
+      context,
+      extra: [controller.qtyRemainingLessThan],
+      TopDateFilterPopup(
           controller: controller,
           showPrice: true,
           showDateRange:false,
@@ -236,20 +232,7 @@ class ProductView extends GetView<ProductController> {
             ),
             const SizedBox(height: 10)
           ],
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, -1), // 👈 slide from top
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
-          child: FadeTransition(
-            opacity: anim1,
-            child: child,
-          ),
-        );
-      },
+      ),
     );
   }
   Widget _buildSearchField(double size, BuildContext context) {

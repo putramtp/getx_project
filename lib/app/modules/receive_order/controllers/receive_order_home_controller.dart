@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 
 import '../../../data/models/serial_confirm_summary_model.dart';
+import '../../../global/functions.dart';
 import '../../../data/providers/receive_order_provider.dart';
 import '../../../routes/app_pages.dart';
+import 'receive_order_list_controller.dart';
 
 /// The Receive menu. Its only state is the "Serials to confirm" card: receive
 /// orders that still hold unscanned labels, loaded on open and again whenever
@@ -38,7 +40,15 @@ class ReceiveOrderHomeController extends GetxController {
 
   /// Push a page from the menu and refresh the card once the user is back.
   Future<void> open(String route, {dynamic arguments}) async {
-    await Get.toNamed(route, arguments: arguments);
+    if (route == AppPages.receiveOrderListPage) {
+      // History and the pending queue are one route under one controller type:
+      // opened right after leaving the other, the binding would reuse its
+      // controller (the queue's filter in the history), then lose it when the
+      // old route is disposed. openFresh waits for it to go.
+      await openFresh<ReceiveOrderListController>(route, arguments: arguments);
+    } else {
+      await Get.toNamed(route, arguments: arguments);
+    }
     await loadSerialSummary();
   }
 

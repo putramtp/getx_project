@@ -61,11 +61,20 @@ class StockTransactionController extends GetxController with ListReloadGuard imp
     super.onClose();
   }
 
+  /// Set once Sort is tapped: from then on the order is kept on every reload
+  /// and next page ([_keepSort]); until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    trans.sort((a, b) => isAscending.value
-        ? a.productName.compareTo(b.productName)
-        : b.productName.compareTo(a.productName));
+    _sortedByUser = true;
+    _keepSort();
+  }
+
+  /// Re-sorts the loaded rows the way Sort set them (see [sortRowsBy]).
+  void _keepSort() {
+    if (!_sortedByUser) return;
+    sortRowsBy(trans, (o) => o.productName, ascending: isAscending.value);
     trans.refresh();
   }
 
@@ -101,6 +110,8 @@ class StockTransactionController extends GetxController with ListReloadGuard imp
     hasMore.value = cursorNext.value != null;
     
     trans.assignAll(rawList.map((e) => StockTransactionModel.fromJson(e)).toList());
+    
+    _keepSort();
   }
 
   // LOAD NEXT PAGE
@@ -128,6 +139,7 @@ class StockTransactionController extends GetxController with ListReloadGuard imp
     hasMore.value = cursorNext.value != null;
 
     trans.addAll(newOrders);
+    _keepSort();
   }
 
   String formatYmd(DateTime date) {

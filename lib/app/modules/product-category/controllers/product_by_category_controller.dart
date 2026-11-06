@@ -87,6 +87,7 @@ class ProductByCategoryController extends GetxController with ListReloadGuard {
 
     if (res['data'] == null) {
       productSummaries.clear();
+      _applyView();
       return;
     }
 
@@ -103,7 +104,7 @@ class ProductByCategoryController extends GetxController with ListReloadGuard {
     final mapped = rawList.map((e) => ProductSummaryModel.fromJson(e)).toList();
 
     productSummaries.assignAll(mapped);
-    filteredProductSummaries.assignAll(mapped);
+    _applyView();
   }
 
     // LOAD NEXT PAGE
@@ -136,16 +137,20 @@ class ProductByCategoryController extends GetxController with ListReloadGuard {
     }
 
     productSummaries.addAll(newOrders);
-    filteredProductSummaries.assignAll(productSummaries);
+    _applyView(); // a next page must not undo the search or the sort
   }
 
 
+  /// The search typed, lower-cased; applied to every page loaded.
+  String _query = '';
+
+  /// Set once Sort is tapped; until then the server's order stands.
+  bool _sortedByUser = false;
+
   void toggleSort() {
     isAscending.value = !isAscending.value;
-    filteredProductSummaries.sort((a, b) => isAscending.value
-        ? a.itemName.compareTo(b.itemName)
-        : b.itemName.compareTo(a.itemName));
-    filteredProductSummaries.refresh();
+    _sortedByUser = true;
+    _applyView();
   }
 
   void onSearchChanged(String value) {
@@ -154,21 +159,25 @@ class ProductByCategoryController extends GetxController with ListReloadGuard {
   }
 
   void filterList(String value) {
-    final query = value.trim().toLowerCase();
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
-      if (query.isEmpty) {
-        filteredProductSummaries.assignAll(productSummaries);
-      } else {
-        filteredProductSummaries.assignAll(
-          productSummaries.where((item) {
-            final name = item.itemName.trim().toLowerCase();
-            final code = item.itemCode.trim().toLowerCase();
-            return name.contains(query) || code.contains(query);
-          }).toList(),
-        );
-      }
+      _query = value.trim().toLowerCase();
+      _applyView();
     });
+  }
+
+  /// [filteredProductSummaries] = the loaded [productSummaries] matching the
+  /// search, in the order Sort set — after a search, a sort, a reload or a
+  /// next page alike.
+  void _applyView() {
+    final rows = productSummaries
+        .where((item) =>
+            _query.isEmpty ||
+            item.itemName.trim().toLowerCase().contains(_query) ||
+            item.itemCode.trim().toLowerCase().contains(_query))
+        .toList();
+    if (_sortedByUser) sortRowsBy(rows, (o) => o.itemName, ascending: isAscending.value);
+    filteredProductSummaries.assignAll(rows);
   }
 
   void openDetail(ProductSummaryModel product) {

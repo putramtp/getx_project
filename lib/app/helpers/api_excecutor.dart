@@ -14,11 +14,15 @@ class ApiExecutor {
   /// empty result: it's set false on success and true on any failure (no
   /// connection or thrown exception), so the view can show an error+retry state
   /// instead of the "No data" empty state.
+  ///
+  /// [quiet] shows no alert on failure — for a follow-up call (a resync after
+  /// a failed save) whose cause was already reported by the call before it.
   static Future<T?> run<T>({
     required RxBool isLoading,
     required Future<T> Function() task,
     RxBool? hasError,
     bool sessionBound = true,
+    bool quiet = false,
   }) async {
     if (isLoading.value) return null;
 
@@ -30,7 +34,7 @@ class ApiExecutor {
       await _networkService.checkConnection();
       if (!_networkService.isConnected.value) {
         hasError?.value = true;
-        errorAlert("No internet connection");
+        if (!quiet) errorAlert("No internet connection");
         return null;
       }
 
@@ -44,7 +48,7 @@ class ApiExecutor {
       // session on purpose and must still show why it failed.
       if (sessionBound && _session != session) return null;
       // The session-ending answer already said why on the login screen.
-      if (e is SessionEndedException) return null;
+      if (e is SessionEndedException || quiet) return null;
       final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
       errorAlert(msg);
       return null;

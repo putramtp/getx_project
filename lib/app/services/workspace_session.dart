@@ -66,7 +66,13 @@ class WorkspaceSession {
       _auth.setUsername(name);
       _auth.setRoles(roles.join(', '));
       return (name: name, roles: roles);
+    } on PasswordChangeRequiredException {
+      rethrow; // its token is revoked and cleared above
     } catch (_) {
+      // A token issued before the failure (e.g. `/me` lost its answer) would
+      // stay valid on the server until it expires: revoke it, then clear.
+      final issued = _auth.currentToken;
+      if (issued != null && issued.isNotEmpty) unawaited(_api.revokeToken(issued));
       if (_auth.currentToken != null || _auth.tenantApiHost.value != null) await _auth.clearToken();
       rethrow;
     }
